@@ -1,0 +1,21 @@
+## Interface: 20501
+## Title: LFG Bulletin Board
+## Notes: Sort LFG/LFM Messages
+## Version: 2.45
+## Author: GPI / Erytheia-Razorfen
+## DefaultState: enabled
+## SavedVariables: GroupBulletinBoardDB
+## SavedVariablesPerCharacter: GroupBulletinBoardDBChar
+LibGPIOptions.lua
+LibGPIMinimapButton.lua
+LibGPIToolBox.lua
+Localization.lua
+Dungeons.lua
+Tags.lua
+RequestList.lua
+Options.lua
+GroupList.Lua
+GroupBulletinBoard.lua
+GroupBulletinBoard.xml
+
+
