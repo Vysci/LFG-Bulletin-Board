@@ -531,9 +531,6 @@ function GBB.Init()
 		GroupBulletinBoardFrame:SetPoint("TOPLEFT", UIParent, "BOTTOMLEFT", x, y)
 		GroupBulletinBoardFrame:SetWidth(w)
 		GroupBulletinBoardFrame:SetHeight(h)		
-		GroupBulletinBoardFrame.bg = GroupBulletinBoardFrame:CreateTexture(nil, "BACKGROUND")
-		GroupBulletinBoardFrame.bg:SetAllPoints(true)
-		GroupBulletinBoardFrame.bg:SetColorTexture(0, 0, 0, .7)	
 	end
 		
 	-- slash command

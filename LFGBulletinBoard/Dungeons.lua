@@ -412,7 +412,7 @@ GBB.DebugNames = {
 	"DEBUG", "BAD", "NIL",
 }
 
--- Needed because Lua sucks, Blizzard switch to Scala please
+-- Needed because Lua sucks, Blizzard switch to Python please
 -- Takes in a list of dungeon lists, it will then concatenate the lists into a single list
 -- it will put the dungeons in an order and give them a value incremental value that can be used for sorting later 
 -- ie one list "Foo" which contains "Bar" and "FooBar" and a second list "BarFoo" which contains "BarBar"

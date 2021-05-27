@@ -1,8 +1,8 @@
 ## Interface: 20501
 ## Title: LFG Bulletin Board
 ## Notes: Sort LFG/LFM Messages
-## Version: 2.45
-## Author: GPI / Erytheia-Razorfen
+## Version: 2.46
+## Author: GPI / Erytheia-Razorfen/ Vyscî-Whitemane
 ## DefaultState: enabled
 ## SavedVariables: GroupBulletinBoardDB
 ## SavedVariablesPerCharacter: GroupBulletinBoardDBChar
