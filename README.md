@@ -1,4 +1,4 @@
-# LFG-Group-Bulletin-Board
+# LFG-Bulletin-Board
 Dungeon Request chat filtering
 GBB provides an overview of the endless requests in the chat channels. It detects all requests to the classic dungeons, sorts them and presents them clearly way. Numerous filtering options reduce the gigantic number to exactly the dungeons that interest you. And if that's not enough, GBB will let you know about any new request via a sound or chat notification. And finally, GBB can post your request repeatedly.
 Currently, English, German and Russian dungeons are recognized natively. But it is easily possible to adapt GBB to any language.
