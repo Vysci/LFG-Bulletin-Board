@@ -24,6 +24,8 @@ Baudzilla for the graphics/idea of the resize-code
 
 Changelog
 
+2.46
+- Fixed an issue where background would be transparent on install
 2.45
 - Fixed a bug that was causing some issues with SM and DM 
 
