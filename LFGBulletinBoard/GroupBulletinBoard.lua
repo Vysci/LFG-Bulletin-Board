@@ -10,115 +10,6 @@ local L = setmetatable({}, {__index = function (t, k)
 end})
 GroupBulletinBoard_Addon=GBB
 
---[[
-
-Group Bulletin Board 	
-2.45 
-- Fixed a bug causing issue opening main window due to SM and DM dungeons
-
-2.44
-- Add TBC support. 
-- Move vanilla dungeons in a seperate panel. 
-- Rename to "LFG Bulletin Board" from "Group Bulletin Board" 
-- Refactor code. 
-- Lua sucks
-
-2.43
-- Update to work for tbc pre-patch. Fix bug with background being transparent 
-
-2.42
-- toc-Update
-
-2.41
-- repair level-display in main window
-
-2.40
-- release
-
-2.33
-- Optional: Add more info to chat on /who and when somebody comes online
-
-2.32
-- optional: Add guild in player tooltip
-- optional: Combine sub-dungeons like Dire Maul
-- message-history in tooltip
-
-2.31
-- optional: Track Party/Members (only when in dungeon)
-- click on a name in the member-list to add a note!
-- Infos in Tooltip: Last seen (with note and dungeon)
-
-2.30
-- update russian by Arrogant_Dreamer 
-
-2.22 
-- Option: Notification on world/dungeons/raids/battleground
-
-2.21
-- Remove Shout/Announce-Box - doesn't work anymore
-
-2.20 	
-- TOC-UPDATETIMER
-
-2.13
-- option to change color of message, time and chat notification
-- "two line"-design is now selectable
-
-2.12
-- detection of minmap-shape
-- set stata to low - should now be behind dialogs
-- Optional: Short one-line chat notification
-- Support for Raid-Symbols {rt1}{cirlce}
-
-2.11
-- fix bug with english client
-- fix bug with guild messages
-
-2.10
-- update russian tags for dire maul (thanks to SD_Liberty)
-- Chat-Notifications - first line is now light grey
-- some code optimizations
-- new option: Scan Guild Channel (in Filter/Channel list)
-- Shout/Announce now work with closed window
-- Item-Links have now a tooltip
-- Adjust mousewheel-scroll-speed to one line
-
-2.07 Beta
-- Fix for russian language (db west)
-
-2.06 Beta
-- Guild Member are marked with a green dot
-- Fix russian /who detection
-
-2.05
-- repair "run"-Detection
-- repair slash commands
-
-2.04 
-- bugfix Hitbox with "ChatStyle"
-- option "Don't truncate message"
-- When two request have the same time, they are sorted by name.
-- updates disabled during combat!
-- Friends are marked with a Star
-
-2.03
-- option "Don't filter own request"
-
-2.02	
-- fix same bug again
-
-2.01
-- bugfix
-
-2.00	
-- Channel-Filter
-- repair priest-icon
-- option "Show a fixed number of requests"
-- option "Chat Style"
-- About-Panel
-		
-]]--
-
 GBB.Version=GetAddOnMetadata(TOCNAME, "Version") 
 GBB.Title=GetAddOnMetadata(TOCNAME, "Title") 
 GBB.Icon= "Interface\\Icons\\spell_holy_prayerofshadowprotection"
@@ -531,6 +422,7 @@ function GBB.Init()
 		GroupBulletinBoardFrame:SetPoint("TOPLEFT", UIParent, "BOTTOMLEFT", x, y)
 		GroupBulletinBoardFrame:SetWidth(w)
 		GroupBulletinBoardFrame:SetHeight(h)		
+
 	end
 		
 	-- slash command
@@ -568,8 +460,14 @@ function GBB.Init()
 				GBB.ShowWindow()
 			end},
 		{{"config","setup","options"},L["SlashConfig"],GBB.Options.Open,1},
-		{"about",L["SlashAbout"],GBB.Options.Open,5},
+		{"about",L["SlashAbout"],GBB.Options.Open,6},
 		{"",L["SlashDefault"],GBB.ToggleWindow},
+		{"chat","",{
+			{{"organize", "clean"},L["SlashChatOrganizer"],function()
+				GBB.InsertChat()
+			end},
+		},
+	},
 		})
 	
 	-- Create options and initalize!
