@@ -3,6 +3,7 @@ local TOCNAME,GBB=...
 GBB.locales = {
 	enGB = {
 		["lfg_channel"]="LookingForGroup", -- must be the default chat-name!
+		["world_channel"]="World", -- must be the default chat-name!
 		["GuildChannel"]="Guild Channel",
 				
 		["msgNbRequest"]="%d request(s) - click to wispher - shift+click to 'who'",
@@ -98,6 +99,7 @@ GBB.locales = {
 		["SlashConfig"]="Open configuration",
 		["SlashDefault"]="open main window",
 		["SlashAbout"]="open about",
+		["SlashChatOrganizer"]="Creates a new chat tab if one doesn't already exist, named \"LFG\" with all channels subscribed. Removes LFG heavy spam channels from default chat tab",
 		
 		["TabRequest"]="Requests",
 		["TabGroup"]="Members",
@@ -184,6 +186,7 @@ GBB.locales = {
 	["HeaderTagsCustom"] = "Eigene Wörterlisten",
 	["HeaderUsage"] = "Benutzung",
 	["lfg_channel"] = "SucheNachGruppe",
+	["world_channel"] = "Welt",
 	["msgAddNote"] = "Notiz von %s",
 	["msgCustomList"] = "Hier die eigenen eindeutigen Suchbegriffe eingeben. Wenn nichts vorhanden ist, werden die englischen als ausgegraues Beispiel angezeigt.",
 	["msgDoShout"] = "Request announced.",
@@ -216,9 +219,11 @@ GBB.locales = {
 },
 	esMX = {
 		["lfg_channel"]="BuscarGrupo",
+		["world_channel"] = "Mundo",
 	},
 	frFR = {
 		["lfg_channel"]="RechercheGroupe",
+		["world_channel"] = "Monde"
 	},
 	ruRU = {	
 		["AboutInfo"] = "GBB предоставляет обзор нескончаемых запросов в каналах чата. Он обнаруживает все запросы к классическим подземельям, сортирует их и четко представляет их.  Многочисленные опции фильтрации уменьшают гигантское число для тех подземелий, которые вас интересуют. А если этого недостаточно, GBB сообщит вам о любом новом запросе через звуковое или чат-уведомление. И, наконец, GBB может опубликовать ваш запрос повторно.",
@@ -285,6 +290,7 @@ GBB.locales = {
 		["HeaderTagsCustom"] = "Пользовательские шаблоны поиска",
 		["HeaderUsage"] = "Использование",
 		["lfg_channel"] = "ПоискСпутников",
+		["world_channel"] = "Мир",
 		["msgCustomList"] = "Введите здесь свои уникальные шаблоны для поиска. Если ничего нет, английские шаблоны отображаются в виде примера серым цветом.",
 		["msgDoShout"] = "Запрос объявлен.",
 		["msgInit"] = "GroupBulletinBoard %s загружен. Введите '/gbb help' чтобы начать.",
