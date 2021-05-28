@@ -20,6 +20,7 @@ Slash Commands
 /gbb config/setup/options - Open configuration
 /gbb about - open about
 /gbb help - Print help
+/gbb chat organize/clean - Creates a new chat tab if one doesn't already exist, named "LFG" with all channels subscribed. Removes LFG heavy spam channels from default chat tab
 /gbb - open main window
 
  
