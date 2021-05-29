@@ -761,8 +761,13 @@ local function createMenu(DungeonID,req)
 	GBB.PopupDynamic:AddItem(L["CboxNotifyChat"],false,GBB.DB,"NotifyChat")		
 	GBB.PopupDynamic:AddItem("",true)
 	GBB.PopupDynamic:AddItem(L["HeaderSettings"],false, GBB.Options.Open, 1)
-	GBB.PopupDynamic:AddItem(L["TBCPanelFilter"], false, GBB.Options.Open, 2)
-	GBB.PopupDynamic:AddItem(L["PanelAbout"], false, GBB.Options.Open, 6)
+	
+	if GBB.GameType == "TBC" then
+		GBB.PopupDynamic:AddItem(L["TBCPanelFilter"], false, GBB.Options.Open, 1 + GBB.PANELOFFSET)
+	else
+		GBB.PopupDynamic:AddItem(L["PanelFilter"], false, GBB.Options.Open, 2 + GBB.PANELOFFSET)
+	end
+	GBB.PopupDynamic:AddItem(L["PanelAbout"], false, GBB.Options.Open, 5 + GBB.PANELOFFSET)
 	GBB.PopupDynamic:AddItem(L["BtnCancel"],false)
 	GBB.PopupDynamic:Show()
 end

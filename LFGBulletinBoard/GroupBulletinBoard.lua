@@ -338,9 +338,16 @@ function GBB.Popup_Minimap(frame,notminimap)
 	if not GBB.PopupDynamic:Wipe(txt..(notminimap and "notminimap" or "minimap")) then
 		return
 	end
+
 	GBB.PopupDynamic:AddItem(L["HeaderSettings"],false, GBB.Options.Open, 1)
-	GBB.PopupDynamic:AddItem(L["TBCPanelFilter"], false, GBB.Options.Open, 2)
-	GBB.PopupDynamic:AddItem(L["PanelAbout"], false, GBB.Options.Open, 6)
+
+	if GBB.GameType == "TBC" then
+		GBB.PopupDynamic:AddItem(L["TBCPanelFilter"], false, GBB.Options.Open, 1 + GBB.PANELOFFSET)
+	else
+		GBB.PopupDynamic:AddItem(L["PanelFilter"], false, GBB.Options.Open, 2 + GBB.PANELOFFSET)
+	end
+
+	GBB.PopupDynamic:AddItem(L["PanelAbout"], false, GBB.Options.Open, 5 + GBB.PANELOFFSET)
 	
 	GBB.PopupDynamic:AddItem("",true)
 	GBB.PopupDynamic:AddItem(L["CboxNotifyChat"],false,GBB.DB,"NotifyChat")
@@ -363,7 +370,15 @@ function GBB.Init()
 	GBB.UserLevel=UnitLevel("player")
 	GBB.UserName=(UnitFullName("player"))
 	GBB.ServerName=GetRealmName()
-		
+	local version, _, _, _ = GetBuildInfo()
+	if version:sub(1, 1) == "2" then
+		GBB.GameType = "TBC"
+		GBB.PANELOFFSET = 1
+	else 
+		GBB.GameType = "VANILLA"
+		GBB.PANELOFFSET = 0
+	end
+
 	-- Initalize options
 	if not GroupBulletinBoardDB then GroupBulletinBoardDB = {} end -- fresh DB
 	if not GroupBulletinBoardDBChar then GroupBulletinBoardDBChar = {} end -- fresh DB

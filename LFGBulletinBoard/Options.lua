@@ -104,6 +104,21 @@ local DoRightClick=function(self)
 	self:SetChecked(true)
 end
 	
+function SetChatOption()
+	GBB.Options.AddCategory(L["HeaderChannel"])
+	GBB.Options.Indent(10)	
+
+	ChannelIDs = {}
+	for i=1,10 do
+		GBB.Options.InLine()
+		ChannelIDs[i]	= GBB.Options.AddCheckBox(GBB.DBChar.channel,i,true,i..". ",125)
+		ChannelIDs[i+10]= GBB.Options.AddCheckBox(GBB.DBChar.channel,i+10,true,(i+10)..". ",125)
+		
+		GBB.Options.EndInLine()
+	end
+	GBB.Options.Indent(-10)
+end
+
 function GBB.OptionsInit ()
 	GBB.Options.Init(
 		function() -- ok button			
@@ -201,58 +216,50 @@ function GBB.OptionsInit ()
 	GBB.Options.AddSpace()
 	CheckBox("OnDebug",false)
 	
+	if GBB.GameType == "TBC" then
 	-- Second Panel for TBC Dungeons
-	GBB.Options.AddPanel(L["TBCPanelFilter"])
-	GBB.Options.AddCategory(L["HeaderDungeon"])
-	GBB.Options.Indent(10)
+		GBB.Options.AddPanel(L["TBCPanelFilter"])
+		GBB.Options.AddCategory(L["HeaderDungeon"])
+		GBB.Options.Indent(10)
 
-	TbcChkBox_FilterDungeon={}
-	for index=GBB.TBCDUNGEONSTART,GBB.TBCDUNGEONBREAK do
-		TbcChkBox_FilterDungeon[index]=CheckBoxFilter(GBB.dungeonSort[index],true)
-	end	
-	GBB.Options.SetRightSide()
-	--GBB.Options.AddCategory("")
-	GBB.Options.Indent(10)	
-	for index=GBB.TBCDUNGEONBREAK+1,GBB.TBCMAXDUNGEON do
-		TbcChkBox_FilterDungeon[index]=CheckBoxFilter(GBB.dungeonSort[index],true)
-	end
-	--GBB.Options.AddSpace()
-	CheckBoxChar("FilterLevel",false)
-	CheckBoxChar("DontFilterOwn",true)
-	
-	--GBB.Options.AddSpace()
-
-	GBB.Options.InLine()
-	GBB.Options.AddButton(L["BtnSelectAll"],function()
-		DoSelectFilter(true, TbcChkBox_FilterDungeon, GBB.TBCDUNGEONSTART, GBB.TBCMAXDUNGEON-2) -- Doing -2 to not select trade and misc
-	end)
-	GBB.Options.AddButton(L["BtnUnselectAll"],function()
-		DoSelectFilter(false, TbcChkBox_FilterDungeon, GBB.TBCDUNGEONSTART, GBB.TBCMAXDUNGEON)
-	end)
-	GBB.Options.EndInLine()
-	
-	GBB.Options.Indent(-10)
-	
-	--GBB.Options.AddSpace()
-	GBB.Options.AddCategory(L["HeaderChannel"])
-	GBB.Options.Indent(10)	
-
-	ChannelIDs = {}
-	for i=1,10 do
-		GBB.Options.InLine()
-		ChannelIDs[i]	= GBB.Options.AddCheckBox(GBB.DBChar.channel,i,true,i..". ",125)
-		ChannelIDs[i+10]= GBB.Options.AddCheckBox(GBB.DBChar.channel,i+10,true,(i+10)..". ",125)
+		TbcChkBox_FilterDungeon={}
+		for index=GBB.TBCDUNGEONSTART,GBB.TBCDUNGEONBREAK do
+			TbcChkBox_FilterDungeon[index]=CheckBoxFilter(GBB.dungeonSort[index],true)
+		end	
+		GBB.Options.SetRightSide()
+		--GBB.Options.AddCategory("")
+		GBB.Options.Indent(10)	
+		for index=GBB.TBCDUNGEONBREAK+1,GBB.TBCMAXDUNGEON do
+			TbcChkBox_FilterDungeon[index]=CheckBoxFilter(GBB.dungeonSort[index],true)
+		end
+		--GBB.Options.AddSpace()
+		CheckBoxChar("FilterLevel",false)
+		CheckBoxChar("DontFilterOwn",true)
 		
+		--GBB.Options.AddSpace()
+
+		GBB.Options.InLine()
+		GBB.Options.AddButton(L["BtnSelectAll"],function()
+			DoSelectFilter(true, TbcChkBox_FilterDungeon, GBB.TBCDUNGEONSTART, GBB.TBCMAXDUNGEON-2) -- Doing -2 to not select trade and misc
+		end)
+		GBB.Options.AddButton(L["BtnUnselectAll"],function()
+			DoSelectFilter(false, TbcChkBox_FilterDungeon, GBB.TBCDUNGEONSTART, GBB.TBCMAXDUNGEON)
+		end)
 		GBB.Options.EndInLine()
+		
+		GBB.Options.Indent(-10)
+		
+		--GBB.Options.AddSpace()
+		if GBB.GameType == "TBC" then
+			SetChatOption()
+		end
+
 	end
-	GBB.Options.Indent(-10)
-
-
 	-- Third panel - Filter
 	GBB.Options.AddPanel(L["PanelFilter"])
 	GBB.Options.AddCategory(L["HeaderDungeon"])
 	GBB.Options.Indent(10)
-	
+
 	ChkBox_FilterDungeon={}
 	for index=1,GBB.DUNGEONBREAK do
 		ChkBox_FilterDungeon[index]=CheckBoxFilter(GBB.dungeonSort[index],true)
@@ -282,6 +289,9 @@ function GBB.OptionsInit ()
 	GBB.Options.Indent(-10)
 	
 	--GBB.Options.AddSpace()	
+	if GBB.GameType == "VANILLA" then
+		SetChatOption()
+	end
 
 	-- Tags
 	GBB.Options.AddPanel(L["PanelTags"],false,true)
