@@ -809,7 +809,7 @@ function GBB.ClickRequest(self,button)
 		if IsShiftKeyDown() then
 			WhoRequest(req.name)
 			--SendWho( req.name )
-		elseif IsAltKeyDown() then
+		elseif IsControlKeyDown() then
 			InviteRequest(req.name)
 		else
 			WhisperRequest(req.name)
