@@ -6,7 +6,7 @@ GBB.locales = {
 		["world_channel"]="World", -- must be the default chat-name!
 		["GuildChannel"]="Guild Channel",
 				
-		["msgNbRequest"]="%d request(s) - click to wispher - shift+click to 'who' - alt+click to 'invite'",
+		["msgNbRequest"]="%d request(s) - click to whisper - shift+click to 'who' - alt+click to 'invite'",
 		["msgStartWho"]="request who on %s...",
 		["msgNewRequest"]="New request by %s for dungeon %s.",
 		["msgInit"]="GroupBulletinBoard %s is loaded. Type '/gbb help' to get started.",
