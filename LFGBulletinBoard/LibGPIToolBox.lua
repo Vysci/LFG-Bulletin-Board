@@ -165,14 +165,7 @@ function Tool.GuildNameToIndex(name, searchOffline)
 end
 
 function Tool.RunSlashCmd(cmd)
-    if Tool._EditBox==nil then 
-		Tool._EditBox = CreateFrame("EditBox", "GPILIB_myEditBox_"..TOCNAME, UIParent)
-		Tool._EditBox.chatFrame = Tool._EditBox:GetParent();
-		ChatEdit_OnLoad(Tool._EditBox);
-		Tool._EditBox:Hide()
-	end
-	Tool._EditBox:SetText(cmd) 
-	ChatEdit_SendText(Tool._EditBox)  
+	DEFAULT_CHAT_FRAME.editBox:SetText(cmd) ChatEdit_SendText(DEFAULT_CHAT_FRAME.editBox, 0)
 end 
 
 function Tool.RGBtoEscape(r, g, b,a)
