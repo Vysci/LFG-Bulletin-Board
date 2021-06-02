@@ -1,6 +1,12 @@
 --[[
 
 Group Bulletin Board 	
+
+2.48
+- Semi fixed classic dungeon levels with TBC
+- Implemented Ctrl + Click to invite player (credit to: h0tw1r3)
+- Fixed bug with Shift + Click (credit to: h0tw1r3)
+
 2.47
 - Added a new feature to contain all lfg spam in a single chat tab. Can be accessed via /gbb chat clean/organize. 
 - It will create a new chat tab called "LFG", will subscribe player to spammy chat channels like "LookingForGroup" if they are not already subscribed.
