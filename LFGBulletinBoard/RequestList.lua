@@ -284,6 +284,10 @@ local function WhisperRequest(name)
 	ChatFrame_OpenChat("/w " .. name .." ")
 end
 
+local function InviteRequest(name)
+	GBB.Tool.RunSlashCmd("/invite " .. name)
+end
+
 local function IgnoreRequest(name)
 	for ir,req in pairs(GBB.RequestList) do
 		if type(req) == "table" and req.name == name then
@@ -740,7 +744,7 @@ local function createMenu(DungeonID,req)
 	if req then
 		GBB.PopupDynamic:AddItem(string.format(L["BtnWho"],req.name),false,WhoRequest,req.name)
 		GBB.PopupDynamic:AddItem(string.format(L["BtnWispher"],req.name),false,WhisperRequest,req.name)			
-		GBB.PopupDynamic:AddItem("",true)
+		GBB.PopupDynamic:AddItem(string.format(L["BtnInvite"],req.name),false,InviteRequest,req.name)
 		GBB.PopupDynamic:AddItem(string.format(L["BtnIgnore"],req.name),false,IgnoreRequest,req.name)	
 		GBB.PopupDynamic:AddItem("",true)
 	end
@@ -805,6 +809,8 @@ function GBB.ClickRequest(self,button)
 		if IsShiftKeyDown() then
 			WhoRequest(req.name)
 			--SendWho( req.name )
+		elseif IsControlKeyDown() then
+			InviteRequest(req.name)
 		else
 			WhisperRequest(req.name)
 		end
