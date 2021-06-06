@@ -2,6 +2,10 @@
 
 Group Bulletin Board 	
 
+2.49 
+ - Russian localization thanks to the great nourlie
+ - German locization thanks to amazing tamariske
+
 2.48
 - Semi fixed classic dungeon levels with TBC
 - Implemented Ctrl + Click to invite player (credit to: h0tw1r3)
