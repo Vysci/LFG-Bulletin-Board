@@ -120,7 +120,7 @@ function GBB.GetDungeonNames()
 			["GL"] = 	"Gruuls Unterschlupf (25)",
 			["MAG"] = 	"Höllenfeuerzitadelle: Magtheridons Kammer (25)",
 			["SSC"] = 	"Echsenkessel: Schlangenschrein (25)",
-			["EYE"] = 	"Auge des Sturms",
+			["EYE"] = 	"Festung der Stürme: Das Auge (25)",
 			["ZA"] = 	"Zul'Aman (10)",
 			["HYJAL"] = 	"Schlacht um den Hyjal (25)",
 			["BT"] = 	"Schwarzer Tempel (25)",
@@ -135,7 +135,7 @@ function GBB.GetDungeonNames()
 			["WSG"] = 	"Warsongschlucht (PVP)",
 			["AV"] = 	"Alteractal (PVP)",
 			["AB"] = 	"Arathibecken (PVP)",
-			["EOTS"] =  "Eye of the Storm (PvP)",
+			["EOTS"] =  	"Auge des Sturms (PvP)",
 			["MISC"] = 	"Verschiedenes",
 			["TRADE"] =	"Handel",
 			
