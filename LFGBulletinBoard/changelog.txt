@@ -2,6 +2,9 @@
 
 Group Bulletin Board 	
 
+2.50 
+ - More German localization
+ 
 2.49 
  - Russian localization thanks to the great nourlie
  - German locization thanks to amazing tamariske
