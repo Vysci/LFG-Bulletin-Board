@@ -7,7 +7,7 @@
 		<Size><AbsDimension x="20" y="18"/></Size>
 	</Button>
 
-	<Frame name="GroupBulletinBoardFrame" parent="UIParent" hidden="true" movable="true" enableMouse="true" frameStrata="LOW" resizable="true">
+	<Frame name="GroupBulletinBoardFrame" parent="UIParent" hidden="true" movable="true" enableMouse="true" frameStrata="HIGH" resizable="true">
 		<Size><AbsDimension x="800" y="600"/></Size>
 		<Anchors>
 			<Anchor point="CENTER"/>
