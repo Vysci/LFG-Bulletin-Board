@@ -287,7 +287,7 @@ function GBB.CreateTagList ()
 		GBB.suffixTagsLoc["custom"]=GBB.Split(GBB.DB.Custom.Suffix)
 		
 		GBB.dungeonTagsLoc["custom"]={}
-		for index=1,GBB.MAXDUNGEON do
+		for index=1,GBB.TBCMAXDUNGEON do
 			GBB.dungeonTagsLoc["custom"][GBB.dungeonSort[index]]= GBB.Split(GBB.DB.Custom[GBB.dungeonSort[index]])
 		end
 		
