@@ -15,7 +15,8 @@ end
 GBB.suffixTagsLoc=langSplit({
 	enGB ="s group run runs",
 	deDE ="gruppe",
-	ruRU ="группран фарм фарма фармить", 
+	ruRU ="группран фарм фарма фармить",
+	frFR = "groupe",
 })
 
 GBB.searchTagsLoc =langSplit({
@@ -24,13 +25,14 @@ GBB.searchTagsLoc =langSplit({
 	deDE = "gesucht suche suchen sucht such gruppe grp sfg sfm druide dudu jäger magier priester warri schurke rschami schamane hexer hexenmeister hm krieger heiler xheiler go run",
 
 	ruRU = "лфг ищет ищу нид нужны лфм лф2м ищем пати похилю лф танк хил нужен дд рдд мдд ршам рога вар прист армс пал",
+	frFR = "groupe cherche chasseur druide mage paladin pretre voleur chaman quete",
 })
 
 GBB.badTagsLoc = langSplit({
 	enGB = "layer",
 	deDE = "fc",
 	ruRU = "гильдию гильдия слой",
-
+	frFR = "",
 })
 
 
@@ -227,6 +229,72 @@ GBB.dungeonTagsLoc={
 		["KARA"] = "каражан кара караджан кару",
 		["GL"] = "грул груула",
 	}),		
+	frFR = langSplit({
+		["RFC"] = "ragefeu",
+		["DM"] = "mortemines",
+		["WC"] = "lams lamentations",
+		["SFK"] = "ombrecroc",
+		["STK"] = "prison",
+		["BFD"] = "brassenoire",
+		--["GNO"] = "",
+		["RFK"] = "kraal",
+		--["SM2"] =	"",
+		["SMG"] = "cimetière cim",
+		["SML"] = "bibli bibliothèque",
+		["SMA"] = "armu armurerie",
+		["SMC"] = "cathé",
+		["RFD"] = "souille souilles",
+		--["ULD"] = "",
+		--["ZF"]  = "",
+		--["MAR"] = "",
+		--["ST"]  = "",
+		["BRD"] = "profondeur profondeurs",
+		["DM2"] = "ht hache-tripes hachetripes",
+		["DME"] = "htest",
+		["DMN"] = "tribut nord",
+		["DMW"] = "ouest",
+		--["STR"] = "",
+		--["SCH"] = "",
+		--["LBRS"] = "",
+		--["UBRS"] = "",
+		["RAMPS"] = "remparts rempart",
+		["BF"] = "fournaise",
+		["SP"] = "enclos",
+		["UB"] = "bt basse tourbière",
+		["MT"] = "tombe mana tm manatomb",
+		["CRYPTS"] = "crypte",
+		["SETH"] = "sethekk seth sethek",
+		["OHB"] = "gt1",
+		["MECH"] = "méca",
+		["BM"] = "gt2",
+		--["MGT"] = "",
+		["SH"] = "salles salle brisées",
+		--["BOT"] = "",
+		["SL"] = "laby shadowlab",
+		["SV"] = "caveau",
+		--["ARC"] = "",
+		--["KARA"] = "",
+		--["GL"] = "",
+		--["MAG"] = "",
+		--["SSC"] = "",
+		--["ZA"] = "",
+		--["EYE"] = "",
+		--["HYJAL"] = "",
+		--["BT"] = "",
+		--["SWP"] = "",
+		--["ONY"] = "",
+		--["MC"] = "",
+		--["ZG"] = "",
+		--["AQ20"] = "",
+		--["BWL"] = "",
+		--["AQ40"] = "" ,
+		--["NAX"] = "",
+		--["WSG"] = "",
+		["AB"] = "arathi",
+		["AV"] = "alterac",
+		--["EOTS"] = "",
+		["TRADE"] = "achete vends enchanteur",
+	}),
 }
 
 GBB.dungeonTagsLoc.enGB["DEADMINES"]={"dm"}
