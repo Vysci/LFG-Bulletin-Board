@@ -196,6 +196,8 @@ function GBB.OptionsInit ()
 	CreateEditBoxNumber("ShowOnlyNb",4,50)	
 	GBB.Options.Indent(-30)
 	GBB.Options.AddColorButton(GBB.DB,"EntryColor",{r=1,g=1,b=1,a=1},L["BtnEntryColor"])
+	GBB.Options.AddColorButton(GBB.DB,"HeroicDungeonColor",{r=1,g=0,b=0,a=1},L["BtnHeroicDungeonColor"])
+	GBB.Options.AddColorButton(GBB.DB,"NormalDungeonColor",{r=0,g=1,b=0,a=1},L["BtnNormalDungeonColor"])
 	GBB.Options.AddColorButton(GBB.DB,"TimeColor",{r=1,g=1,b=1,a=1},L["BtnTimeColor"])
 	GBB.Options.AddColorButton(GBB.DB,"HistoryColor",{r=.6,g=.6,b=.6,a=1},L["BtnHistoryColor"])
 	GBB.Options.AddSpace()
@@ -235,6 +237,10 @@ function GBB.OptionsInit ()
 		--GBB.Options.AddSpace()
 		CheckBoxChar("FilterLevel",false)
 		CheckBoxChar("DontFilterOwn",true)
+
+		if(GBB.GameType ~= "VANILLA") then
+			CheckBoxChar("HeroicOnly",false)
+		end
 		
 		--GBB.Options.AddSpace()
 
@@ -260,16 +266,21 @@ function GBB.OptionsInit ()
 	GBB.Options.AddCategory(L["HeaderDungeon"])
 	GBB.Options.Indent(10)
 
+	local defaultChecked = true
+	if GBB.GameType ~= "VANILLA" then
+		defaultChecked = false
+	end
+
 	ChkBox_FilterDungeon={}
 	for index=1,GBB.DUNGEONBREAK do
-		ChkBox_FilterDungeon[index]=CheckBoxFilter(GBB.dungeonSort[index],true)
+		ChkBox_FilterDungeon[index]=CheckBoxFilter(GBB.dungeonSort[index],defaultChecked)
 	end	
 
 	GBB.Options.SetRightSide()
 	--GBB.Options.AddCategory("")
 	GBB.Options.Indent(10)	
 	for index=GBB.DUNGEONBREAK+1,GBB.MAXDUNGEON do
-		ChkBox_FilterDungeon[index]=CheckBoxFilter(GBB.dungeonSort[index],true)
+		ChkBox_FilterDungeon[index]=CheckBoxFilter(GBB.dungeonSort[index],defaultChecked)
 	end
 		
 	--GBB.Options.AddSpace()

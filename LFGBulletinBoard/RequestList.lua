@@ -201,15 +201,24 @@ local function CreateItem(yy,i,doCompact,req,forceHight)
 			ti=GBB.formatTime(time()-req.last)
 		end		
 	
+		local typePrefix
+		if req.IsHeroic == true then
+			local colorHex = GBB.Tool.RGBPercToHex(GBB.DB.HeroicDungeonColor.r,GBB.DB.HeroicDungeonColor.g,GBB.DB.HeroicDungeonColor.b)
+			typePrefix = "|c00".. colorHex .. "[" .. L["heroicAbr"] .. "]     "
+		else
+			local colorHex = GBB.Tool.RGBPercToHex(GBB.DB.NormalDungeonColor.r,GBB.DB.NormalDungeonColor.g,GBB.DB.NormalDungeonColor.b)
+			typePrefix = "|c00".. colorHex .. "[" .. L["normalAbr"] .. "]    "
+		end
+
 		if GBB.DB.ChatStyle then
-			--local col="|cFFFFC0C0"
 			_G[ItemFrameName.."_name"]:SetText()					
 			_G[ItemFrameName.."_message"]:SetText(ClassIcon.."["..prefix ..req.name..suffix.."]"..FriendIcon..": "..req.message)
 		else
-			_G[ItemFrameName.."_name"]:SetText(ClassIcon..prefix .. req.name ..suffix..FriendIcon)					
-			_G[ItemFrameName.."_message"]:SetText(req.message)
+			_G[ItemFrameName.."_name"]:SetText(ClassIcon..prefix .. req.name .. suffix..FriendIcon)					
+			_G[ItemFrameName.."_message"]:SetText(typePrefix .. suffix .. req.message)
 			_G[ItemFrameName.."_time"]:SetText(ti)
 		end
+
 		_G[ItemFrameName.."_message"]:SetTextColor(GBB.DB.EntryColor.r,GBB.DB.EntryColor.g,GBB.DB.EntryColor.b,GBB.DB.EntryColor.a)
 		_G[ItemFrameName.."_time"]:SetTextColor(GBB.DB.TimeColor.r,GBB.DB.TimeColor.g,GBB.DB.TimeColor.b,GBB.DB.TimeColor.a)
 		
@@ -394,7 +403,7 @@ function GBB.UpdateList()
 	for i,req in pairs(GBB.RequestList) do
 		if type(req) == "table" then
 		
-			if (ownRequestDungeons[req.dungeon]==true or GBB.FilterDungeon(req.dungeon)) and req.last + GBB.DB.TimeOut > time() then
+			if (ownRequestDungeons[req.dungeon]==true or GBB.FilterDungeon(req.dungeon, req.IsHeroic)) and req.last + GBB.DB.TimeOut > time() then
 				
 				count= count + 1
 				
@@ -412,7 +421,7 @@ function GBB.UpdateList()
 						end
 						hi=hi+1
 						
-						if (ownRequestDungeons[GBB.dungeonSort[hi]]==true or GBB.FilterDungeon(GBB.dungeonSort[hi])) then
+						if (ownRequestDungeons[GBB.dungeonSort[hi]]==true or GBB.FilterDungeon(GBB.dungeonSort[hi], req.IsHeroic)) then
 							yy=CreateHeader(yy,GBB.dungeonSort[hi])
 							cEntrys=0
 						else
@@ -437,7 +446,7 @@ function GBB.UpdateList()
 				yy=yy+ itemHight*(GBB.DB.ShowOnlyNb-cEntrys)
 			end
 			hi=hi+1			
-			if (ownRequestDungeons[GBB.dungeonSort[hi]]==true or GBB.FilterDungeon(GBB.dungeonSort[hi])) then
+			if (ownRequestDungeons[GBB.dungeonSort[hi]]==true or GBB.FilterDungeon(GBB.dungeonSort[hi], false)) then
 				yy=CreateHeader(yy,GBB.dungeonSort[hi])
 				cEntrys=0
 			else 
@@ -457,26 +466,29 @@ end
 
 function GBB.GetDungeons(msg,name)
 	if msg==nil then return {} end
-
 	local dungeons={}
 	
 	local parts =GBB.SplitNoNb(msg)
 	
 	local isBad=false
 	local isGood=false
-	
+	local isHeroic=false
+
 	local runrequired=false
 	local hasrun=false
 	local runDungeon=""
 		
 	for ip, p in pairs(parts) do
-		
 		if p=="run" or p=="runs" then
 			hasrun=true
 		end
 		
 		x=tagList[p]
 		
+		if p == L["heroic"]:lower() or p == L["heroicAbr"]:lower() then
+			isHeroic = true
+		end
+
 		if x==nil then
 			if tagList[p.."run"]~=nil then
 				runDungeon=tagList[p.."run"]
@@ -572,7 +584,7 @@ function GBB.GetDungeons(msg,name)
 	end
 	
 	
-	return dungeons, isGood, isBad, #(parts)
+	return dungeons, isGood, isBad, #(parts), isHeroic
 		
 end
 
@@ -614,7 +626,7 @@ function GBB.PhraseMessage(msg,name,guid,channel)
 		return
 	end
 	--flm RFD need healer and 3 dps
-	local dungeonList,isGood,isBad,wordcount=GBB.GetDungeons(msg,name)
+	local dungeonList, isGood, isBad, wordcount, isHeroic = GBB.GetDungeons(msg,name)
 	
 	if type(dungeonList) ~= "table" then return end
 	
@@ -653,7 +665,7 @@ function GBB.PhraseMessage(msg,name,guid,channel)
 					GBB.RequestList[index].IsGuildMember=IsInGuild() and IsGuildMember(guid)
 					GBB.RequestList[index].IsFriend=C_FriendList.IsFriend(guid)
 					
-					if GBB.FilterDungeon(dungeon) and dungeon~="TRADE" and dungeon~="MISC" and GBB.FoldedDungeons[dungeon]~= true then
+					if GBB.FilterDungeon(dungeon, isHeroic) and dungeon~="TRADE" and dungeon~="MISC" and GBB.FoldedDungeons[dungeon]~= true then
 						if dungeonTXT=="" then
 							dungeonTXT=GBB.dungeonNames[dungeon]
 						else
@@ -668,7 +680,8 @@ function GBB.PhraseMessage(msg,name,guid,channel)
 					end			
 				end
 			
-				GBB.RequestList[index].message=msg		
+				GBB.RequestList[index].message=msg	
+				GBB.RequestList[index].IsHeroic = isHeroic
 				GBB.RequestList[index].last=requestTime
 				doUpdate=true
 			end
@@ -694,7 +707,6 @@ function GBB.PhraseMessage(msg,name,guid,channel)
 	
 	
 	if doUpdate then
-	
 		for i,req in pairs(GBB.RequestList) do
 			if type(req) == "table" then
 				if req.name == name and req.last ~= requestTime and req.dungeon~="TRADE" then
@@ -721,6 +733,7 @@ function GBB.PhraseMessage(msg,name,guid,channel)
 		end
 		
 		GBB.RequestList[index].message=msg		
+		GBB.RequestList[index].IsHeroic = isHeroic
 		GBB.RequestList[index].last=requestTime
 		GBB.UpdateList()
 	end
