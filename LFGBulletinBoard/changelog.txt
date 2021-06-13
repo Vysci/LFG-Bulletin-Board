@@ -2,6 +2,14 @@
 
 Group Bulletin Board 	
 
+2.51 
+ - Added support to filter by heroic only dungeons
+ - Supported to select color of heroic and normal dungeons
+ - Fixed a bug where custom tags were not working
+ - Fixed a bug that was causing classic dungeons in tbc to not display the proper level
+ - Fixed a few tags, such as black morass appearing under black temple
+ - Turns off classic dungeons by default in TBC
+ 
 2.50 
  - More German localization
  
