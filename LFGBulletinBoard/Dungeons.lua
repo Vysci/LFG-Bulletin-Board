@@ -1,5 +1,18 @@
 local TOCNAME,GBB=...
 
+function DetermineGameVersion()
+	local version, _, _, _ = GetBuildInfo()
+	if version:sub(1, 1) == "2" then
+		GBB.GameType = "TBC"
+		GBB.PANELOFFSET = 1
+	else 
+		GBB.GameType = "VANILLA"
+		GBB.PANELOFFSET = 0
+	end
+end
+
+_ = DetermineGameVersion()
+
 function GBB.GetDungeonNames()
 	local DefaultEnGB={
 		["RFC"] = 	"Ragefire Chasm",
@@ -475,6 +488,7 @@ function GBB.GetDungeonSort()
 end
 	
 function DetermineVanillDungeonRange() 
+
 	if GBB.GameType == "TBC" then
 		return GBB.PostTbcDungeonLevels
 	end

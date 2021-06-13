@@ -130,10 +130,11 @@ function GBB.LevelRange(dungeon,short)
 	return ""
 end
 
-function GBB.FilterDungeon(dungeon)
+function GBB.FilterDungeon(dungeon, isHeroic)
 	if dungeon==nil then return false end
+	if isHeroic == nil then isHeroic = false end
 	
-	return GBB.DBChar["FilterDungeon"..dungeon] and
+	return GBB.DBChar["FilterDungeon"..dungeon] and (GBB.DBChar["HeroicOnly"] == false or isHeroic) and
 		(GBB.DBChar.FilterLevel==false or (GBB.dungeonLevel[dungeon][1] <= GBB.UserLevel and GBB.UserLevel <= GBB.dungeonLevel[dungeon][2]))
 end
 
@@ -287,7 +288,7 @@ function GBB.CreateTagList ()
 		GBB.suffixTagsLoc["custom"]=GBB.Split(GBB.DB.Custom.Suffix)
 		
 		GBB.dungeonTagsLoc["custom"]={}
-		for index=1,GBB.MAXDUNGEON do
+		for index=1,GBB.TBCMAXDUNGEON do
 			GBB.dungeonTagsLoc["custom"][GBB.dungeonSort[index]]= GBB.Split(GBB.DB.Custom[GBB.dungeonSort[index]])
 		end
 		
@@ -370,14 +371,6 @@ function GBB.Init()
 	GBB.UserLevel=UnitLevel("player")
 	GBB.UserName=(UnitFullName("player"))
 	GBB.ServerName=GetRealmName()
-	local version, _, _, _ = GetBuildInfo()
-	if version:sub(1, 1) == "2" then
-		GBB.GameType = "TBC"
-		GBB.PANELOFFSET = 1
-	else 
-		GBB.GameType = "VANILLA"
-		GBB.PANELOFFSET = 0
-	end
 
 	-- Initalize options
 	if not GroupBulletinBoardDB then GroupBulletinBoardDB = {} end -- fresh DB
