@@ -369,7 +369,7 @@ function GBB.GetDungeonNames()
 	return dungeonNames
 end
 
-function Union ( a, b )
+local function Union ( a, b )
     local result = {}
     for k,v in pairs ( a ) do
         result[k] = v
@@ -440,7 +440,7 @@ GBB.DebugNames = {
 -- it will put the dungeons in an order and give them a value incremental value that can be used for sorting later 
 -- ie one list "Foo" which contains "Bar" and "FooBar" and a second list "BarFoo" which contains "BarBar"
 -- the output would be single list with "Bar" = 1, "FooBar" = 2, "BarFoo" = 3, "BarBar" = 4
-function ConcatenateLists(Names) 
+local function ConcatenateLists(Names) 
 	local result = {}
 	local index = 1
 	for k, nameLists in pairs (Names) do 
@@ -487,7 +487,7 @@ function GBB.GetDungeonSort()
 	return dungeonSort
 end
 	
-function DetermineVanillDungeonRange() 
+local function DetermineVanillDungeonRange() 
 
 	if GBB.GameType == "TBC" then
 		return GBB.PostTbcDungeonLevels

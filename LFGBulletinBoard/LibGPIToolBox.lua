@@ -385,7 +385,7 @@ function Tool.EnableSize(frame,border,OnStart,OnStop)
 	frame:EnableMouse(true)
 	frame:SetResizable(true)	
 	
-	path= "Interface\\AddOns\\".. TOCNAME .. "\\Resize\\"
+	-- path= "Interface\\AddOns\\".. TOCNAME .. "\\Resize\\"
 	
 	CreateSizeBorder(frame,"BOTTOM","BOTTOMLEFT", border, border, "BOTTOMRIGHT", -border, 0,"Interface\\CURSOR\\UI-Cursor-SizeLeft",45,OnStart,OnStop)
 	CreateSizeBorder(frame,"TOP","TOPLEFT", border, 0, "TOPRIGHT", -border, -border,"Interface\\CURSOR\\UI-Cursor-SizeLeft",45,OnStart,OnStop)
