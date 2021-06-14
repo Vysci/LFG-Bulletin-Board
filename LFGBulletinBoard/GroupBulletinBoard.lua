@@ -478,6 +478,13 @@ function GBB.Init()
 	},
 		})
 	
+	SlashCmdList.GBB_LFG = function()
+		if not GroupBulletinBoardFrame:IsShown() then
+			GBB.ShowWindow()
+		end
+	end
+	SLASH_GBB_LFG1 = "/lfg"
+	
 	-- Create options and initalize!
 	GBB.OptionsInit()
 		
