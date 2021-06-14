@@ -1,6 +1,6 @@
 local TOCNAME,GBB=...
 
-function DetermineGameVersion()
+local function DetermineGameVersion()
 	local version, _, _, _ = GetBuildInfo()
 	if version:sub(1, 1) == "2" then
 		GBB.GameType = "TBC"
@@ -11,7 +11,7 @@ function DetermineGameVersion()
 	end
 end
 
-_ = DetermineGameVersion()
+DetermineGameVersion()
 
 function GBB.GetDungeonNames()
 	local DefaultEnGB={
