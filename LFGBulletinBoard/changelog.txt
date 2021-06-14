@@ -2,6 +2,9 @@
 
 Group Bulletin Board 	
 
+2.53
+ - Fix for heroic not filtering properly when custom in search patterns is checked
+ 
 2.52
  - Added HC to heroics
  - Refactored to allow the option to configure heroic tags
