@@ -19,7 +19,6 @@ GBB.locales = {
 		["msgCustomList"]="Enter your own unique search patterns here. If there is nothing, the English patterns are displayed as a grayed out example.",
 		["msgAddNote"]="%s note",
 		["msgLastSeen"]="Last Seen:",
-		["heroic"]="Heroic", 
 		["heroicAbr"]="H",
 		["normalAbr"]="N",
 		
@@ -81,6 +80,7 @@ GBB.locales = {
 		["EditCustom_Search"]="Search words (lfg, lfm,...)",
 		["EditCustom_Bad"]="Blacklist words",
 		["EditCustom_Suffix"]="Suffixes",
+		["EditCustom_Heroic"] = "Heroic",
 		
 		["BtnUnselectAll"]="Unselect all",
 		["BtnSelectAll"]="Select all",
@@ -130,7 +130,6 @@ GBB.locales = {
 	["BtnEntryColor"] = "Farbe der Anfrage",
 	["BtnHeroicDungeonColor"]="Color of heroic dungeon tooltip",
 	["BtnNormalDungeonColor"]="Color of normal dungeon tooltip",
-	["heroic"]="Heroic", 
 	["heroicAbr"]="H",
 	["normalAbr"]="N",
 	["BtnFold"] = "Falten",
@@ -186,6 +185,7 @@ GBB.locales = {
 	["EditCustom_Bad"] = "Blacklist Wörter",
 	["EditCustom_Search"] = "Suchwörter (lfg, lfm,...)",
 	["EditCustom_Suffix"] = "Suffixes",
+	["EditCustom_Heroic"] = "Heroic",
 	["EditShowOnlyNb"] = "Anzahl der Anfragen:",
 	["EditTimeOut"] = "Zeit bis zum entfernen (sek):",
 	["GuildChannel"] = "Gildenchat",
@@ -242,7 +242,6 @@ GBB.locales = {
 		["AboutInfo"] = "GBB предоставляет обзор нескончаемых запросов в каналах чата. Он обнаруживает все запросы к классическим подземельям, сортирует их и четко представляет их.  Многочисленные опции фильтрации уменьшают гигантское число для тех подземелий, которые вас интересуют. А если этого недостаточно, GBB сообщит вам о любом новом запросе через звуковое или чат-уведомление. И, наконец, GBB может опубликовать ваш запрос повторно.",
 		["AboutSlashCommand"] = "<значение> может быть верным, 1, включить, ложным, 0, отключить. Если <значение> опущено, текущий статус переключиться.",
 		["AboutUsage"] = "GBB ищет в сообщениях чата запросы о подземельях в фоновом режиме. Чтобы шепнуть человеку, просто нажмите на запись ЛКМ. Для '/кто' достаточно ШИФТ+ ЛКМ. Список подземелий можно отфильтровать в настройках. Вы также можете свернуть это, нажав ЛКМ по названию подземелья.|nСтарые записи отфильтровываются через 150 секунд.",
-		["heroic"]="Heroic", 
 		["heroicAbr"]="H",
 		["normalAbr"]="N",
 		["BtnCancel"] = "Отмена",
@@ -296,6 +295,7 @@ GBB.locales = {
 		["EditCustom_Bad"] = "Список плохих слов",
 		["EditCustom_Search"] = "Поиск слов (lfg, lfm,...)",
 		["EditCustom_Suffix"] = "Суффиксы",
+		["EditCustom_Heroic"] = "Heroic",
 		["EditShowOnlyNb"] = "Количество запросов:",
 		["EditTimeOut"] = "Время до удаления (сек):",
 		["GuildChannel"] = "Канал гильдии",
@@ -340,12 +340,9 @@ GBB.locales = {
 	},
 
 }
-	
 		
 GBB.locales.esES=GBB.locales.esMX
 GBB.locales.enUS=GBB.locales.enGB
-
-
 
 function GBB.LocalizationInit()
 	if GroupBulletinBoardDB and GroupBulletinBoardDB.CustomLocales then

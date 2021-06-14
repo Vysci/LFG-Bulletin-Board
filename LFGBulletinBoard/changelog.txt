@@ -2,6 +2,10 @@
 
 Group Bulletin Board 	
 
+2.52
+ - Added HC to heroics
+ - Refactored to allow the option to configure heroic tags
+
 2.51 
  - Added support to filter by heroic only dungeons
  - Supported to select color of heroic and normal dungeons

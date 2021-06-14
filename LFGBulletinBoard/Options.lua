@@ -47,6 +47,8 @@ local function CreateEditBoxDungeon(Dungeon,Init,width,width2)
 			txt=GBB.Tool.Combine(GBB.badTagsLoc["enGB"])
 		elseif Dungeon=="Suffix" then
 			txt=GBB.Tool.Combine(GBB.suffixTagsLoc["enGB"])
+		elseif Dungeon=="Heroic" then
+			txt=GBB.Tool.Combine(GBB.heroicTagsLoc["enGB"])
 		end
 		
 		GBB.Options.AddEditBox(GBB.DB.Custom,Dungeon,Init,L["EditCustom_"..Dungeon],width,width2,false,nil,txt)
@@ -324,6 +326,7 @@ function GBB.OptionsInit ()
 	CreateEditBoxDungeon("Search","",450,200)
 	CreateEditBoxDungeon("Bad","",450,200)
 	CreateEditBoxDungeon("Suffix","",450,200)
+	CreateEditBoxDungeon("Heroic","",450,200)
 	
 	GBB.Options.AddSpace()	
 	for index=1,GBB.MAXDUNGEON do

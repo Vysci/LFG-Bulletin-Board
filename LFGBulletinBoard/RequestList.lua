@@ -485,7 +485,7 @@ function GBB.GetDungeons(msg,name)
 		
 		x=tagList[p]
 		
-		if p == L["heroic"]:lower() or p == L["heroicAbr"]:lower() then
+		if GBB.HeroicKeywords[p] ~= nil then
 			isHeroic = true
 		end
 
