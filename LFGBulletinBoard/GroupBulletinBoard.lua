@@ -264,6 +264,12 @@ function GBB.CreateTagListLOC(loc)
 			tagList[tag]=dungeon
 		end
 	end
+
+	local arr = {}
+	for _, tag in pairs(GBB.heroicTagsLoc[loc]) do
+		arr[tag] = 1
+	end
+	GBB.HeroicKeywords = arr
 end
 
 function GBB.CreateTagList ()
@@ -286,6 +292,7 @@ function GBB.CreateTagList ()
 		GBB.searchTagsLoc["custom"]=GBB.Split(GBB.DB.Custom.Search)
 		GBB.badTagsLoc["custom"]=GBB.Split(GBB.DB.Custom.Bad)
 		GBB.suffixTagsLoc["custom"]=GBB.Split(GBB.DB.Custom.Suffix)
+		GBB.heroicTagsLoc["custom"]=GBB.Split(GBB.DB.Custom.Heroic)
 		
 		GBB.dungeonTagsLoc["custom"]={}
 		for index=1,GBB.TBCMAXDUNGEON do
@@ -481,10 +488,7 @@ function GBB.Init()
 	-- Create options and initalize!
 	GBB.OptionsInit()
 		
-	GBB.CreateTagList()	
-		
-	
-
+	GBB.CreateTagList()		
 
 	GBB.MinimapButton.Init(GBB.DB.MinimapButton, GBB.Icon,
 		function(self,button) --onclick
