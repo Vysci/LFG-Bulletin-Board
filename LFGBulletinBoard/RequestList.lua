@@ -483,15 +483,15 @@ function GBB.GetDungeons(msg,name)
 			hasrun=true
 		end
 		
-		x=tagList[p]
+		local x=GBB.tagList[p]
 		
 		if GBB.HeroicKeywords[p] ~= nil then
 			isHeroic = true
 		end
 
 		if x==nil then
-			if tagList[p.."run"]~=nil then
-				runDungeon=tagList[p.."run"]
+			if GBB.tagList[p.."run"]~=nil then
+				runDungeon=GBB.tagList[p.."run"]
 				runrequired=true			
 			end
 		elseif x==GBB.TAGBAD then
@@ -721,7 +721,7 @@ function GBB.PhraseMessage(msg,name,guid,channel)
 	elseif GBB.DB.OnDebug then
 		
 		
-		index=#GBB.RequestList +1
+		local index=#GBB.RequestList +1
 		GBB.RequestList[index]={}
 		GBB.RequestList[index].name=name
 		GBB.RequestList[index].class=engClass
@@ -797,7 +797,7 @@ function GBB.ClickFrame(self,button)
 end
 
 function GBB.ClickDungeon(self,button)
-	id=string.match(self:GetName(), "GBB.Dungeon_(.+)") 
+	local id=string.match(self:GetName(), "GBB.Dungeon_(.+)") 
 	if id==nil or id==0 then return end
 	
 	if button=="LeftButton" then 
@@ -814,7 +814,7 @@ function GBB.ClickDungeon(self,button)
 end
 
 function GBB.ClickRequest(self,button)
-	id = string.match(self:GetName(), "GBB.Item_(.+)")
+	local id = string.match(self:GetName(), "GBB.Item_(.+)")
 	if id==nil or id==0 then return end
 	
 	local req=GBB.RequestList[tonumber(id)]

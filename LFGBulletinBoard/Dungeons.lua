@@ -1,6 +1,6 @@
 local TOCNAME,GBB=...
 
-function DetermineGameVersion()
+local function DetermineGameVersion()
 	local version, _, _, _ = GetBuildInfo()
 	if version:sub(1, 1) == "2" then
 		GBB.GameType = "TBC"
@@ -11,7 +11,7 @@ function DetermineGameVersion()
 	end
 end
 
-_ = DetermineGameVersion()
+DetermineGameVersion()
 
 function GBB.GetDungeonNames()
 	local DefaultEnGB={
@@ -163,10 +163,10 @@ function GBB.GetDungeonNames()
 			["GNO"] = 	"Gnomeregan",
 			["RFK"] = 	"Kraal de Tranchebauge",
 			["SM2"] =	"Monastère écarlate",
-			["SMG"] = 	"Monastère écarlate: Graveyard",
-			["SML"] = 	"Monastère écarlate: Library",
-			["SMA"] = 	"Monastère écarlate: Armory",
-			["SMC"] = 	"Monastère écarlate: Cathedral",
+			["SMG"] = 	"Monastère écarlate: Cimetière",
+			["SML"] = 	"Monastère écarlate: Bibliothèque",
+			["SMA"] = 	"Monastère écarlate: Armurerie",
+			["SMC"] = 	"Monastère écarlate: Cathédrale",
 			["RFD"] = 	"Souilles de Tranchebauge",
 			["ULD"] = 	"Uldaman",
 			["ZF"] = 	"Zul'Farrak",
@@ -174,38 +174,38 @@ function GBB.GetDungeonNames()
 			["ST"] = 	"Le temple d'Atal'Hakkar",
 			["BRD"] = 	"Profondeurs de Blackrock",
 			["DM2"] = 	"Hache-tripes",
-			["DME"] = 	"Hache-tripes: East",
-			["DMN"] = 	"Hache-tripes: North",
-			["DMW"] = 	"Hache-tripes: West",
+			["DME"] = 	"Hache-tripes: Est",
+			["DMN"] = 	"Hache-tripes: Nord",
+			["DMW"] = 	"Hache-tripes: Ouest",
 			["STR"] = 	"Stratholme",
 			["SCH"] = 	"Scholomance",
 			["LBRS"] = 	"Pic Blackrock",
 			["UBRS"] = 	"Pic Blackrock (10)",
-			["RAMPS"] = "Hellfire Citadel: Ramparts",
-			["BF"] = 	"Hellfire Citadel: Blood Furnace",
-			["SP"] = 	"Coilfang Reservoir: Slave Pens",
-			["UB"] = 	"Coilfang Reservoir: Underbog",
-			["MT"] = 	"Auchindoun: Mana Tombs",
-			["CRYPTS"] = "Auchindoun: Auchenai Crypts",
-			["SETH"] = 	"Auchindoun: Sethekk Halls",
-			["OHB"] = 	"Caverns of Time: Old Hillsbrad",
-			["MECH"] = 	"Tempest Keep: The Mechanar",
-			["BM"] = 	"Caverns of Time: Black Morass",
-			["MGT"] = 	"Magisters' Terrace",
-			["SH"] = 	"Hellfire Citadel: Shattered Halls",
-			["BOT"] = 	"Tempest Keep: Botanica",
-			["SL"] = 	"Auchindoun: Shadow Labyrinth",
-			["SV"] = 	"Coilfang Reservoir: Steamvault",
-			["ARC"] = 	"Tempest Keep: The Arcatraz",
+			["RAMPS"] = "Citadelle des Flammes Infernales: Remparts des Flammes infernales",
+			["BF"] = 	"Citadelle des Flammes Infernales: La Fournaise du sang",
+			["SP"] = 	"Réservoir de Glissecroc : Les enclos aux esclaves",
+			["UB"] = 	"Réservoir de Glissecroc : La Basse-tourbière",
+			["MT"] = 	"Auchindoun: Tombes-mana",
+			["CRYPTS"] = "Auchindoun: Cryptes Auchenaï",
+			["SETH"] = 	"Auchindoun: Les salles des Sethekk",
+			["OHB"] = 	"Grottes du Temps: Contreforts de Hautebrande d'antan",
+			["MECH"] = 	"Donjon de la Tempête: Le Méchanar",
+			["BM"] = 	"Grottes du Temps: Le Noir Marécage",
+			["MGT"] = 	"Terrasse des Magistères",
+			["SH"] = 	"Citadelle des Flammes Infernales: Les Salles brisées",
+			["BOT"] = 	"Donjon de la Tempête: Botanica",
+			["SL"] = 	"Auchindoun: Labyrinthe des ombres",
+			["SV"] = 	"Réservoir de Glissecroc : Le Caveau de la vapeur",
+			["ARC"] = 	"Donjon de la Tempête: L'Arcatraz",
 			["KARA"] = 	"Karazhan",
-			["GL"] = 	"Gruul's Lair",
-			["MAG"] = 	"Hellfire Citadel: Magtheridon's Lair",
-			["SSC"] = 	"Coilfang Reservoir: Serpentshrine Cavern",
-			["EYE"] = 	"The Eye",
+			["GL"] = 	"Repaire de Gruul",
+			["MAG"] = 	"Citadelle des Flammes Infernales: Le repaire de Magtheridon",
+			["SSC"] = 	"Réservoir de Glissecroc : Caverne du sanctuaire du Serpent",
+			["EYE"] = 	"L'Œil du cyclone",
 			["ZA"] = 	"Zul-Aman",
-			["HYJAL"] = "The Battle For Mount Hyjal",
-			["BT"] = 	"Black Temple",
-			["SWP"] = 	"Sunwell Plateau",
+			["HYJAL"] = "Sommet d'Hyjal",
+			["BT"] = 	"Temple noir",
+			["SWP"] = 	"Plateau du Puits de soleil",
 			["ONY"] = 	"Repaire d'Onyxia (40)",
 			["MC"] = 	"Cœur du Magma (40)",
 			["ZG"] = 	"Zul'Gurub (20)",
@@ -369,7 +369,7 @@ function GBB.GetDungeonNames()
 	return dungeonNames
 end
 
-function Union ( a, b )
+local function Union ( a, b )
     local result = {}
     for k,v in pairs ( a ) do
         result[k] = v
@@ -440,7 +440,7 @@ GBB.DebugNames = {
 -- it will put the dungeons in an order and give them a value incremental value that can be used for sorting later 
 -- ie one list "Foo" which contains "Bar" and "FooBar" and a second list "BarFoo" which contains "BarBar"
 -- the output would be single list with "Bar" = 1, "FooBar" = 2, "BarFoo" = 3, "BarBar" = 4
-function ConcatenateLists(Names) 
+local function ConcatenateLists(Names) 
 	local result = {}
 	local index = 1
 	for k, nameLists in pairs (Names) do 
@@ -487,7 +487,7 @@ function GBB.GetDungeonSort()
 	return dungeonSort
 end
 	
-function DetermineVanillDungeonRange() 
+local function DetermineVanillDungeonRange() 
 
 	if GBB.GameType == "TBC" then
 		return GBB.PostTbcDungeonLevels

@@ -19,7 +19,7 @@ local AllowedInstanceType={"party","scenario","raid"}
 
 
 function GBB.GetPlayerList()
-	local count
+	local count, prefix
 	local ret={}
 		
 	if IsInRaid() then

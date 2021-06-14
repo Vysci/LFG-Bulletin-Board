@@ -99,7 +99,7 @@ function GBB.SplitNoNb(msg)
 	]]--
 	
 	for it,tag in ipairs(result) do		
-		lastTag=tag
+		-- lastTag=tag
 		for is,suffix in ipairs(GBB.suffixTags) do
 			if tag~=suffix and string.sub(tag,-string.len(suffix))==suffix then				
 				tinsert(add,string.sub(tag,1,-string.len(suffix)-1))
@@ -233,20 +233,19 @@ end
 
 --Tag Lists
 -------------------------------------------------------------------------------------
-
 function GBB.CreateTagListLOC(loc)
 	for id,tag in pairs(GBB.badTagsLoc[loc]) do
-		if GBB.DB.OnDebug and tagList[tag]~=nil then
-			print(GBB.MSGPREFIX.."DoubleTag:"..tag.." - "..tagList[tag].." / "..GBB.TAGBAD)
+		if GBB.DB.OnDebug and GBB.tagList[tag]~=nil then
+			print(GBB.MSGPREFIX.."DoubleTag:"..tag.." - "..GBB.tagList[tag].." / "..GBB.TAGBAD)
 		end		
-		tagList[tag]=GBB.TAGBAD		
+		GBB.tagList[tag]=GBB.TAGBAD		
 	end
 	
 	for id,tag in pairs(GBB.searchTagsLoc[loc]) do
-		if GBB.DB.OnDebug and tagList[tag]~=nil then
-			print(GBB.MSGPREFIX.."DoubleTag:"..tag.." - "..tagList[tag].." / "..GBB.TAGSEARCH)
+		if GBB.DB.OnDebug and GBB.tagList[tag]~=nil then
+			print(GBB.MSGPREFIX.."DoubleTag:"..tag.." - "..GBB.tagList[tag].." / "..GBB.TAGSEARCH)
 		end
-		tagList[tag]=GBB.TAGSEARCH		
+		GBB.tagList[tag]=GBB.TAGSEARCH		
 	end
 	
 	for id,tag in pairs(GBB.suffixTagsLoc[loc]) do
@@ -258,10 +257,10 @@ function GBB.CreateTagListLOC(loc)
 	
 	for dungeon,tags in pairs(GBB.dungeonTagsLoc[loc]) do
 		for id,tag in pairs(tags) do
-			if GBB.DB.OnDebug and tagList[tag]~=nil then
-				print(GBB.MSGPREFIX.."DoubleTag:"..tag.." - "..tagList[tag].." / "..dungeon)
+			if GBB.DB.OnDebug and GBB.tagList[tag]~=nil then
+				print(GBB.MSGPREFIX.."DoubleTag:"..tag.." - "..GBB.tagList[tag].." / "..dungeon)
 			end
-			tagList[tag]=dungeon
+			GBB.tagList[tag]=dungeon
 		end
 	end
 
@@ -273,7 +272,7 @@ function GBB.CreateTagListLOC(loc)
 end
 
 function GBB.CreateTagList ()
-	tagList={}
+	GBB.tagList={}
 	GBB.suffixTags={}
 	if GBB.DB.TagsEnglish then
 		GBB.CreateTagListLOC("enGB")
@@ -287,6 +286,9 @@ function GBB.CreateTagList ()
 	end
 	if GBB.DB.TagsRussian then
 		GBB.CreateTagListLOC("ruRU")
+	end
+	if GBB.DB.TagsFrench then
+		GBB.CreateTagListLOC("frFR")
 	end
 	if GBB.DB.TagsCustom then
 		GBB.searchTagsLoc["custom"]=GBB.Split(GBB.DB.Custom.Search)
@@ -413,7 +415,7 @@ function GBB.Init()
 	-- Reset Request-List
 	GBB.RequestList={}
 	GBB.FramesEntries={}
-	ownRequestDungeons={}
+	-- ownRequestDungeons={}
 	GBB.FoldedDungeons={}
 	
 	-- Timer-Stuff

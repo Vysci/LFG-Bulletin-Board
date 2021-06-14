@@ -19,7 +19,7 @@ function GBB.CreateChatFrame(name, ...)
 	return Frame
 end
 
-function GetChannels()
+local function GetChannels()
 	local channelList = {GetChannelList()}
 	local channels = {}
 	for i = 1, #channelList, 3 do 
@@ -33,7 +33,7 @@ function GetChannels()
 	return channels
 end
 
-function SetChannels(ChanNames, Frame, ShouldRemove)
+local function SetChannels(ChanNames, Frame, ShouldRemove)
 	ShouldRemove = ShouldRemove or false
 
 	for k, _ in pairs(ChanNames) do
@@ -45,7 +45,7 @@ function SetChannels(ChanNames, Frame, ShouldRemove)
 	end
 end
 
-function MissingChannels(ChanNames, ChannelsToAdd)
+local function MissingChannels(ChanNames, ChannelsToAdd)
 	local missingChannels = {}
 	for k, _ in pairs (ChannelsToAdd) do
 		if ChanNames[k] == nil and ChanNames[k] ~= "" then
