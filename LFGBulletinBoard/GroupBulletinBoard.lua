@@ -264,16 +264,16 @@ function GBB.CreateTagListLOC(loc)
 		end
 	end
 
-	local arr = {}
 	for _, tag in pairs(GBB.heroicTagsLoc[loc]) do
-		arr[tag] = 1
+		GBB.HeroicKeywords[tag] = 1
 	end
-	GBB.HeroicKeywords = arr
 end
 
 function GBB.CreateTagList ()
 	GBB.tagList={}
 	GBB.suffixTags={}
+	GBB.HeroicKeywords={}
+
 	if GBB.DB.TagsEnglish then
 		GBB.CreateTagListLOC("enGB")
 	end
