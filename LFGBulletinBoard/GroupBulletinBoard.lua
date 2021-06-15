@@ -134,7 +134,7 @@ function GBB.FilterDungeon(dungeon, isHeroic)
 	if dungeon==nil then return false end
 	if isHeroic == nil then isHeroic = false end
 	
-	return GBB.DBChar["FilterDungeon"..dungeon] and ((GBB.DBChar["Heroic"] == true and isHeroic) or (GBB.DBChar["Normal"] == true and not isHeroic)) and
+	return GBB.DBChar["FilterDungeon"..dungeon] and ((GBB.DBChar["Heroic"] == true and isHeroic) or (GBB.DBChar["Normal"] == true and not isHeroic) or GBB.GameType == "VANILLA") and
 		(GBB.DBChar.FilterLevel==false or (GBB.dungeonLevel[dungeon][1] <= GBB.UserLevel and GBB.UserLevel <= GBB.dungeonLevel[dungeon][2]))
 end
 
