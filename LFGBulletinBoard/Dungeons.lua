@@ -342,7 +342,7 @@ function GBB.GetDungeonNames()
 			["ULD"] = "Ульдаман",
 			["WC"] = "Пещеры Стенаний",
 			["WSG"] = "Ущелье Песни Войны (PvP)",
-			["EOTS"] =  "Eye of the Storm (PvP)",
+			["EOTS"] =  "Око Бури (PvP)",
 			["ZF"] = "Зул'Фаррак",
 			["ZG"] = "Зул'Гуруб (20)",
 		},
