@@ -513,7 +513,7 @@ function GBB.GetDungeons(msg,name)
 
 		if GBB.DB.TagsZhtw then
 			for key,v in pairs(GBB.HeroicKeywords) do
-				if strfind(p, v) then
+				if strfind(p, key) then
 					isHeroic = true
 				end
 			end
