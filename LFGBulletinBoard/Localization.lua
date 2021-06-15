@@ -237,7 +237,7 @@ GBB.locales = {
 		["world_channel"] = "Mundo",
 	},
 	frFR = {
-		["lfg_channel"]="RechercheGroupe",
+		["lfg_channel"]="RechercheDeGroupe",
 		["world_channel"] = "Monde"
 	},
 	ruRU = {	
