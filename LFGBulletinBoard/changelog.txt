@@ -5,6 +5,8 @@ Group Bulletin Board
 2.54
  - Fixed addon crashing when custom localization is set
  - Fixed localization not working
+ - Updated Russian localization (thanks to hungry)
+ - Updated French official channel (thanks to yannlugrin)
  
 2.53
  - Fix for heroic not filtering properly when custom in search patterns is checked
