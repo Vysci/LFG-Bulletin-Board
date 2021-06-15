@@ -316,6 +316,12 @@ function GBB.OptionsInit ()
 	CheckBox("TagsGerman",true)
 	CheckBox("TagsRussian",true)
 	CheckBox("TagsFrench",true)
+	if (GetLocale() == "zhTW") then
+		CheckBox("TagsZhtw",true)
+	else
+		CheckBox("TagsZhtw",false)
+	end
+
 	CheckBox("TagsCustom",true)
 	GBB.Options.EndInLine()
 	GBB.Options.Indent(-10)

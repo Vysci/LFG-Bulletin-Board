@@ -290,6 +290,9 @@ function GBB.CreateTagList ()
 	if GBB.DB.TagsFrench then
 		GBB.CreateTagListLOC("frFR")
 	end
+	if GBB.DB.TagsZhtw then
+		GBB.CreateTagListLOC("zhTW")
+	end
 	if GBB.DB.TagsCustom then
 		GBB.searchTagsLoc["custom"]=GBB.Split(GBB.DB.Custom.Search)
 		GBB.badTagsLoc["custom"]=GBB.Split(GBB.DB.Custom.Bad)
