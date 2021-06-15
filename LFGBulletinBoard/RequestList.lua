@@ -477,6 +477,10 @@ function GBB.GetDungeons(msg,name)
 	local runrequired=false
 	local hasrun=false
 	local runDungeon=""
+
+	if GBB.DB.TagsZhtw then
+		parts = GBB.Split(msg)
+	end
 		
 	for ip, p in pairs(parts) do
 		if p=="run" or p=="runs" then
@@ -484,9 +488,35 @@ function GBB.GetDungeons(msg,name)
 		end
 		
 		local x=GBB.tagList[p]
+		if GBB.DB.TagsZhtw then
+			x=nil
+			for key,v in pairs(GBB.tagList) do
+				if strfind(p,key) then
+					if v==GBB.TAGSEARCH then
+						isGood=true
+						if x==nil then
+							x=v
+						end
+					elseif v==GBB.TAGBAD then
+						x=v
+						break
+					else
+						x=v
+					end
+				end
+			end
+		end
 		
 		if GBB.HeroicKeywords[p] ~= nil then
 			isHeroic = true
+		end
+
+		if GBB.DB.TagsZhtw then
+			for key,v in pairs(GBB.HeroicKeywords) do
+				if strfind(p, v) then
+					isHeroic = true
+				end
+			end
 		end
 
 		if x==nil then
@@ -641,6 +671,10 @@ function GBB.PhraseMessage(msg,name,guid,channel)
 		dungeonList={}
 	end
 	
+	if GBB.DB.TagsZhtw and wordcount<2 then
+		wordcount=2
+	end
+
 	if wordcount>1 then	
 		for dungeon,id in pairs(dungeonList) do
 			local index=0
