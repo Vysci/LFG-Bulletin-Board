@@ -348,17 +348,15 @@ GBB.locales.esES=GBB.locales.esMX
 GBB.locales.enUS=GBB.locales.enGB
 
 function GBB.LocalizationInit()
-	if GroupBulletinBoardDB and GroupBulletinBoardDB.CustomLocales then
+	L = GBB.locales[GetLocale()] or {}
+
+	if GroupBulletinBoardDB and GroupBulletinBoardDB.CustomLocales and type(GroupBulletinBoardDB.CustomLocales) == "table" then
 		for key,value in pairs(GroupBulletinBoardDB.CustomLocales) do
 			if value~=nil and value ~="" then
-				GBB.L[key.."_org"]=GBB.L[key] or locales.enGB[key]
-				GBB.L[key]=value
+				L[key.."_org"]=L[key] or GBB.locales.enGB[key]
+				L[key]=value
 			end
 		end
 	end
-
-	GBB.L = GBB.locales[GetLocale()] or {}
-	
-	GBB.L["AboutCredits"]="Arrogant_Dreamer, Hubbotu and kavarus for the russian translation |nBaudzilla for the idea of the resize-code"
 	
 end

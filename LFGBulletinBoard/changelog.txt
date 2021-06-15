@@ -2,6 +2,10 @@
 
 Group Bulletin Board 	
 
+2.54
+ - Fixed addon crashing when custom localization is set
+ - Fixed localization not working
+ 
 2.53
  - Fix for heroic not filtering properly when custom in search patterns is checked
  

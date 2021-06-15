@@ -353,7 +353,7 @@ function GBB.OptionsInit ()
 	end
 	table.sort(t)
 	for i,key in ipairs(t) do 
-		local col=GBB.L[key]~=nil and "|cffffffff" or "|cffff4040"
+		local col=L[key]~=nil and "|cffffffff" or "|cffff4040"
 		local txt=L[key.."_org"]~="["..key.."_org]" and L[key.."_org"] or L[key]
 				
 		GBB.Options.AddEditBox(GBB.DB.CustomLocales,key,"",col.."["..key.."]",450,200,false,locales[key],txt)
