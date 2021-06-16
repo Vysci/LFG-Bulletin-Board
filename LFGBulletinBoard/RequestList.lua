@@ -468,8 +468,6 @@ function GBB.GetDungeons(msg,name)
 	if msg==nil then return {} end
 	local dungeons={}
 	
-	local parts =GBB.SplitNoNb(msg)
-	
 	local isBad=false
 	local isGood=false
 	local isHeroic=false
@@ -478,30 +476,54 @@ function GBB.GetDungeons(msg,name)
 	local hasrun=false
 	local runDungeon=""
 		
-	for ip, p in pairs(parts) do
-		if p=="run" or p=="runs" then
-			hasrun=true
-		end
-		
-		local x=GBB.tagList[p]
-		
-		if GBB.HeroicKeywords[p] ~= nil then
-			isHeroic = true
-		end
+	local wordcount=0
 
-		if x==nil then
-			if GBB.tagList[p.."run"]~=nil then
-				runDungeon=GBB.tagList[p.."run"]
-				runrequired=true			
+	if GBB.DB.TagsZhtw then
+		for key, v in pairs(GBB.tagList) do
+			if strfind(msg:lower(), key) then
+				if v==GBB.TAGSEARCH then
+					isGood=true
+				elseif v==GBB.TAGBAD then
+					break
+				elseif v~=nil then
+					dungeons[v]=true
+				end
 			end
-		elseif x==GBB.TAGBAD then
-			isBad=true
-			break
-		elseif x==GBB.TAGSEARCH then
-			isGood=true
-		else
-			dungeons[x]=true
 		end
+		for key, v in pairs(GBB.HeroicKeywords) do
+			if strfind(msg:lower(), key) then
+				isHeroic = true
+			end
+		end
+		wordcount = string.len(msg)
+	else
+		local parts =GBB.SplitNoNb(msg)
+		for ip, p in pairs(parts) do
+			if p=="run" or p=="runs" then
+				hasrun=true
+			end
+			
+			local x=GBB.tagList[p]
+		
+			if GBB.HeroicKeywords[p] ~= nil then
+				isHeroic = true
+			end
+
+			if x==nil then
+				if GBB.tagList[p.."run"]~=nil then
+					runDungeon=GBB.tagList[p.."run"]
+					runrequired=true			
+				end
+			elseif x==GBB.TAGBAD then
+				isBad=true
+				break
+			elseif x==GBB.TAGSEARCH then
+				isGood=true
+			else
+				dungeons[x]=true
+			end
+		end
+		wordcount = #(parts)
 	end
 	
 	if runrequired and hasrun and runDungeon and isBad==false then
@@ -584,7 +606,7 @@ function GBB.GetDungeons(msg,name)
 	end
 	
 	
-	return dungeons, isGood, isBad, #(parts), isHeroic
+	return dungeons, isGood, isBad, wordcount, isHeroic
 		
 end
 
