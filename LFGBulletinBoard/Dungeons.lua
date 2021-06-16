@@ -435,6 +435,20 @@ GBB.DebugNames = {
 	"DEBUG", "BAD", "NIL",
 }
 
+GBB.Raids = {
+	"ONY", "MC", "ZG", "AQ20", "BWL", "AQ40", "NAX", 
+	"KARA", "GL", "MAG", "SSC", "EYE", "ZA", "HYJAL", 
+	"BT", "SWP"
+}
+
+function GBB.GetRaids()
+	local arr = {}
+	for _, v in pairs (GBB.Raids) do
+		arr[v] = 1
+	end
+	return arr
+end
+
 -- Needed because Lua sucks, Blizzard switch to Python please
 -- Takes in a list of dungeon lists, it will then concatenate the lists into a single list
 -- it will put the dungeons in an order and give them a value incremental value that can be used for sorting later 
