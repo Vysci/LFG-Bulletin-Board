@@ -130,11 +130,12 @@ function GBB.LevelRange(dungeon,short)
 	return ""
 end
 
-function GBB.FilterDungeon(dungeon, isHeroic)
+function GBB.FilterDungeon(dungeon, isHeroic, isRaid)
 	if dungeon==nil then return false end
 	if isHeroic == nil then isHeroic = false end
+	if isRaid == nil then isRaid = false end
 	
-	return GBB.DBChar["FilterDungeon"..dungeon] and (GBB.DBChar["HeroicOnly"] == false or isHeroic) and
+	return GBB.DBChar["FilterDungeon"..dungeon] and (isRaid or ((GBB.DBChar["HeroicOnly"] == false or isHeroic) and (GBB.DBChar["NormalOnly"] == false or isHeroic == false))) and
 		(GBB.DBChar.FilterLevel==false or (GBB.dungeonLevel[dungeon][1] <= GBB.UserLevel and GBB.UserLevel <= GBB.dungeonLevel[dungeon][2]))
 end
 
@@ -408,6 +409,7 @@ function GBB.Init()
 	-- Get localize and Dungeon-Information
 	GBB.LocalizationInit()	
 	GBB.dungeonNames = GBB.GetDungeonNames()
+	GBB.RaidList = GBB.GetRaids()
 	--GBB.dungeonLevel
 	GBB.dungeonSort = GBB.GetDungeonSort()	
 	--GBB.searchTagsLoc,GBB.badTagsLoc,GBB.dungeonTagsLoc,GBB.dungeonSecondTags,GBB.suffixTagsLoc = GroupBulletinBoard_GetTags()
