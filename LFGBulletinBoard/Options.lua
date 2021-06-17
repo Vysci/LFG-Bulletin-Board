@@ -201,7 +201,6 @@ function GBB.OptionsInit ()
 	GBB.Options.AddColorButton(GBB.DB,"HeroicDungeonColor",{r=1,g=0,b=0,a=1},L["BtnHeroicDungeonColor"])
 	GBB.Options.AddColorButton(GBB.DB,"NormalDungeonColor",{r=0,g=1,b=0,a=1},L["BtnNormalDungeonColor"])
 	GBB.Options.AddColorButton(GBB.DB,"TimeColor",{r=1,g=1,b=1,a=1},L["BtnTimeColor"])
-	GBB.Options.AddColorButton(GBB.DB,"HistoryColor",{r=.6,g=.6,b=.6,a=1},L["BtnHistoryColor"])
 	GBB.Options.AddSpace()
 	CreateEditBoxNumber("TimeOut",150,50)	
 		
