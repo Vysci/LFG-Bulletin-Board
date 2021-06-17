@@ -212,7 +212,7 @@ function GBB.OptionsInit ()
 	GBB.Options.Indent(-30)
 	GBB.Options.AddSpace()
 	
-	CheckBox("EnableGuild",true)
+	CheckBox("EnableGuild",false)
 	GBB.Options.Indent(30)
 	GBB.Options.AddColorButton(GBB.DB,"ColorGuild",{a=1,r=.2,g=1,b=.2},L["BtnColorGuild"])
 	GBB.Options.Indent(-30)
