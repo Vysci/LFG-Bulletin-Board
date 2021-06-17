@@ -2,6 +2,13 @@
 
 Group Bulletin Board 	
 
+2.55
+ - Filtering by normal dungeon
+ - Raid categorization
+ - Selecting normal only or heroic only filter will not cause raids to be filtered out
+ - Support for Chinese (zhTW Traditional Taiwan) done completely by pallthennonwow, so huge thanks or huge hate to him
+ - Removed post history as it's just clutter
+ 
 2.54
  - Fixed addon crashing when custom localization is set
  - Fixed localization not working
