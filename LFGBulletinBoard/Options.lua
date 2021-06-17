@@ -313,15 +313,12 @@ function GBB.OptionsInit ()
 	GBB.Options.AddCategory(L["HeaderTags"])
 	GBB.Options.Indent(10)
 	GBB.Options.InLine()
-	CheckBox("TagsEnglish",true)
-	CheckBox("TagsGerman",true)
-	CheckBox("TagsRussian",true)
-	CheckBox("TagsFrench",true)
-	if (GetLocale() == "zhTW") then
-		CheckBox("TagsZhtw",true)
-	else
-		CheckBox("TagsZhtw",false)
-	end
+	local locale = GetLocale()
+	CheckBox("TagsEnglish", locale == "enUS" or locale == "enGB")
+	CheckBox("TagsGerman", locale == "deDE")
+	CheckBox("TagsRussian", locale == "ruRU")
+	CheckBox("TagsFrench", locale == "frFR")
+	CheckBox("TagsZhtw",locale == "zhTW")
 
 	CheckBox("TagsCustom",true)
 	GBB.Options.EndInLine()
