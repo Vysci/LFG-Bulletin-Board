@@ -696,12 +696,6 @@ function GBB.PhraseMessage(msg,name,guid,channel)
 							dungeonTXT=GBB.dungeonNames[dungeon]..", "..dungeonTXT
 						end
 					end
-				elseif GBB.RequestList[index].message~=msg and string.lower(GBB.RequestList[index].message)~=string.lower(msg) then 
-					if GBB.RequestList[index].OldMessage then
-						GBB.RequestList[index].OldMessage=GBB.RequestList[index].message .."|n"..GBB.RequestList[index].OldMessage 
-					else
-						GBB.RequestList[index].OldMessage=GBB.RequestList[index].message
-					end			
 				end
 			
 				GBB.RequestList[index].message=msg	
@@ -882,9 +876,7 @@ function GBB.RequestShowTooltip(self)
 		else
 			GameTooltip:AddLine(string.format(L["msgTotalTime"],GBB.formatTime(time()-req.start)))
 		end
-		if req.OldMessage then
-			GameTooltip:AddLine(req.OldMessage,GBB.DB.HistoryColor.r,GBB.DB.HistoryColor.g,GBB.DB.HistoryColor.b,1)
-		end
+		
 		if GBB.DB.EnableGroup and GBB.GroupTrans and GBB.GroupTrans[req.name] then
 			local entry=GBB.GroupTrans[req.name] 
 			
