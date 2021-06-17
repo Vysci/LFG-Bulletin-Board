@@ -17,6 +17,7 @@ GBB.suffixTagsLoc=langSplit({
 	deDE ="gruppe",
 	ruRU ="группран фарм фарма фармить",
 	frFR = "groupe",
+	zhTW = "",
 })
 
 GBB.searchTagsLoc =langSplit({
@@ -26,6 +27,8 @@ GBB.searchTagsLoc =langSplit({
 
 	ruRU = "лфг ищет ищу нид нужны лфм лф2м ищем пати похилю лф танк хил нужен дд рдд мдд ршам рога вар прист армс пал",
 	frFR = "groupe cherche chasseur druide mage paladin pretre voleur chaman quete",
+
+	zhTW = "缺 來 找 徵 坦 補 DD 輸出 戰 聖 薩 獵 德 賊 法 牧 術",
 })
 
 GBB.badTagsLoc = langSplit({
@@ -33,6 +36,7 @@ GBB.badTagsLoc = langSplit({
 	deDE = "fc",
 	ruRU = "гильдию гильдия слой",
 	frFR = "",
+	zhTW = "影布 回流",
 })
 
 GBB.heroicTagsLoc=langSplit({
@@ -40,6 +44,7 @@ GBB.heroicTagsLoc=langSplit({
 	deDE ="h hc heroic",
 	ruRU ="h hc heroic",
 	frFR = "h hc heroic",
+	zhTW = "h 英雄",
 })
 
 
@@ -301,6 +306,72 @@ GBB.dungeonTagsLoc={
 		["AV"] = "alterac",
 		--["EOTS"] = "",
 		["TRADE"] = "achete vends enchanteur",
+	}),
+	zhTW = langSplit({
+		["RFC"] = 	"怒焰裂谷 怒驗 怒焰" ,
+		["DM"]  = 	"死亡礦坑 死況 死礦" ,
+		["WC"]  = 	"哀嚎洞穴 哀號 哀嚎" ,	
+		["SFK"] = 	"影牙城堡 影牙" ,
+		-- ["STK"] = 	"" ,
+		["BFD"] = 	"黑暗深淵" ,
+		["GNO"] =  	"諾姆瑞根" ,
+		["RFK"] = 	"剃刀沼澤" ,
+		["SM2"] =	"血色",
+		["SMG"] = 	"血色墓地" ,
+		["SML"] = 	"血色圖書館" ,
+		["SMA"] = 	"軍械" ,
+		["SMC"] =  	"教堂",
+		["RFD"] = 	"剃刀高地" ,
+		["ULD"] = 	"奧達曼" ,
+		["ZF"]  = 	"ZF 組爾法 祖爾法" ,
+		["MAR"] = 	"馬拉 瑪拉" ,
+		["ST"]  = 	"神廟 阿塔哈卡" ,
+		["BRD"] = 	"黑深 深淵",
+		["DM2"] =	"厄運 惡運 噩運",
+		["DME"] =  	"厄東 惡東 噩東",
+		["DMN"] = 	"厄北 惡北 噩北 完美厄運 完美惡運 完美噩運",
+		["DMW"] = 	"厄西 惡西 噩西",
+		["STR"] = 	"斯坦",
+		["SCH"] = 	"通靈",
+		["LBRS"] = 	"黑下 黑石塔下",
+		["UBRS"] =	"黑上 黑石塔上",
+		["RAMPS"] = 	"堡壘 壁壘 火堡 火壘 火堡壘 火壁壘",
+		["BF"] = 	"血熔爐 熔爐 融爐 血熔盧 熔盧 融盧",
+		["SP"] = 	"奴隸 監獄 奴監",
+		["UB"] = 	"深幽 泥沼",
+		["MT"] = 	"法力 墓地 法墓",
+		["CRYPTS"] = 	"地穴",
+		["SETH"] = 	"鳥廳 塞斯克 塞司克 賽司克 賽斯克 鳥聽",
+		["OHB"] = 	"索爾 丘陵",
+		["MECH"] = 	"麥克",
+		["BM"] = 	"18波 黑色沼澤 黑沼 沼澤",
+		["MGT"] = 	"博學",
+		["SH"] = 	"破碎",
+		["BOT"] = 	"波塔 波卡",
+		["SL"] = 	"迷宮 暗影 暗宮",
+		["SV"] = 	"蒸氣 蒸汽",
+		["ARC"] = 	"亞克",
+		["KARA"] = 	"卡拉 卡啦",
+		["GL"] = 	"戈魯 魯爾 戈魯爾",
+		["MAG"] = 	"馬肥 瑪色 馬瑟 瑪瑟",
+		-- ["SSC"] = 	"",
+		["ZA"] = 	"ZA 阿曼",
+		-- ["EYE"] = 	"",
+		["HYJAL"] = 	"海珊 海山 海加爾",
+		["BT"] = 	"黑暗神廟 黑廟",
+		["SWP"] = 	"太陽",
+		["ONY"] = 	"黑妹 龍妹 奧妮 ONYX",
+		["MC"]  = 	"MC 熔火 螺絲",
+		["ZG"]  = 	"ZG 祖爾格 組爾格 龍虎",
+		["AQ20"] = 	"RAQ AQ20 廢墟",
+		["BWL"] = 	"BWL 黑翼",
+		["AQ40"] = 	"TAQ AQ40 安琪拉 安其拉" ,
+		["NAX"] = 	"NAXX 老克 納克",
+		["WSG"] = 	"戰哥 戰歌",
+		["AB"]  = 	"阿拉溪 阿拉希 阿拉西",
+		["AV"]  = 	"奧山 奧特蘭",	
+		["EOTS"] = 	"暴風眼 暴風之眼",
+		["TRADE"] = 	"買 賣 售 收 代工 出售 附魔 COD", --hlink
 	}),
 }
 
