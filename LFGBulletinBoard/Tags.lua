@@ -42,7 +42,7 @@ GBB.badTagsLoc = langSplit({
 GBB.heroicTagsLoc=langSplit({
 	enGB ="h hc heroic",
 	deDE ="h hc heroic",
-	ruRU ="h hc heroic",
+	ruRU ="гер героик",
 	frFR = "h hc heroic",
 	zhTW = "h 英雄",
 })
