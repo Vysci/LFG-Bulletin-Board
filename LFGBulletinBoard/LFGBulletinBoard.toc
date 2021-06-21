@@ -1,8 +1,8 @@
 ## Interface: 20501
 ## Title: LFG Bulletin Board
 ## Notes: Sort LFG/LFM Messages
-## Version: 2.55
-## Author: Vyscî-Whitemane original by GPI / Erytheia-Razorfen
+## Version: 2.56
+## Author: Vyscî-Whitemane
 ## DefaultState: enabled
 ## SavedVariables: GroupBulletinBoardDB
 ## SavedVariablesPerCharacter: GroupBulletinBoardDBChar

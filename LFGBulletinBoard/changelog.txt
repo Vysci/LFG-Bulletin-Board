@@ -2,6 +2,9 @@
 
 Group Bulletin Board 	
 
+2.56
+ - Fixed localization channel bug
+
 2.55
  - Filtering by normal dungeon
  - Raid categorization

@@ -1,13 +1,5 @@
 local TOCNAME,GBB=...
-local L = setmetatable({}, {__index = function (t, k)  
-	if GBB.L and GBB.L[k] then 
-		return GBB.L[k]
-	elseif GBB.locales.enGB and GBB.locales.enGB[k] then
-		return GBB.locales.enGB[k]
-	else
-		return "["..k.."]"
-	end	
-end})
+
 GroupBulletinBoard_Addon=GBB
 
 GBB.Version=GetAddOnMetadata(TOCNAME, "Version") 
@@ -410,7 +402,7 @@ function GBB.Init()
 	GBB.DB.minimapPos=nil
 	
 	-- Get localize and Dungeon-Information
-	GBB.LocalizationInit()	
+	L = GBB.LocalizationInit()	
 	GBB.dungeonNames = GBB.GetDungeonNames()
 	GBB.RaidList = GBB.GetRaids()
 	--GBB.dungeonLevel
