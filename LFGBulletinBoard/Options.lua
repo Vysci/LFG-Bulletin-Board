@@ -154,7 +154,7 @@ function GBB.OptionsInit ()
 	
 	GBB.Options.AddCheckBox(GBB.DB.MinimapButton,"visible",true,L["Cboxshowminimapbutton"])
 	GBB.Options.AddCheckBox(GBB.DB.MinimapButton,"lock",false,L["CboxLockMinimapButton"])
-	GBB.Options.AddCheckBox(GBB.DB.MinimapButton,"lockDistance",false,L["CboxLockMinimapButtonDistance"])
+	GBB.Options.AddCheckBox(GBB.DB.MinimapButton,"lockDistance",true,L["CboxLockMinimapButtonDistance"])
 	GBB.Options.AddSpace()
 	CheckBox("ShowTotalTime",false)
 	CheckBox("OrderNewTop",true)
