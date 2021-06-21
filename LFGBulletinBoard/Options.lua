@@ -227,7 +227,7 @@ function GBB.OptionsInit ()
 		end
 		--GBB.Options.AddSpace()
 		CheckBoxChar("FilterLevel",false)
-		CheckBoxChar("DontFilterOwn",true)
+		CheckBoxChar("DontFilterOwn",false)
 
 		if(GBB.GameType ~= "VANILLA") then
 			CheckBoxChar("HeroicOnly", false)
