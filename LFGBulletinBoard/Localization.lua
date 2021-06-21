@@ -120,7 +120,7 @@ GBB.locales = {
 		
 		
 		["AboutInfo"]="GBB provides an overview of the endless requests in the chat channels. It detects all requests to the classic dungeons, sorts them and presents them clearly way. Numerous filtering options reduce the gigantic number to exactly the dungeons that interest you. And if that's not enough, GBB will let you know about any new request via a sound or chat notification. And finally, GBB can post your request repeatedly.",
-		
+		["AboutCredits"]="Original by GPI / Erytheia-Razorfen",
 		
 	},
 	
@@ -478,7 +478,8 @@ GBB.locales.esES=GBB.locales.esMX
 GBB.locales.enUS=GBB.locales.enGB
 
 function GBB.LocalizationInit()
-	L = GBB.locales[GetLocale()] or {}
+	local locale = GetLocale()
+	local L = GBB.locales[locale] or {}
 
 	if GroupBulletinBoardDB and GroupBulletinBoardDB.CustomLocales and type(GroupBulletinBoardDB.CustomLocales) == "table" then
 		for key,value in pairs(GroupBulletinBoardDB.CustomLocales) do
@@ -489,4 +490,17 @@ function GBB.LocalizationInit()
 		end
 	end
 	
+	-- Needed to not cause overflow when using english
+	if (locale ~= "enGB" and locale ~= "enUS") then
+		setmetatable(L, {__index = function (t, k)  
+			if GBB.L and GBB.L[k] then 
+				return GBB.L[k]
+			elseif GBB.locales.enGB and GBB.locales.enGB[k] then
+				return GBB.locales.enGB[k]
+			else
+				return "["..k.."]"
+			end	
+		end})
+	end
+	return L
 end

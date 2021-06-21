@@ -1,14 +1,4 @@
 local TOCNAME,GBB=...
-local L = setmetatable({}, {__index = function (t, k)  
-	if GBB.L and GBB.L[k] then 
-		return GBB.L[k]
-	elseif GBB.locales.enGB and GBB.locales.enGB[k] then
-		return GBB.locales.enGB[k]
-	else
-		return "["..k.."]"
-	end	
-end})
-
 local ChannelIDs
 local ChkBox_FilterDungeon
 local TbcChkBox_FilterDungeon
@@ -349,13 +339,14 @@ function GBB.OptionsInit ()
 	GBB.Options.AddPanel(L["PanelLocales"],false,true)
 	GBB.Options.AddText(L["msgLocalRestart"])
 	GBB.Options.AddSpace()
-	local locales=GBB.locales.enGB
+	local locales= GBB.locales.enGB
 	local t={}
 	for key,value in pairs(locales) do 
 		table.insert(t,key)
 	end
 	table.sort(t)
 	for i,key in ipairs(t) do 
+		
 		local col=L[key]~=nil and "|cffffffff" or "|cffff4040"
 		local txt=L[key.."_org"]~="["..key.."_org]" and L[key.."_org"] or L[key]
 				
