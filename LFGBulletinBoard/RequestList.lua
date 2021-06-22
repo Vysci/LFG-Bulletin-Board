@@ -282,7 +282,11 @@ local function WhoRequest(name)
 end
 
 local function WhisperRequest(name)
-	ChatFrame_OpenChat("/w " .. name .." ")
+	if GBB.DB.QuickReplyMsg then
+		SendChatMessage(GBB.DB.QuickMsg,"WHISPER",nil,name)
+	else
+		ChatFrame_OpenChat("/w " .. name .." ")
+	end
 end
 
 local function InviteRequest(name)

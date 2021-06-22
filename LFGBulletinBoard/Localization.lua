@@ -73,6 +73,8 @@ GBB.locales = {
 		["CboxEnableGuild"]="Add guild in player tooltip",
 		["CboxCombineSubDungeons"]="Combine sub-dungeons like Dire Maul (only new request)",
 		["CboxAdditionalInfo"]="Add more info to chat on /who and when somebody comes online",
+		["CboxQuickReplyMsg"] = "Enable Quck Reply Message",
+		
 		
 		["CboxNotfiyInnone"]="Enable on overworld",
 		["CboxNotfiyInpvp"]="Enable in battleground",
@@ -85,6 +87,7 @@ GBB.locales = {
 		["EditCustom_Bad"]="Blacklist words",
 		["EditCustom_Suffix"]="Suffixes",
 		["EditCustom_Heroic"] = "Heroic",
+		["EditQuickMsg"] = "Message",
 		
 		["BtnUnselectAll"]="Unselect all",
 		["BtnSelectAll"]="Select all",
