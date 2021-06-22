@@ -114,6 +114,7 @@ GBB.dungeonTagsLoc={
 		["AB"]  = 	"basin",
 		["AV"]  = 	"av valley",	
 		["EOTS"] =  "storm eots",
+		["ARENA"] = "2s 3s 5s",
 		["TRADE"] = "buy buying sell selling wts wtb hitem henchant htrade enchanter", --hlink
 	}),
 	deDE =langSplit({
@@ -180,7 +181,8 @@ GBB.dungeonTagsLoc={
 		["WSG"] = 	"warsongschlucht schlucht",
 		--["AB"]  = 	{},
 		--["AV"]  = 	{},
-		["EOTS"] =  "ads",	
+		["EOTS"] =  "ads",
+		["ARENA"] = "2s 3s 5s",	
 		["TRADE"] =	"kaufe verkauf kauf verkaufe ah vk tg trinkgeld trinkgold vz schneider verzauberer verzaubere schliesskassetten schließkassetten kassetten schlossknacken schloßknacken alchimie",
 	}),	
  	ruRU = langSplit({
@@ -239,6 +241,7 @@ GBB.dungeonTagsLoc={
 		["ZF"] = "зф фарак фаррак зул'фаррак зулфарак зулфаррак зульфарак",
 		["ZG"] = "зг гуруб зул'гуруб  зулгуруб  зул´гуруб зул`гуруб зул'гуруба",
 		["KARA"] = "каражан кара караджан кару",
+		["ARENA"] = "2s 3s 5s",
 		["GL"] = "грул груула",
 	}),		
 	frFR = langSplit({
@@ -304,6 +307,7 @@ GBB.dungeonTagsLoc={
 		--["WSG"] = "",
 		["AB"] = "arathi",
 		["AV"] = "alterac",
+		["ARENA"] = "2s 3s 5s",
 		--["EOTS"] = "",
 		["TRADE"] = "achete vends enchanteur vend",
 	}),
