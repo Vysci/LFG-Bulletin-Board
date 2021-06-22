@@ -2,6 +2,9 @@
 
 Group Bulletin Board 	
 
+2.57 
+ - Added support for arena
+
 2.56
  - Fixed localization channel bug
 

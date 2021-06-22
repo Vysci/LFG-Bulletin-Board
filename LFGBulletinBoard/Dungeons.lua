@@ -78,6 +78,7 @@ function GBB.GetDungeonNames()
 		["AB"] = 	"Arathi Basin (PvP)",
 		["AV"] = 	"Alterac Valley (PvP)",
 		["EOTS"] =  "Eye of the Storm (PvP)",
+		["ARENA"] = "Arena (PvP)",
 		["MISC"] = 	"Miscellaneous",
 		["TRADE"] =	"Trade",
 		["DEBUG"] = "DEBUG INFO",
@@ -149,6 +150,7 @@ function GBB.GetDungeonNames()
 			["AV"] = 	"Alteractal (PVP)",
 			["AB"] = 	"Arathibecken (PVP)",
 			["EOTS"] =  "Auge des Sturms (PvP)",
+			["ARENA"] = "Arena (PvP)",
 			["MISC"] = 	"Verschiedenes",
 			["TRADE"] =	"Handel",
  
@@ -213,7 +215,7 @@ function GBB.GetDungeonNames()
 			["BWL"] = 	"Repaire de l'Aile noire (40)",
 			["AQ40"] = 	"Ahn'Qiraj (40)",
 			["NAX"] = 	"Naxxramas (40)",
-		
+			["ARENA"] = "Arena (PvP)",
 		},
 		esMX ={
 			["RFC"] = 	"Sima Ígnea",
@@ -275,6 +277,7 @@ function GBB.GetDungeonNames()
 			["BWL"] = 	"Guarida Alanegra (40)",
 			["AQ40"] = 	"Ahn'Qiraj (40)",
 			["NAX"] = 	"Naxxramas (40)",
+			["ARENA"] = "Arena (PvP)",
 
 		},
 		ruRU = {
@@ -343,6 +346,7 @@ function GBB.GetDungeonNames()
 			["WC"] = "Пещеры Стенаний",
 			["WSG"] = "Ущелье Песни Войны (PvP)",
 			["EOTS"] =  "Око Бури (PvP)",
+			["ARENA"] = "Arena (PvP)",
 			["ZF"] = "Зул'Фаррак",
 			["ZG"] = "Зул'Гуруб (20)",
 		},
@@ -472,7 +476,7 @@ GBB.TbcDungeonLevels = {
 	["SETH"] =   {67,69},  	["OHB"] = 	 {66,68},     ["MECH"] =   {69,70},    ["BM"] =      {69,70},    ["MGT"] =	 {70,70},    ["SH"] =	 {70,70}, 
 	["BOT"] =    {70,70},    ["SL"] = 	 {70,70},    ["SV"] =     {70,70},   ["ARC"] = 	 {70,70},    ["KARA"] = 	 {70,70},    ["GL"] = 	 {70,70}, 
 	["MAG"] =    {70,70},    ["SSC"] =    {70,70}, 	["EYE"] =    {70,70},   ["ZA"] = 	 {70,70},    ["HYJAL"] =  {70,70}, 	["BT"] =     {70,70}, 
-	["SWP"] =    {70,70}, 	["EOTS"] =   {15,70},    	
+	["SWP"] =    {70,70}, 	["EOTS"] =   {15,70},   ["ARENA"] = {70,70}, 	
 }	
 
 GBB.TbcDungeonNames = { 
@@ -493,7 +497,7 @@ GBB.VanillDungeonNames  = {
 
 
 GBB.PvpNames = {
-	"WSG", "AB", "AV", "EOTS"
+	"WSG", "AB", "AV", "EOTS", "ARENA",
 }
 
 GBB.Misc = {"MISC", "TRADE",}
@@ -505,7 +509,7 @@ GBB.DebugNames = {
 GBB.Raids = {
 	"ONY", "MC", "ZG", "AQ20", "BWL", "AQ40", "NAX", 
 	"KARA", "GL", "MAG", "SSC", "EYE", "ZA", "HYJAL", 
-	"BT", "SWP"
+	"BT", "SWP", "ARENA", "WSG", "AV", "AB", "EOTS",
 }
 
 function GBB.GetRaids()
