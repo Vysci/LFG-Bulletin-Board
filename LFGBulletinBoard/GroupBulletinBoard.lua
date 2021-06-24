@@ -11,6 +11,7 @@ GBB.MiniIcon= "Interface\\Icons\\spell_holy_prayerofshadowprotection"
 GBB.FriendIcon="Interface\\LootFrame\\toast-star"
 --"Interface\\COMMON\\FavoritesIcon"
 GBB.GuildIcon="Interface\\COMMON\\Indicator-Green"
+GBB.PastPlayerIcon="Interface\\COMMON\\Indicator-Yellow"
 GBB.TxtEscapePicture="|T%s:0|t"
 --"Interface\\Calendar\\MeetingIcon"
 --"Interface\\Icons\\spell_holy_prayerofshadowprotection"
@@ -315,9 +316,8 @@ local function hooked_createTooltip(self)
 				self:AddLine(GBB.Tool.RGBtoEscape(GBB.DB.ColorGuild).."< "..guildName.." / "..guildRankName.." >")
 			end
 		end
-	
+
 		if GBB.DB.EnableGroup and GBB.GroupTrans and GBB.GroupTrans[name] then
-		
 			local inInstance, instanceType = IsInInstance()
 		
 			if instanceType=="none" then
