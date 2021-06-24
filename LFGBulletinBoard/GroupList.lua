@@ -3,6 +3,8 @@ local 	TOCNAME,GBB=...
 local MAXGROUP=500
 local guildcache={}
 local friendcache={}
+local pastplayercache={}
+
 GBB.GroupTrans={}
 
 local AllowedInstanceType={"party","scenario","raid"}
@@ -57,6 +59,9 @@ function GBB.AddGroupList(entry)
 		friendcache[entry.name]=entry.guid and C_FriendList.IsFriend(entry.guid)
 	end
 		
+	if pastplayercache[entry.name] == nil then
+		pastplayercache[entry.name]=entry.name and GBB.GroupTrans[entry.name]~=nil
+	end
 	GroupBulletinBoardFrame_GroupFrame:AddMessage(
 		"|Hplayer:".. entry.name .."|h"..
 		GBB.Tool.IconClass[entry.class]..
