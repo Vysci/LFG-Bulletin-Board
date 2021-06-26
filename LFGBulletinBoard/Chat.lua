@@ -99,3 +99,68 @@ function GBB.InsertChat()
     GBB.DB["NotifyChat"]=true
     GBB.OptionsUpdate()
 end
+
+function GBB.SendMessage(ChannelName, Msg)
+	local index = GetChannelName(ChannelName) -- It finds General is a channel at index 1
+	if (index~=nil) then 
+  		SendChatMessage(Msg , "CHANNEL", nil, index); 
+	end
+end
+
+function GBB.AnnounceInit()
+	GroupBulletinBoardFrameAnnounceMsg:SetTextColor(0.6,0.6,0.6)
+	GroupBulletinBoardFrameAnnounceMsg:SetText(L["msgRequestHere"])
+	GroupBulletinBoardFrameAnnounce:SetText(L["BtnPostMsg"])
+	GroupBulletinBoardFrameAnnounceMsg:HighlightText(0,0) 
+	GroupBulletinBoardFrameAnnounceMsg:SetCursorPosition(0)
+	GroupBulletinBoardFrameAnnounce:Disable()
+
+end
+
+function GBB.GetFocus()
+	local t= GroupBulletinBoardFrameAnnounceMsg:GetText()
+	if t==L["msgRequestHere"]  then
+		GroupBulletinBoardFrameAnnounceMsg:SetTextColor(1,1,1)
+		GroupBulletinBoardFrameAnnounceMsg:SetText("")
+		
+	end
+end
+
+function GBB.EditAnnounceMessage_Changed()
+	local t= GroupBulletinBoardFrameAnnounceMsg:GetText()
+	if t==nil or t=="" or t==L["msgRequestHere"] then
+		GroupBulletinBoardFrameAnnounce:Disable()
+	else
+		GroupBulletinBoardFrameAnnounce:Enable()
+	end	
+end
+
+function GBB.Announce()
+	local msg = GroupBulletinBoardFrameAnnounceMsg:GetText()
+	
+	if msg~= nil and msg~="" and msg~=L["msgRequestHere"]then
+		GBB.SendMessage(GBB.DB.AnnounceChannel, msg)
+		GroupBulletinBoardFrameAnnounceMsg:ClearFocus()
+	end
+end
+
+function GBB.CreateChannelPulldown (frame, level, menuList)
+	if level~=1 then return end
+	local t= GBB.PhraseChannelList(GetChannelList())
+	
+	local info = UIDropDownMenu_CreateInfo()
+ 
+	
+	for i,channel in pairs(t) do
+		info.text =  i..". "..channel.name
+		info.checked = (channel.name == GBB.DB.AnnounceChannel)
+		info.disabled = channel.hidden
+		info.arg1 = i
+		info.arg2 = channel.name
+		info.func = function(self, arg1, arg2, checked)
+				GBB.DB.AnnounceChannel=arg2
+				GroupBulletinBoardFrameSelectChannel:SetText(arg2)
+			end
+		UIDropDownMenu_AddButton(info)
+	end
+end
