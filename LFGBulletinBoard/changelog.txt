@@ -2,6 +2,9 @@
 
 Group Bulletin Board 	
 
+2.58 
+ - Added a text box to post LFG msg at a click of a button
+
 2.57 
  - Added support for arena
 
@@ -103,7 +106,7 @@ Group Bulletin Board
 - Option: Notification on world/dungeons/raids/battleground
 
 2.21
-- Remove Shout/Announce-Box - doesn't work anymore
+- Remove Announce/Announce-Box - doesn't work anymore
 
 2.20 	
 - TOC-UPDATETIMER
@@ -127,7 +130,7 @@ Group Bulletin Board
 - Chat-Notifications - first line is now light grey
 - some code optimizations
 - new option: Scan Guild Channel (in Filter/Channel list)
-- Shout/Announce now work with closed window
+- Announce/Announce now work with closed window
 - Item-Links have now a tooltip
 - Adjust mousewheel-scroll-speed to one line
 

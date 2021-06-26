@@ -95,7 +95,64 @@
 					</OnMouseDown>
 				</Scripts>
 			</Button>
-				
+
+			<!-- announcebox -->
+			<Button name="$parentSelectChannel" inherits="UIPanelButtonTemplate" text="channel">
+				<Anchors>
+					<Anchor point="BOTTOMLEFT" relativePoint="BOTTOMLEFT" relativeTo="$parent" >
+						<Offset>
+							<AbsDimension x="10" y="22"/>
+						</Offset>
+					</Anchor>
+				</Anchors>
+				<Size><AbsDimension x="150" y="20" /></Size>
+				<Scripts>
+					<OnClick>
+						GroupBulletinBoard_Addon.BtnSelectChannel()
+					</OnClick>
+				</Scripts>
+			</Button>
+			
+			<Button name="$parentAnnounce" inherits="UIPanelButtonTemplate" text="Post">
+				<Anchors>
+					<Anchor point="BOTTOMRIGHT" relativePoint="BOTTOMRIGHT" relativeTo="$parent" >
+						<Offset>
+							<AbsDimension x="-40" y="22"/>
+						</Offset>
+					</Anchor>
+				</Anchors>
+				<Size><AbsDimension x="100" y="20" /></Size>
+				<Scripts>
+					<OnClick>
+						GroupBulletinBoard_Addon.Announce()
+					</OnClick>
+				</Scripts>
+			</Button>
+			
+			<EditBox name="$parentAnnounceMsg" letters="255" autoFocus="false" inherits="InputBoxTemplate">
+				<Anchors>
+					<Anchor point="TOPLEFT" relativePoint="TOPRIGHT" relativeTo="$parentSelectChannel" >
+						<Offset>
+							<AbsDimension x="8" y="0"/>
+						</Offset>
+					</Anchor>
+					<Anchor point="BOTTOMRIGHT" relativePoint="BOTTOMLEFT" relativeTo="$parentAnnounce" >
+						<Offset>
+							<AbsDimension x="-4" y="0"/>
+						</Offset>
+					</Anchor>
+				</Anchors>
+				<Size><AbsDimension x="100" y="20"/></Size>
+				<Scripts>
+					<OnEditFocusGained>
+						GroupBulletinBoard_Addon.GetFocus()
+					</OnEditFocusGained>
+					<OnTextChanged>
+						GroupBulletinBoard_Addon.EditAnnounceMessage_Changed()
+					</OnTextChanged>
+				</Scripts>
+			</EditBox>
+
 			<!--Scrollframe -->
 			<ScrollFrame name="GroupBulletinBoardFrame_ScrollFrame" inherits="UIPanelScrollFrameTemplate">
 				<Backdrop name="$parentBackdrop" bgFile="Interface\TutorialFrame\TutorialFrameBackground" tile="true">
