@@ -64,7 +64,7 @@ local function requestSort_nTOP_nTOTAL (a,b)
 end
 
 local function CreateHeader(yy,dungeon)
-	local AnchorTop="GroupBulletinBoardFrame_ScrollChildFrame"
+	local AnchorTop="GroupBulletinBoardFrame_ScrollChildFrame"https://github.com/afreedma/LFG-Bulletin-Board.git
 	local AnchorRight="GroupBulletinBoardFrame_ScrollChildFrame"
 	local ItemFrameName="GBB.Dungeon_"..dungeon
 	
@@ -768,7 +768,7 @@ local function createMenu(DungeonID,req)
 	end
 	if req then
 		GBB.PopupDynamic:AddItem(string.format(L["BtnWho"],req.name),false,WhoRequest,req.name)
-		GBB.PopupDynamic:AddItem(string.format(L["BtnWispher"],req.name),false,WhisperRequest,req.name)			
+		GBB.PopupDynamic:AddItem(string.format(L["BtnWhisper"],req.name),false,WhisperRequest,req.name)			
 		GBB.PopupDynamic:AddItem(string.format(L["BtnInvite"],req.name),false,InviteRequest,req.name)
 		GBB.PopupDynamic:AddItem(string.format(L["BtnIgnore"],req.name),false,IgnoreRequest,req.name)	
 		GBB.PopupDynamic:AddItem("",true)
