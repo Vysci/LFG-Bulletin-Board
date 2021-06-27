@@ -90,7 +90,7 @@ GBB.locales = {
 		["BtnUnselectAll"]="Unselect all",
 		["BtnSelectAll"]="Select all",
 		
-		["BtnWispher"]="Wispher %s",
+		["BtnWhisper"]="Whisper %s",
 		["BtnInvite"]="Invite %s",
 		["BtnWho"]="Who %s",
 		["BtnIgnore"]="Ignore %s",
@@ -149,7 +149,7 @@ GBB.locales = {
 	["BtnUnFoldAll"] = "Alle entfalten",
 	["BtnUnselectAll"] = "Alles abwählen",
 	["BtnWho"] = "Who %s",
-	["BtnWispher"] = "%s anflüstern",
+	["BtnWhisper"] = "%s anflüstern",
 	["CboxAdditionalInfo"] = "Mehr Informationen bei /who und wenn jemand online kommt.",
 	["CboxCharDontFilterOwn"] = "Eigene Anfragen nicht filtern",
 	["CboxCharHeroicOnly"]= "Nur heroischer filter",
