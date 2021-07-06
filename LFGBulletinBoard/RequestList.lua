@@ -768,7 +768,7 @@ local function createMenu(DungeonID,req)
 	end
 	if req then
 		GBB.PopupDynamic:AddItem(string.format(GBB.L["BtnWho"],req.name),false,WhoRequest,req.name)
-		GBB.PopupDynamic:AddItem(string.format(GBB.L["BtnWispher"],req.name),false,WhisperRequest,req.name)			
+		GBB.PopupDynamic:AddItem(string.format(GBB.L["BtnWhisper"],req.name),false,WhisperRequest,req.name)			
 		GBB.PopupDynamic:AddItem(string.format(GBB.L["BtnInvite"],req.name),false,InviteRequest,req.name)
 		GBB.PopupDynamic:AddItem(string.format(GBB.L["BtnIgnore"],req.name),false,IgnoreRequest,req.name)	
 		GBB.PopupDynamic:AddItem("",true)
