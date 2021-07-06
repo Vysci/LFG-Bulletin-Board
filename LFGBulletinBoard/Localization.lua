@@ -63,6 +63,7 @@ GBB.locales = {
 		["CboxUseAllInLFG"]="Show all messages from lfg-channel",
 		["CboxEscapeQuit"]="ESC close main window (Restart needed)",
 		["CboxEnableShowOnly"]="Show a fixed number of requests per dungeon",
+		["CboxDisplayLFG"] = "Display LFG Bar (requires /reload)",
 		["CboxChatStyle"]="Use more chat style design",
 		["CboxCharDontFilterOwn"]="Don't filter own request",		 
 		["CboxCharHeroicOnly"]="Heroic only filter",	
@@ -478,22 +479,22 @@ GBB.locales.enUS=GBB.locales.enGB
 
 function GBB.LocalizationInit()
 	local locale = GetLocale()
-	local L = GBB.locales[locale] or {}
+	local l = GBB.locales[locale] or {}
 
 	if GroupBulletinBoardDB and GroupBulletinBoardDB.CustomLocales and type(GroupBulletinBoardDB.CustomLocales) == "table" then
 		for key,value in pairs(GroupBulletinBoardDB.CustomLocales) do
 			if value~=nil and value ~="" then
-				L[key.."_org"]=L[key] or GBB.locales.enGB[key]
-				L[key]=value
+				l[key.."_org"]=l[key] or GBB.locales.enGB[key]
+				l[key]=value
 			end
 		end
 	end
 	
 	-- Needed to not cause overflow when using english
 	if (locale ~= "enGB" and locale ~= "enUS") then
-		setmetatable(L, {__index = function (t, k)  
-			if GBB.L and GBB.L[k] then 
-				return GBB.L[k]
+		setmetatable(l, {__index = function (t, k)  
+			if GBB.l and GBB.l[k] then 
+				return GBB.l[k]
 			elseif GBB.locales.enGB and GBB.locales.enGB[k] then
 				return GBB.locales.enGB[k]
 			else
@@ -501,5 +502,5 @@ function GBB.LocalizationInit()
 			end	
 		end})
 	end
-	return L
+	return l
 end

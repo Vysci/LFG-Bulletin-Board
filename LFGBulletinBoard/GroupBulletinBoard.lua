@@ -115,10 +115,10 @@ end
 function GBB.LevelRange(dungeon,short)
 	if short then 
 		if GBB.dungeonLevel[dungeon][1]>0 then
-			return string.format(L["msgLevelRangeShort"],GBB.dungeonLevel[dungeon][1],GBB.dungeonLevel[dungeon][2])
+			return string.format(GBB.L["msgLevelRangeShort"],GBB.dungeonLevel[dungeon][1],GBB.dungeonLevel[dungeon][2])
 		end
 	elseif GBB.dungeonLevel[dungeon][1]>0 then
-		return string.format(L["msgLevelRange"],GBB.dungeonLevel[dungeon][1],GBB.dungeonLevel[dungeon][2])
+		return string.format(GBB.L["msgLevelRange"],GBB.dungeonLevel[dungeon][1],GBB.dungeonLevel[dungeon][2])
 	end
 	return ""
 end
@@ -133,7 +133,7 @@ function GBB.FilterDungeon(dungeon, isHeroic, isRaid)
 end
 
 function GBB.formatTime(sec) 
-	return string.format(L["msgTimeFormat"],math.floor(sec/60), sec %60)
+	return string.format(GBB.L["msgTimeFormat"],math.floor(sec/60), sec %60)
 end
 
 function GBB.PhraseChannelList(...)
@@ -141,20 +141,20 @@ function GBB.PhraseChannelList(...)
 	for i=1,select("#", ...),3 do
 		t[select(i, ...)]= {name=select(i+1, ...),hidden=select(i+2, ...) }
 	end
-	t[20]={name=L.GuildChannel,hidden=true}
+	t[20]={name=GBB.L.GuildChannel,hidden=true}
 	return t
 end
 
 function GBB.JoinLFG()
 	if GBB.Initalized==true and GBB.LFG_Successfulljoined==false then 
-		if L["lfg_channel"]~=nil and L["lfg_channel"]~="" then 
-			local id,name=GetChannelName(L["lfg_channel"])
+		if GBB.L["lfg_channel"]~=nil and GBB.L["lfg_channel"]~="" then 
+			local id,name=GetChannelName(GBB.L["lfg_channel"])
 			if  id~=nil and id >0  then 
 				--DEFAULT_CHAT_FRAME:AddMessage("Success join lfg-channel")
 				GBB.LFG_Successfulljoined=true
 			else
 				--DEFAULT_CHAT_FRAME:AddMessage("try join lfg-channel")
-				JoinChannelByName(L["lfg_channel"])
+				JoinChannelByName(GBB.L["lfg_channel"])
 			end	
 		else
 			-- missing localization
@@ -352,27 +352,27 @@ function GBB.Popup_Minimap(frame,notminimap)
 		return
 	end
 
-	GBB.PopupDynamic:AddItem(L["HeaderSettings"],false, GBB.Options.Open, 1)
+	GBB.PopupDynamic:AddItem(GBB.L["HeaderSettings"],false, GBB.Options.Open, 1)
 
 	if GBB.GameType == "TBC" then
-		GBB.PopupDynamic:AddItem(L["TBCPanelFilter"], false, GBB.Options.Open, 1 + GBB.PANELOFFSET)
+		GBB.PopupDynamic:AddItem(GBB.L["TBCPanelFilter"], false, GBB.Options.Open, 1 + GBB.PANELOFFSET)
 	else
-		GBB.PopupDynamic:AddItem(L["PanelFilter"], false, GBB.Options.Open, 2 + GBB.PANELOFFSET)
+		GBB.PopupDynamic:AddItem(GBB.L["PanelFilter"], false, GBB.Options.Open, 2 + GBB.PANELOFFSET)
 	end
 
-	GBB.PopupDynamic:AddItem(L["PanelAbout"], false, GBB.Options.Open, 5 + GBB.PANELOFFSET)
+	GBB.PopupDynamic:AddItem(GBB.L["PanelAbout"], false, GBB.Options.Open, 5 + GBB.PANELOFFSET)
 	
 	GBB.PopupDynamic:AddItem("",true)
-	GBB.PopupDynamic:AddItem(L["CboxNotifyChat"],false,GBB.DB,"NotifyChat")
-	GBB.PopupDynamic:AddItem(L["CboxNotifySound"],false,GBB.DB,"NotifySound")
+	GBB.PopupDynamic:AddItem(GBB.L["CboxNotifyChat"],false,GBB.DB,"NotifyChat")
+	GBB.PopupDynamic:AddItem(GBB.L["CboxNotifySound"],false,GBB.DB,"NotifySound")
 	
 	if notminimap~=false then 
 		GBB.PopupDynamic:AddItem("",true)
-		GBB.PopupDynamic:AddItem(L["CboxLockMinimapButton"],false,GBB.DB.MinimapButton,"lock")
-		GBB.PopupDynamic:AddItem(L["CboxLockMinimapButtonDistance"],false,GBB.DB.MinimapButton,"lockDistance")
+		GBB.PopupDynamic:AddItem(GBB.L["CboxLockMinimapButton"],false,GBB.DB.MinimapButton,"lock")
+		GBB.PopupDynamic:AddItem(GBB.L["CboxLockMinimapButtonDistance"],false,GBB.DB.MinimapButton,"lockDistance")
 	end
 	GBB.PopupDynamic:AddItem("",true)
-	GBB.PopupDynamic:AddItem(L["BtnCancel"],false)
+	GBB.PopupDynamic:AddItem(GBB.L["BtnCancel"],false)
 		
 	GBB.PopupDynamic:Show(frame,0,0)
 end
@@ -409,7 +409,7 @@ function GBB.Init()
 	GBB.DB.minimapPos=nil
 	
 	-- Get localize and Dungeon-Information
-	L = GBB.LocalizationInit()	
+	GBB.L = GBB.LocalizationInit()	
 	GBB.dungeonNames = GBB.GetDungeonNames()
 	GBB.RaidList = GBB.GetRaids()
 	--GBB.dungeonLevel
@@ -431,9 +431,14 @@ function GBB.Init()
 	GBB.LFG_Successfulljoined=false
 	
 	GBB.AutoUpdateTimer=time()+GBB.UPDATETIMER
-		
+
 	GBB.AnnounceInit()
-	
+	if GBB.DB.DisplayLFG == false then
+		GroupBulletinBoardFrameAnnounce:Hide()
+		GroupBulletinBoardFrameAnnounceMsg:Hide()
+		GroupBulletinBoardFrameSelectChannel:Hide()
+	end
+
 	local x, y, w, h = GBB.DB.X, GBB.DB.Y, GBB.DB.Width, GBB.DB.Height
 	if not x or not y or not w or not h then
 		GBB.SaveAnchors()
@@ -461,29 +466,29 @@ function GBB.Init()
 	GBB.Tool.SlashCommand({"/gbb", "/groupbulletinboard"},{
 		{"notify","",{
 				{"chat","",{
-						{"%",L["CboxNotifyChat"],doDBSet,GBB.DB,"NotifyChat"}
+						{"%",GBB.L["CboxNotifyChat"],doDBSet,GBB.DB,"NotifyChat"}
 					}
 				},
 					
 				{"sound","",{
-						{"%",L["CboxNotifySound"],doDBSet,GBB.DB,"NotifySound"}
+						{"%",GBB.L["CboxNotifySound"],doDBSet,GBB.DB,"NotifySound"}
 					}
 				},
 			},
 		},
 		{"debug","",{
-				{"%",L["CboxOnDebug"],doDBSet,GBB.DB,"OnDebug"}
+				{"%",GBB.L["CboxOnDebug"],doDBSet,GBB.DB,"OnDebug"}
 			},
 		},
-		{"reset",L["SlashReset"],function()
+		{"reset",GBB.L["SlashReset"],function()
 				GBB.ResetWindow()
 				GBB.ShowWindow()
 			end},
-		{{"config","setup","options"},L["SlashConfig"],GBB.Options.Open,1},
-		{"about",L["SlashAbout"],GBB.Options.Open,6},
-		{"",L["SlashDefault"],GBB.ToggleWindow},
+		{{"config","setup","options"},GBB.L["SlashConfig"],GBB.Options.Open,1},
+		{"about",GBB.L["SlashAbout"],GBB.Options.Open,6},
+		{"",GBB.L["SlashDefault"],GBB.ToggleWindow},
 		{"chat","",{
-			{{"organize", "clean"},L["SlashChatOrganizer"],function()
+			{{"organize", "clean"},GBB.L["SlashChatOrganizer"],function()
 				GBB.InsertChat()
 			end},
 		},
@@ -509,8 +514,8 @@ function GBB.Init()
 	
 	GBB.FramePullDownChannel=CreateFrame("Frame", "GBB.PullDownMenu", UIParent, "UIDropDownMenuTemplate")
 	if GBB.DB.AnnounceChannel == nil then
-		if L["lfg_channel"] ~= "" then
-			GBB.DB.AnnounceChannel = L["lfg_channel"]
+		if GBB.L["lfg_channel"] ~= "" then
+			GBB.DB.AnnounceChannel = GBB.L["lfg_channel"]
 		else
 			_, GBB.DB.AnnounceChannel = GetChannelList()
 		end
@@ -545,8 +550,8 @@ function GBB.Init()
 	
 	GBB.InitGroupList()
 	
-	GBB.Tool.AddTab(GroupBulletinBoardFrame,L.TabRequest,GroupBulletinBoardFrame_ScrollFrame)
-	GBB.Tool.AddTab(GroupBulletinBoardFrame,L.TabGroup,GroupBulletinBoardFrame_GroupFrame)
+	GBB.Tool.AddTab(GroupBulletinBoardFrame,GBB.L.TabRequest,GroupBulletinBoardFrame_ScrollFrame)
+	GBB.Tool.AddTab(GroupBulletinBoardFrame,GBB.L.TabGroup,GroupBulletinBoardFrame_GroupFrame)
 	GBB.Tool.SelectTab(GroupBulletinBoardFrame,1)
 	if GBB.DB.EnableGroup then
 		GBB.Tool.TabShow(GroupBulletinBoardFrame)
@@ -659,7 +664,7 @@ local function Event_CHAT_MSG_CHANNEL(msg,name,_3,_4,_5,_6,_7,channelID,channel,
 end
 
 local function Event_GuildMessage(msg,name,_3,_4,_5,_6,_7,channelID,channel,_10,_11,guid)
-	Event_CHAT_MSG_CHANNEL(msg,name,_3,_4,_5,_6,_7,20,L.GuildChannel,_10,_11,guid)
+	Event_CHAT_MSG_CHANNEL(msg,name,_3,_4,_5,_6,_7,20,GBB.L.GuildChannel,_10,_11,guid)
 end
 
 
