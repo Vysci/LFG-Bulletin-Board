@@ -6,19 +6,19 @@ local TbcChkBox_FilterDungeon
 -------------------------------------------------------------------------------------
 
 local function CheckBox (Var,Init)
-	return GBB.Options.AddCheckBox(GBB.DB,Var,Init,L["Cbox"..Var])
+	return GBB.Options.AddCheckBox(GBB.DB,Var,Init,GBB.L["Cbox"..Var])
 end
 local function CheckBoxChar (Var,Init)
-	return GBB.Options.AddCheckBox(GBB.DBChar,Var,Init,L["CboxChar"..Var])
+	return GBB.Options.AddCheckBox(GBB.DBChar,Var,Init,GBB.L["CboxChar"..Var])
 end
 local function CheckBoxFilter (Dungeon,Init)
 	return GBB.Options.AddCheckBox(GBB.DBChar,"FilterDungeon".. Dungeon,Init,GBB.dungeonNames[Dungeon].." "..GBB.LevelRange(Dungeon,true))
 end
 local function CreateEditBoxNumber (Var,Init,width,width2)
-	return GBB.Options.AddEditBox(GBB.DB,Var,Init,L["Edit"..Var],width,width2,true)
+	return GBB.Options.AddEditBox(GBB.DB,Var,Init,GBB.L["Edit"..Var],width,width2,true)
 end
 local function CreateEditBox (Var,Init,width,width2)
-	return GBB.Options.AddEditBox(GBB.DB,Var,Init,L["Edit"..Var],width,width2,false)
+	return GBB.Options.AddEditBox(GBB.DB,Var,Init,GBB.L["Edit"..Var],width,width2,false)
 end
 
 local function CreateEditBoxDungeon(Dungeon,Init,width,width2)
@@ -41,7 +41,7 @@ local function CreateEditBoxDungeon(Dungeon,Init,width,width2)
 			txt=GBB.Tool.Combine(GBB.heroicTagsLoc["enGB"])
 		end
 		
-		GBB.Options.AddEditBox(GBB.DB.Custom,Dungeon,Init,L["EditCustom_"..Dungeon],width,width2,false,nil,txt)
+		GBB.Options.AddEditBox(GBB.DB.Custom,Dungeon,Init,GBB.L["EditCustom_"..Dungeon],width,width2,false,nil,txt)
 	end
 end
 
@@ -97,7 +97,7 @@ local DoRightClick=function(self)
 end
 	
 function SetChatOption()
-	GBB.Options.AddCategory(L["HeaderChannel"])
+	GBB.Options.AddCategory(GBB.L["HeaderChannel"])
 	GBB.Options.Indent(10)	
 
 	ChannelIDs = {}
@@ -149,12 +149,12 @@ function GBB.OptionsInit ()
 	--GBB.Options.AddVersion('|cff00c0ff' .. GBB.Version .. '|r')
 	
 	
-	GBB.Options.AddCategory(L["HeaderSettings"])
+	GBB.Options.AddCategory(GBB.L["HeaderSettings"])
 	GBB.Options.Indent(10)
 	
-	GBB.Options.AddCheckBox(GBB.DB.MinimapButton,"visible",true,L["Cboxshowminimapbutton"])
-	GBB.Options.AddCheckBox(GBB.DB.MinimapButton,"lock",false,L["CboxLockMinimapButton"])
-	GBB.Options.AddCheckBox(GBB.DB.MinimapButton,"lockDistance",true,L["CboxLockMinimapButtonDistance"])
+	GBB.Options.AddCheckBox(GBB.DB.MinimapButton,"visible",true,GBB.L["Cboxshowminimapbutton"])
+	GBB.Options.AddCheckBox(GBB.DB.MinimapButton,"lock",false,GBB.L["CboxLockMinimapButton"])
+	GBB.Options.AddCheckBox(GBB.DB.MinimapButton,"lockDistance",true,GBB.L["CboxLockMinimapButtonDistance"])
 	GBB.Options.AddSpace()
 	CheckBox("ShowTotalTime",false)
 	CheckBox("OrderNewTop",true)
@@ -168,12 +168,13 @@ function GBB.OptionsInit ()
 	CheckBox("NotfiyInparty",true)
 	CheckBox("NotfiyInraid",false)
 	CheckBox("OneLineNotification",false)
-	GBB.Options.AddColorButton(GBB.DB,"NotifyColor",{r=1,g=1,b=1,a=1},L["BtnNotifyColor"])
+	GBB.Options.AddColorButton(GBB.DB,"NotifyColor",{r=1,g=1,b=1,a=1},GBB.L["BtnNotifyColor"])
 	GBB.Options.Indent(-20)	
 	GBB.Options.AddSpace()
 	CheckBox("ColorOnLevel",true)
 	CheckBox("UseAllInLFG",true)
 	CheckBox("EscapeQuit",true)
+	CheckBox("DisplayLFG",false)
 	GBB.Options.AddSpace()
 	GBB.Options.InLine()
 	CheckBox("ColorByClass",true)
@@ -187,10 +188,10 @@ function GBB.OptionsInit ()
 	GBB.Options.Indent(30)
 	CreateEditBoxNumber("ShowOnlyNb",4,50)	
 	GBB.Options.Indent(-30)
-	GBB.Options.AddColorButton(GBB.DB,"EntryColor",{r=1,g=1,b=1,a=1},L["BtnEntryColor"])
-	GBB.Options.AddColorButton(GBB.DB,"HeroicDungeonColor",{r=1,g=0,b=0,a=1},L["BtnHeroicDungeonColor"])
-	GBB.Options.AddColorButton(GBB.DB,"NormalDungeonColor",{r=0,g=1,b=0,a=1},L["BtnNormalDungeonColor"])
-	GBB.Options.AddColorButton(GBB.DB,"TimeColor",{r=1,g=1,b=1,a=1},L["BtnTimeColor"])
+	GBB.Options.AddColorButton(GBB.DB,"EntryColor",{r=1,g=1,b=1,a=1},GBB.L["BtnEntryColor"])
+	GBB.Options.AddColorButton(GBB.DB,"HeroicDungeonColor",{r=1,g=0,b=0,a=1},GBB.L["BtnHeroicDungeonColor"])
+	GBB.Options.AddColorButton(GBB.DB,"NormalDungeonColor",{r=0,g=1,b=0,a=1},GBB.L["BtnNormalDungeonColor"])
+	GBB.Options.AddColorButton(GBB.DB,"TimeColor",{r=1,g=1,b=1,a=1},GBB.L["BtnTimeColor"])
 	GBB.Options.AddSpace()
 	CreateEditBoxNumber("TimeOut",150,50)	
 		
@@ -198,21 +199,21 @@ function GBB.OptionsInit ()
 	CheckBox("AdditionalInfo",false)
 	CheckBox("EnableGroup",false)
 	GBB.Options.Indent(30)
-	GBB.Options.AddColorButton(GBB.DB,"PlayerNoteColor",{r=1,g=0.8,b=0.2,a=1},L["BtnPlayerNoteColor"])
+	GBB.Options.AddColorButton(GBB.DB,"PlayerNoteColor",{r=1,g=0.8,b=0.2,a=1},GBB.L["BtnPlayerNoteColor"])
 	GBB.Options.Indent(-30)
 	GBB.Options.AddSpace()
 	
 	CheckBox("EnableGuild",false)
 	GBB.Options.Indent(30)
-	GBB.Options.AddColorButton(GBB.DB,"ColorGuild",{a=1,r=.2,g=1,b=.2},L["BtnColorGuild"])
+	GBB.Options.AddColorButton(GBB.DB,"ColorGuild",{a=1,r=.2,g=1,b=.2},GBB.L["BtnColorGuild"])
 	GBB.Options.Indent(-30)
 	GBB.Options.AddSpace()
 	CheckBox("OnDebug",false)
 	
 	if GBB.GameType == "TBC" then
 	-- Second Panel for TBC Dungeons
-		GBB.Options.AddPanel(L["TBCPanelFilter"])
-		GBB.Options.AddCategory(L["HeaderDungeon"])
+		GBB.Options.AddPanel(GBB.L["TBCPanelFilter"])
+		GBB.Options.AddCategory(GBB.L["HeaderDungeon"])
 		GBB.Options.Indent(10)
 
 		TbcChkBox_FilterDungeon={}
@@ -237,10 +238,10 @@ function GBB.OptionsInit ()
 		--GBB.Options.AddSpace()
 
 		GBB.Options.InLine()
-		GBB.Options.AddButton(L["BtnSelectAll"],function()
+		GBB.Options.AddButton(GBB.L["BtnSelectAll"],function()
 			DoSelectFilter(true, TbcChkBox_FilterDungeon, GBB.TBCDUNGEONSTART, GBB.TBCMAXDUNGEON-2) -- Doing -2 to not select trade and misc
 		end)
-		GBB.Options.AddButton(L["BtnUnselectAll"],function()
+		GBB.Options.AddButton(GBB.L["BtnUnselectAll"],function()
 			DoSelectFilter(false, TbcChkBox_FilterDungeon, GBB.TBCDUNGEONSTART, GBB.TBCMAXDUNGEON)
 		end)
 		GBB.Options.EndInLine()
@@ -254,8 +255,8 @@ function GBB.OptionsInit ()
 
 	end
 	-- Third panel - Filter
-	GBB.Options.AddPanel(L["PanelFilter"])
-	GBB.Options.AddCategory(L["HeaderDungeon"])
+	GBB.Options.AddPanel(GBB.L["PanelFilter"])
+	GBB.Options.AddCategory(GBB.L["HeaderDungeon"])
 	GBB.Options.Indent(10)
 
 	local defaultChecked = true
@@ -281,10 +282,10 @@ function GBB.OptionsInit ()
 	--GBB.Options.AddSpace()
 
 	GBB.Options.InLine()
-	GBB.Options.AddButton(L["BtnSelectAll"],function()
+	GBB.Options.AddButton(GBB.L["BtnSelectAll"],function()
 		DoSelectFilter(true, ChkBox_FilterDungeon, 1, GBB.MAXDUNGEON)
 	end)
-	GBB.Options.AddButton(L["BtnUnselectAll"],function()
+	GBB.Options.AddButton(GBB.L["BtnUnselectAll"],function()
 		DoSelectFilter(false, ChkBox_FilterDungeon, 1, GBB.MAXDUNGEON)
 	end)
 	GBB.Options.EndInLine()
@@ -297,9 +298,9 @@ function GBB.OptionsInit ()
 	end
 
 	-- Tags
-	GBB.Options.AddPanel(L["PanelTags"],false,true)
+	GBB.Options.AddPanel(GBB.L["PanelTags"],false,true)
 	
-	GBB.Options.AddCategory(L["HeaderTags"])
+	GBB.Options.AddCategory(GBB.L["HeaderTags"])
 	GBB.Options.Indent(10)
 	GBB.Options.InLine()
 	local locale = GetLocale()
@@ -313,9 +314,9 @@ function GBB.OptionsInit ()
 	GBB.Options.EndInLine()
 	GBB.Options.Indent(-10)
 	
-	GBB.Options.AddCategory(L["HeaderTagsCustom"])
+	GBB.Options.AddCategory(GBB.L["HeaderTagsCustom"])
 	GBB.Options.Indent(10)
-	GBB.Options.AddText(L["msgCustomList"],450+200)
+	GBB.Options.AddText(GBB.L["msgCustomList"],450+200)
 	GBB.Options.AddSpace()
 	CreateEditBoxDungeon("Search","",450,200)
 	CreateEditBoxDungeon("Bad","",450,200)
@@ -336,8 +337,8 @@ function GBB.OptionsInit ()
 	GBB.Options.Indent(-10)
 	
 	-- localization
-	GBB.Options.AddPanel(L["PanelLocales"],false,true)
-	GBB.Options.AddText(L["msgLocalRestart"])
+	GBB.Options.AddPanel(GBB.L["PanelLocales"],false,true)
+	GBB.Options.AddText(GBB.L["msgLocalRestart"])
 	GBB.Options.AddSpace()
 	local locales= GBB.locales.enGB
 	local t={}
@@ -347,8 +348,8 @@ function GBB.OptionsInit ()
 	table.sort(t)
 	for i,key in ipairs(t) do 
 		
-		local col=L[key]~=nil and "|cffffffff" or "|cffff4040"
-		local txt=L[key.."_org"]~="["..key.."_org]" and L[key.."_org"] or L[key]
+		local col=GBB.L[key]~=nil and "|cffffffff" or "|cffff4040"
+		local txt=GBB.L[key.."_org"]~="["..key.."_org]" and GBB.L[key.."_org"] or GBB.L[key]
 				
 		GBB.Options.AddEditBox(GBB.DB.CustomLocales,key,"",col.."["..key.."]",450,200,false,locales[key],txt)
 		
@@ -382,32 +383,32 @@ function GBB.OptionsInit ()
 		GBB.Options.AddText(txt)
 	end
 	
-	GBB.Options.AddPanel(L["PanelAbout"])
+	GBB.Options.AddPanel(GBB.L["PanelAbout"])
 
 	GBB.Options.AddCategory("|cFFFF1C1C"..GetAddOnMetadata(TOCNAME, "Title") .." ".. GetAddOnMetadata(TOCNAME, "Version") .." by "..GetAddOnMetadata(TOCNAME, "Author"))
 	GBB.Options.Indent(10)
 	GBB.Options.AddText(GetAddOnMetadata(TOCNAME, "Notes"))		
 	GBB.Options.Indent(-10)
 	
-	GBB.Options.AddCategory(L["HeaderInfo"])
+	GBB.Options.AddCategory(GBB.L["HeaderInfo"])
 	GBB.Options.Indent(10)
-	GBB.Options.AddText(L["AboutInfo"],-20)
+	GBB.Options.AddText(GBB.L["AboutInfo"],-20)
 	GBB.Options.Indent(-10)
 	
-	GBB.Options.AddCategory(L["HeaderUsage"])
+	GBB.Options.AddCategory(GBB.L["HeaderUsage"])
 	GBB.Options.Indent(10)
-	GBB.Options.AddText(L["AboutUsage"],-20)
+	GBB.Options.AddText(GBB.L["AboutUsage"],-20)
 	GBB.Options.Indent(-10)
 	
-	GBB.Options.AddCategory(L["HeaderSlashCommand"])
+	GBB.Options.AddCategory(GBB.L["HeaderSlashCommand"])
 	GBB.Options.Indent(10)
-	GBB.Options.AddText(L["AboutSlashCommand"],-20)
+	GBB.Options.AddText(GBB.L["AboutSlashCommand"],-20)
 	GBB.Tool.PrintSlashCommand(nil,nil,SlashText)
 	GBB.Options.Indent(-10)
 	
-	GBB.Options.AddCategory(L["HeaderCredits"])
+	GBB.Options.AddCategory(GBB.L["HeaderCredits"])
 	GBB.Options.Indent(10)
-	GBB.Options.AddText(L["AboutCredits"],-20)
+	GBB.Options.AddText(GBB.L["AboutCredits"],-20)
 	GBB.Options.Indent(-10)
 	
 	FixFilters()

@@ -65,7 +65,7 @@ function GBB.InsertChat()
 		return
 	end
 
-	local ChannelsToAdd = { [L["lfg_channel"]] = 1, [L["world_channel"]] = 1, }
+	local ChannelsToAdd = { [GBB.L["lfg_channel"]] = 1, [GBB.L["world_channel"]] = 1, }
 
 	-- Create new chat frame and new tab with no default message groups
 
@@ -109,8 +109,8 @@ end
 
 function GBB.AnnounceInit()
 	GroupBulletinBoardFrameAnnounceMsg:SetTextColor(0.6,0.6,0.6)
-	GroupBulletinBoardFrameAnnounceMsg:SetText(L["msgRequestHere"])
-	GroupBulletinBoardFrameAnnounce:SetText(L["BtnPostMsg"])
+	GroupBulletinBoardFrameAnnounceMsg:SetText(GBB.L["msgRequestHere"])
+	GroupBulletinBoardFrameAnnounce:SetText(GBB.L["BtnPostMsg"])
 	GroupBulletinBoardFrameAnnounceMsg:HighlightText(0,0) 
 	GroupBulletinBoardFrameAnnounceMsg:SetCursorPosition(0)
 	GroupBulletinBoardFrameAnnounce:Disable()
@@ -119,7 +119,7 @@ end
 
 function GBB.GetFocus()
 	local t= GroupBulletinBoardFrameAnnounceMsg:GetText()
-	if t==L["msgRequestHere"]  then
+	if t==GBB.L["msgRequestHere"]  then
 		GroupBulletinBoardFrameAnnounceMsg:SetTextColor(1,1,1)
 		GroupBulletinBoardFrameAnnounceMsg:SetText("")
 		
@@ -128,7 +128,7 @@ end
 
 function GBB.EditAnnounceMessage_Changed()
 	local t= GroupBulletinBoardFrameAnnounceMsg:GetText()
-	if t==nil or t=="" or t==L["msgRequestHere"] then
+	if t==nil or t=="" or t==GBB.L["msgRequestHere"] then
 		GroupBulletinBoardFrameAnnounce:Disable()
 	else
 		GroupBulletinBoardFrameAnnounce:Enable()
@@ -138,7 +138,7 @@ end
 function GBB.Announce()
 	local msg = GroupBulletinBoardFrameAnnounceMsg:GetText()
 	
-	if msg~= nil and msg~="" and msg~=L["msgRequestHere"]then
+	if msg~= nil and msg~="" and msg~=GBB.L["msgRequestHere"]then
 		GBB.SendMessage(GBB.DB.AnnounceChannel, msg)
 		GroupBulletinBoardFrameAnnounceMsg:ClearFocus()
 	end

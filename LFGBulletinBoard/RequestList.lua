@@ -195,12 +195,12 @@ local function CreateItem(yy,i,doCompact,req,forceHight)
 		local typePrefix
 		if req.IsHeroic == true then
 			local colorHex = GBB.Tool.RGBPercToHex(GBB.DB.HeroicDungeonColor.r,GBB.DB.HeroicDungeonColor.g,GBB.DB.HeroicDungeonColor.b)
-			typePrefix = "|c00".. colorHex .. "[" .. L["heroicAbr"] .. "]     "
+			typePrefix = "|c00".. colorHex .. "[" .. GBB.L["heroicAbr"] .. "]     "
 		elseif req.IsRaid == true then
-			typePrefix = "|c00ffff00" .. "[" .. L["raidAbr"] .. "]     "
+			typePrefix = "|c00ffff00" .. "[" .. GBB.L["raidAbr"] .. "]     "
 		else
 			local colorHex = GBB.Tool.RGBPercToHex(GBB.DB.NormalDungeonColor.r,GBB.DB.NormalDungeonColor.g,GBB.DB.NormalDungeonColor.b)
-			typePrefix = "|c00".. colorHex .. "[" .. L["normalAbr"] .. "]    "
+			typePrefix = "|c00".. colorHex .. "[" .. GBB.L["normalAbr"] .. "]    "
 		end
 
 		if GBB.DB.ChatStyle then
@@ -276,7 +276,7 @@ local function CreateItem(yy,i,doCompact,req,forceHight)
 end
 
 local function WhoRequest(name)
-	--DEFAULT_CHAT_FRAME:AddMessage(GBB.MSGPREFIX .. string.format(L["msgStartWho"],name))
+	--DEFAULT_CHAT_FRAME:AddMessage(GBB.MSGPREFIX .. string.format(GBB.L["msgStartWho"],name))
 	--DEFAULT_CHAT_FRAME.editBox:SetText("/who " .. name) 
 	--ChatEdit_SendText(DEFAULT_CHAT_FRAME.editBox)
 	GBB.Tool.RunSlashCmd("/who " .. name) 
@@ -451,7 +451,7 @@ function GBB.UpdateList()
 	yy=yy+GroupBulletinBoardFrame_ScrollFrame:GetHeight()-20
 	
 	GroupBulletinBoardFrame_ScrollChildFrame:SetHeight(yy)
-	GroupBulletinBoardFrameStatusText:SetText(string.format(L["msgNbRequest"], count))
+	GroupBulletinBoardFrameStatusText:SetText(string.format(GBB.L["msgNbRequest"], count))
 	
 	GBB.AutoUpdateTimer=time()+GBB.UPDATETIMER
 end
@@ -646,7 +646,7 @@ function GBB.PhraseMessage(msg,name,guid,channel)
 	
 	local dungeonTXT=""
 	
-	if GBB.DB.UseAllInLFG and isBad==false and isGood==false and string.lower(L["lfg_channel"])==string.lower(channel) then
+	if GBB.DB.UseAllInLFG and isBad==false and isGood==false and string.lower(GBB.L["lfg_channel"])==string.lower(channel) then
 		isGood=true
 		if next(dungeonList) == nil then 
 			dungeonList["MISC"]=true
@@ -709,7 +709,7 @@ function GBB.PhraseMessage(msg,name,guid,channel)
 			if GBB.DB.OneLineNotification then 
 				DEFAULT_CHAT_FRAME:AddMessage(GBB.MSGPREFIX..linkname..FriendIcon..": "..msg,GBB.DB.NotifyColor.r,GBB.DB.NotifyColor.g,GBB.DB.NotifyColor.b)
 			else
-				DEFAULT_CHAT_FRAME:AddMessage(GBB.MSGPREFIX..string.format(L["msgNewRequest"],linkname..FriendIcon,dungeonTXT),GBB.DB.NotifyColor.r*.8,GBB.DB.NotifyColor.g*.8,GBB.DB.NotifyColor.b*.8)
+				DEFAULT_CHAT_FRAME:AddMessage(GBB.MSGPREFIX..string.format(GBB.L["msgNewRequest"],linkname..FriendIcon,dungeonTXT),GBB.DB.NotifyColor.r*.8,GBB.DB.NotifyColor.g*.8,GBB.DB.NotifyColor.b*.8)
 				DEFAULT_CHAT_FRAME:AddMessage(GBB.MSGPREFIX..msg,GBB.DB.NotifyColor.r,GBB.DB.NotifyColor.g,GBB.DB.NotifyColor.b)
 			end
 		end
@@ -767,37 +767,37 @@ local function createMenu(DungeonID,req)
 		return
 	end
 	if req then
-		GBB.PopupDynamic:AddItem(string.format(L["BtnWho"],req.name),false,WhoRequest,req.name)
-		GBB.PopupDynamic:AddItem(string.format(L["BtnWispher"],req.name),false,WhisperRequest,req.name)			
-		GBB.PopupDynamic:AddItem(string.format(L["BtnInvite"],req.name),false,InviteRequest,req.name)
-		GBB.PopupDynamic:AddItem(string.format(L["BtnIgnore"],req.name),false,IgnoreRequest,req.name)	
+		GBB.PopupDynamic:AddItem(string.format(GBB.L["BtnWho"],req.name),false,WhoRequest,req.name)
+		GBB.PopupDynamic:AddItem(string.format(GBB.L["BtnWispher"],req.name),false,WhisperRequest,req.name)			
+		GBB.PopupDynamic:AddItem(string.format(GBB.L["BtnInvite"],req.name),false,InviteRequest,req.name)
+		GBB.PopupDynamic:AddItem(string.format(GBB.L["BtnIgnore"],req.name),false,IgnoreRequest,req.name)	
 		GBB.PopupDynamic:AddItem("",true)
 	end
 	if DungeonID then 
-		GBB.PopupDynamic:AddItem(L["BtnFold"], false,GBB.FoldedDungeons,DungeonID)
-		GBB.PopupDynamic:AddItem(L["BtnFoldAll"], false,GBB.FoldAllDungeon)
-		GBB.PopupDynamic:AddItem(L["BtnUnFoldAll"], false,GBB.UnfoldAllDungeon)
+		GBB.PopupDynamic:AddItem(GBB.L["BtnFold"], false,GBB.FoldedDungeons,DungeonID)
+		GBB.PopupDynamic:AddItem(GBB.L["BtnFoldAll"], false,GBB.FoldAllDungeon)
+		GBB.PopupDynamic:AddItem(GBB.L["BtnUnFoldAll"], false,GBB.UnfoldAllDungeon)
 		GBB.PopupDynamic:AddItem("",true)
 	end	
-	GBB.PopupDynamic:AddItem(L["CboxShowTotalTime"],false,GBB.DB,"ShowTotalTime")
-	GBB.PopupDynamic:AddItem(L["CboxOrderNewTop"],false,GBB.DB,"OrderNewTop")
-	GBB.PopupDynamic:AddItem(L["CboxEnableShowOnly"],false,GBB.DB,"EnableShowOnly")
-	GBB.PopupDynamic:AddItem(L["CboxChatStyle"],false,GBB.DB,"ChatStyle")
-	GBB.PopupDynamic:AddItem(L["CboxCompactStyle"],false,GBB.DB,"CompactStyle")	
-	GBB.PopupDynamic:AddItem(L["CboxDontTrunicate"],false,GBB.DB,"DontTrunicate")
+	GBB.PopupDynamic:AddItem(GBB.L["CboxShowTotalTime"],false,GBB.DB,"ShowTotalTime")
+	GBB.PopupDynamic:AddItem(GBB.L["CboxOrderNewTop"],false,GBB.DB,"OrderNewTop")
+	GBB.PopupDynamic:AddItem(GBB.L["CboxEnableShowOnly"],false,GBB.DB,"EnableShowOnly")
+	GBB.PopupDynamic:AddItem(GBB.L["CboxChatStyle"],false,GBB.DB,"ChatStyle")
+	GBB.PopupDynamic:AddItem(GBB.L["CboxCompactStyle"],false,GBB.DB,"CompactStyle")	
+	GBB.PopupDynamic:AddItem(GBB.L["CboxDontTrunicate"],false,GBB.DB,"DontTrunicate")
 	GBB.PopupDynamic:AddItem("",true)
-	GBB.PopupDynamic:AddItem(L["CboxNotifySound"],false,GBB.DB,"NotifySound")
-	GBB.PopupDynamic:AddItem(L["CboxNotifyChat"],false,GBB.DB,"NotifyChat")		
+	GBB.PopupDynamic:AddItem(GBB.L["CboxNotifySound"],false,GBB.DB,"NotifySound")
+	GBB.PopupDynamic:AddItem(GBB.L["CboxNotifyChat"],false,GBB.DB,"NotifyChat")		
 	GBB.PopupDynamic:AddItem("",true)
-	GBB.PopupDynamic:AddItem(L["HeaderSettings"],false, GBB.Options.Open, 1)
+	GBB.PopupDynamic:AddItem(GBB.L["HeaderSettings"],false, GBB.Options.Open, 1)
 	
 	if GBB.GameType == "TBC" then
-		GBB.PopupDynamic:AddItem(L["TBCPanelFilter"], false, GBB.Options.Open, 1 + GBB.PANELOFFSET)
+		GBB.PopupDynamic:AddItem(GBB.L["TBCPanelFilter"], false, GBB.Options.Open, 1 + GBB.PANELOFFSET)
 	else
-		GBB.PopupDynamic:AddItem(L["PanelFilter"], false, GBB.Options.Open, 2 + GBB.PANELOFFSET)
+		GBB.PopupDynamic:AddItem(GBB.L["PanelFilter"], false, GBB.Options.Open, 2 + GBB.PANELOFFSET)
 	end
-	GBB.PopupDynamic:AddItem(L["PanelAbout"], false, GBB.Options.Open, 5 + GBB.PANELOFFSET)
-	GBB.PopupDynamic:AddItem(L["BtnCancel"],false)
+	GBB.PopupDynamic:AddItem(GBB.L["PanelAbout"], false, GBB.Options.Open, 5 + GBB.PANELOFFSET)
+	GBB.PopupDynamic:AddItem(GBB.L["BtnCancel"],false)
 	GBB.PopupDynamic:Show()
 end
 
@@ -864,11 +864,11 @@ function GBB.RequestShowTooltip(self)
 		end
 		
 		if GBB.DB.ChatStyle then
-			GameTooltip:AddLine(string.format(L["msgLastTime"],GBB.formatTime(time()-req.last)).."|n"..string.format(L["msgTotalTime"],GBB.formatTime(time()-req.start)))
+			GameTooltip:AddLine(string.format(GBB.L["msgLastTime"],GBB.formatTime(time()-req.last)).."|n"..string.format(GBB.L["msgTotalTime"],GBB.formatTime(time()-req.start)))
 		elseif GBB.DB.ShowTotalTime then
-			GameTooltip:AddLine(string.format(L["msgLastTime"],GBB.formatTime(time()-req.last)))
+			GameTooltip:AddLine(string.format(GBB.L["msgLastTime"],GBB.formatTime(time()-req.last)))
 		else
-			GameTooltip:AddLine(string.format(L["msgTotalTime"],GBB.formatTime(time()-req.start)))
+			GameTooltip:AddLine(string.format(GBB.L["msgTotalTime"],GBB.formatTime(time()-req.start)))
 		end
 		
 		if GBB.DB.EnableGroup and GBB.GroupTrans and GBB.GroupTrans[req.name] then

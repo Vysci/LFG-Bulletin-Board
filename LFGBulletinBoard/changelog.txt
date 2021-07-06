@@ -2,6 +2,10 @@
 
 Group Bulletin Board 	
 
+2.59
+- Fixed interference with other addons
+- Make LFG bar optional (configured in setting)
+
 2.58 
  - Added a text box to post LFG msg at a click of a button
 

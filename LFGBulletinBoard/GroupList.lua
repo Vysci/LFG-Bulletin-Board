@@ -178,7 +178,7 @@ function GBB.InitGroupList()
 	end
 	
 	StaticPopupDialogs["GroupBulletinBoard_AddNote"] = {
-		text = L.msgAddNote,
+		text = GBB.L.msgAddNote,
 		button1 = ACCEPT,
 		button2 = CANCEL,
 		hasEditBox = 1,
