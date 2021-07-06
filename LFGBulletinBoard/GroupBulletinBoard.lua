@@ -124,16 +124,12 @@ function GBB.LevelRange(dungeon,short)
 end
 
 function GBB.FilterDungeon(dungeon, isHeroic, isRaid)
-	if dungeon == nil then return false end
+	if dungeon==nil then return false end
 	if isHeroic == nil then isHeroic = false end
 	if isRaid == nil then isRaid = false end
-
-	-- If the user is within the level range, or if they're max level and it's heroic.
-	local inLevelRange = (GBB.dungeonLevel[dungeon][1] <= GBB.UserLevel and GBB.UserLevel <= GBB.dungeonLevel[dungeon][2]) or (isHeroic and GBB.UserLevel == 70)
 	
-	return GBB.DBChar["FilterDungeon"..dungeon] and 
-		(isRaid or ((GBB.DBChar["HeroicOnly"] == false or isHeroic) and (GBB.DBChar["NormalOnly"] == false or isHeroic == false))) and
-		(GBB.DBChar.FilterLevel == false or inLevelRange)
+	return GBB.DBChar["FilterDungeon"..dungeon] and (isRaid or ((GBB.DBChar["HeroicOnly"] == false or isHeroic) and (GBB.DBChar["NormalOnly"] == false or isHeroic == false))) and
+		(GBB.DBChar.FilterLevel==false or (GBB.dungeonLevel[dungeon][1] <= GBB.UserLevel and GBB.UserLevel <= GBB.dungeonLevel[dungeon][2]))
 end
 
 function GBB.formatTime(sec) 
