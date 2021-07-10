@@ -80,6 +80,7 @@ function GBB.GetDungeonNames()
 		["EOTS"] =  "Eye of the Storm (PvP)",
 		["ARENA"] = "Arena (PvP)",
 		["MISC"] = 	"Miscellaneous",
+		["QUEST"] =	"Quests",
 		["TRADE"] =	"Trade",
 		["DEBUG"] = "DEBUG INFO",
 		["BAD"] =	"DEBUG BAD WORDS - REJECTED",
@@ -458,7 +459,8 @@ GBB.VanillaDungeonLevels ={
 	["LBRS"] = 	{55,60}, ["DME"] = 	{58,60}, ["DMN"] = 	{58,60}, ["DMW"] = 	{58,60}, ["STR"] = 	{58,60}, ["SCH"] = 	{58,60},
 	["UBRS"] = 	{58,60}, ["ONY"] = 	{60,60}, ["MC"] = 	{60,60}, ["ZG"] = 	{60,60}, ["AQ20"]= 	{60,60}, ["BWL"] = {60,60},
 	["AQ40"] = 	{60,60}, ["NAX"] = 	{60,60}, ["WSG"] = 	{10,70}, ["AB"] = 	{20,70}, ["AV"] = 	{51,70}, ["MISC"]= {0,100},  
-	["DEBUG"] = {0,100}, ["BAD"] =	{0,100}, ["TRADE"]=	{0,100}, ["SM2"] =  {28,42}, ["DM2"] =	{58,60}, ["DEADMINES"]={18,23},
+	["DEBUG"] = {0,100}, ["QUEST"]= {0,100}, ["BAD"] =	{0,100}, ["TRADE"]=	{0,100}, ["SM2"] =  {28,42}, ["DM2"] =	{58,60},
+	["DEADMINES"]={18,23},
 }
 
 GBB.PostTbcDungeonLevels = {
@@ -468,7 +470,8 @@ GBB.PostTbcDungeonLevels = {
 	["LBRS"] = 	{54,60}, ["DME"] = 	{54,61}, ["DMN"] = 	{54,61}, ["DMW"] = 	{54,61}, ["STR"] = 	{56,61}, ["SCH"] = 	{56,61},
 	["UBRS"] = 	{53,61}, ["ONY"] = 	{60,60}, ["MC"] = 	{60,60}, ["ZG"] = 	{60,60}, ["AQ20"]= 	{60,60}, ["BWL"] = {60,60},
 	["AQ40"] = 	{60,60}, ["NAX"] = 	{60,60}, ["WSG"] = 	{10,70}, ["AB"] = 	{20,70}, ["AV"] = 	{51,70}, ["MISC"]= {0,100},  
-	["DEBUG"] = {0,100}, ["BAD"] =	{0,100}, ["TRADE"]=	{0,100}, ["SM2"] =  {28,42}, ["DM2"] =	{58,60}, ["DEADMINES"]={16,24},
+	["DEBUG"] = {0,100}, ["QUEST"]= {0,100},   ["BAD"] =	{0,100}, ["TRADE"]=	{0,100}, ["SM2"] =  {28,42}, ["DM2"] =	{58,60},
+	["DEADMINES"]={16,24},
 }
 
 GBB.TbcDungeonLevels = { 
@@ -500,7 +503,7 @@ GBB.PvpNames = {
 	"WSG", "AB", "AV", "EOTS", "ARENA",
 }
 
-GBB.Misc = {"MISC", "TRADE",}
+GBB.Misc = {"MISC", "TRADE", "QUEST"}
 
 GBB.DebugNames = {
 	"DEBUG", "BAD", "NIL",
