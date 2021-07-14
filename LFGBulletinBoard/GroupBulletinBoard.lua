@@ -335,7 +335,7 @@ local function hooked_createTooltip(self)
 				local entry=GBB.GroupTrans[name] 
 				
 				self:AddLine(" ")					
-				self:AddLine(L.msgLastSeen)					
+				self:AddLine(GBB.L.msgLastSeen)					
 				if entry.dungeon then
 					self:AddLine(entry.dungeon)
 				end
