@@ -23,7 +23,6 @@ GBB.locales = {
 		["heroicAbr"]="H",
 		["normalAbr"]="N",
 		["raidAbr"]="R",
-		["msgFontSize"] = "Font Size (Requires /reload)",
 		
 		-- option panel
 		
