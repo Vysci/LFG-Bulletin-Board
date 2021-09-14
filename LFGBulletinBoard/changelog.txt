@@ -2,6 +2,14 @@
 
 Group Bulletin Board 	
 
+2.61
+- Added option to adjust font size. 3 whole options, don't ask for more
+- Fixed the thing that made the addon not working for everyone except me 
+- LFG bar defaulted to being off (its ugly af)
+
+2.60 
+ - I cant remember what happened here. I was drunk
+
 2.59
 - Fixed interference with other addons
 - Make LFG bar optional (configured in setting)

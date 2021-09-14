@@ -215,7 +215,7 @@ function GBB.InitGroupList()
 	
 
 	GroupBulletinBoardFrame_GroupFrame:SetFading(false);
-	GroupBulletinBoardFrame_GroupFrame:SetFontObject(GameFontNormal);
+	GroupBulletinBoardFrame_GroupFrame:SetFontObject(GBB.DB.FontSize);
 	GroupBulletinBoardFrame_GroupFrame:SetJustifyH("LEFT");
 	GroupBulletinBoardFrame_GroupFrame:SetHyperlinksEnabled(true);
 	GroupBulletinBoardFrame_GroupFrame:SetScript("OnHyperlinkClick",ClickHyperlink)
