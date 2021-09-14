@@ -108,8 +108,6 @@ function GBB.SendMessage(ChannelName, Msg)
 end
 
 function GBB.AnnounceInit()
-	GroupBulletinBoardFrameSelectChannel:SetNormalFontObject(GBB.DB.FontSize)
-	GroupBulletinBoardFrameAnnounce:SetNormalFontObject(GBB.DB.FontSize)
 	GroupBulletinBoardFrameAnnounceMsg:SetTextColor(0.6,0.6,0.6)
 	GroupBulletinBoardFrameAnnounceMsg:SetText(GBB.L["msgRequestHere"])
 	GroupBulletinBoardFrameAnnounce:SetText(GBB.L["BtnPostMsg"])
