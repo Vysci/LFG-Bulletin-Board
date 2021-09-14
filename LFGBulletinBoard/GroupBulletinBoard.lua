@@ -498,7 +498,7 @@ function GBB.Init()
 		},
 	},
 		})
-	
+		
 	-- Create options and initalize!
 	GBB.OptionsInit()
 		
@@ -517,6 +517,7 @@ function GBB.Init()
 	)	
 	
 	GBB.FramePullDownChannel=CreateFrame("Frame", "GBB.PullDownMenu", UIParent, "UIDropDownMenuTemplate")
+	GroupBulletinBoardFrameTitle:SetFontObject(GBB.DB.FontSize)
 	if GBB.DB.AnnounceChannel == nil then
 		if GBB.L["lfg_channel"] ~= "" then
 			GBB.DB.AnnounceChannel = GBB.L["lfg_channel"]
@@ -524,6 +525,7 @@ function GBB.Init()
 			_, GBB.DB.AnnounceChannel = GetChannelList()
 		end
 	end
+
 	GroupBulletinBoardFrameSelectChannel:SetText(GBB.DB.AnnounceChannel)
 
 	GBB.ResizeFrameList()
@@ -553,7 +555,6 @@ function GBB.Init()
 	GBB.PopupDynamic=GBB.Tool.CreatePopup(GBB.OptionsUpdate)
 	
 	GBB.InitGroupList()
-	
 	GBB.Tool.AddTab(GroupBulletinBoardFrame,GBB.L.TabRequest,GroupBulletinBoardFrame_ScrollFrame)
 	GBB.Tool.AddTab(GroupBulletinBoardFrame,GBB.L.TabGroup,GroupBulletinBoardFrame_GroupFrame)
 	GBB.Tool.SelectTab(GroupBulletinBoardFrame,1)
