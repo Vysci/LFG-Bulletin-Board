@@ -73,9 +73,9 @@ local function CreateHeader(yy,dungeon)
 		GBB.FramesEntries[dungeon]:SetPoint("RIGHT", _G[AnchorRight], "RIGHT", 0, 0)						
 		_G[ItemFrameName.."_name"]:SetPoint("RIGHT",GBB.FramesEntries[dungeon], "RIGHT", 0,0)
 		local fname,h=_G[ItemFrameName.."_name"]:GetFont()
-		
 		_G[ItemFrameName.."_name"]:SetHeight(h)
 		_G[ItemFrameName]:SetHeight(h+5)
+		_G[ItemFrameName.."_name"]:SetFontObject(GBB.DB.FontSize)		
 		
 	end
 	
@@ -106,7 +106,7 @@ local function CreateHeader(yy,dungeon)
 	end
 
 	_G[ItemFrameName.."_name"]:SetText(colTXT..GBB.dungeonNames[dungeon].." |cFFAAAAAA"..GBB.LevelRange(dungeon).."|r")
-						
+	_G[ItemFrameName.."_name"]:SetFontObject(GBB.DB.FontSize)				
 	GBB.FramesEntries[dungeon]:SetPoint("TOPLEFT",_G[AnchorTop], "TOPLEFT", 0,-yy)
 	GBB.FramesEntries[dungeon]:Show()
 	
@@ -123,10 +123,14 @@ local function CreateItem(yy,i,doCompact,req,forceHight)
 	if GBB.FramesEntries[i]==nil then
 		GBB.FramesEntries[i]=CreateFrame("Frame",ItemFrameName , GroupBulletinBoardFrame_ScrollChildFrame, "GroupBulletinBoard_TmpRequest")
 		GBB.FramesEntries[i]:SetPoint("RIGHT", _G[AnchorRight], "RIGHT", 0, 0)
+
 		_G[ItemFrameName.."_name"]:SetPoint("TOPLEFT")
 		_G[ItemFrameName.."_time"]:SetPoint("TOP",_G[ItemFrameName.."_name"], "TOP",0,0)
 		
 		_G[ItemFrameName.."_message"]:SetNonSpaceWrap(false)
+		_G[ItemFrameName.."_message"]:SetFontObject(GBB.DB.FontSize)
+		_G[ItemFrameName.."_name"]:SetFontObject(GBB.DB.FontSize)
+		_G[ItemFrameName.."_time"]:SetFontObject(GBB.DB.FontSize)
 		if GBB.DontTrunicate then
 			GBB.ClearNeeded=true
 		end
