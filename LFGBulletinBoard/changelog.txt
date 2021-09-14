@@ -4,6 +4,8 @@ Group Bulletin Board
 
 2.61
 - Added option to adjust font size. 3 whole options, don't ask for more
+- Fixed the issue that caused this version to stop working
+- Made the LFG bar default to being hidden (its ugly af)
 
 2.60 
  - I cant remember what happened here. I was drunk
