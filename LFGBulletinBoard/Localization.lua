@@ -355,7 +355,7 @@ GBB.locales = {
 		["lfg_channel"]="尋求組隊", -- must be the default chat-name!
 		["world_channel"]="綜合", -- must be the default chat-name!
 		["GuildChannel"]="公會",
-				
+		
 		["msgNbRequest"]="%d 個尋求組隊 - 左鍵:密語 - shift+左鍵:查詢who - ctrl+左鍵:邀請進組 - 繁中化:帕爾提娜@伊弗斯|n",
 		["msgStartWho"]="查詢 who 於 %s...",
 		["msgNewRequest"]="新的尋求組隊 %s 尋找地城 %s.",
@@ -372,6 +372,8 @@ GBB.locales = {
 		["heroic"]="英雄", 
 		["heroicAbr"]="H",
 		["normalAbr"]="N",
+		["raidAbr"]="R",
+		["msgFontSize"] = "字體大小 (需要 /reload)",
 		
 		-- option panel
 		
@@ -406,18 +408,20 @@ GBB.locales = {
 		["CboxTagsZhtw"]="中文 (台灣)",
 		["CboxTagsCustom"]="自訂",
 		["CboxRemoveRaidSymbols"]="移除團隊圖示 如 {rt1}",
-		["CboxOrderNewTop"]="排序新尋求組隊顯示在上面",
-		["CboxColorByClass"]="根據職業著色名字",
+		["CboxOrderNewTop"]="排序越新的顯示越上面",
+		["CboxColorByClass"]="名字依職業著色",
 		["CboxShowClassIcon"]="並顯示圖示",
-		["CboxUseAllInLFG"]="顯示來自 lfg-channel 的所有訊息",
+		["CboxUseAllInLFG"]="顯示來自組隊頻道的所有訊息",
 		["CboxEscapeQuit"]="ESC 關閉主視窗 (需要重啟)",
 		["CboxEnableShowOnly"]="在每個地城顯示尋求組隊的數量",
+		["CboxDisplayLFG"] = "顯示組隊條 (需要 /reload)",
 		["CboxChatStyle"]="使用聊天樣式設計",
 		["CboxCharDontFilterOwn"]="不要過濾自己的請求",		 
-		["CboxCharHeroicOnly"]="只過濾英雄",	 
-		["CboxDontTrunicate"]="不要截斷訊息",
+		["CboxCharHeroicOnly"]="只顯示英雄",	 
+		["CboxCharNormalOnly"]="只顯示普通",  
+		["CboxDontTrunicate"]="不要斷行訊息",
 		["CboxOneLineNotification"]="小的單行聊天通知",
-		["CboxCompactStyle"]="使用雙行設計",
+		["CboxCompactStyle"]="使用雙行樣式",
 		["CboxEnableGroup"]="記得過去的團隊成員",
 		["CboxEnableGuild"]="新增公會於玩家提示",
 		["CboxCombineSubDungeons"]="合併次副本如 厄運之槌 (僅新尋求組隊生效)",
@@ -453,6 +457,7 @@ GBB.locales = {
 		["BtnNotifyColor"]="通知訊息顏色",
 		["BtnPlayerNoteColor"]="玩家註記顏色",
 		["BtnColorGuild"]="公會文字顏色",
+		["BtnPostMsg"] = "發佈",
 		
 		["SlashReset"]="重設主視窗位置",
 		["SlashConfig"]="開啟設定",
@@ -464,13 +469,12 @@ GBB.locales = {
 		["TabGroup"]="成員",
 		
 		["AboutUsage"]="GBB 於背景搜尋尋求組隊的聊天訊息. 欲密語, 單點左鍵即可. 欲查詢 '/who' shift + 左鍵即可. 地城列表可以在設定中被過濾. 你也可以對地城名稱單點左鍵折疊.|n舊的尋求組隊會在150秒後被過濾掉.",
-			
+		
 		["AboutSlashCommand"]="<value> 可以是 true, 1, enable, false, 0, disable. 如 <value> 未提供, 則會改變目前狀態.",
 		
 		
 		["AboutInfo"]="GBB provides an overview of the endless requests in the chat channels. It detects all requests to the classic dungeons, sorts them and presents them clearly way. Numerous filtering options reduce the gigantic number to exactly the dungeons that interest you. And if that's not enough, GBB will let you know about any new request via a sound or chat notification. And finally, GBB can post your request repeatedly.",
-		
-		
+		["AboutCredits"]="Original by GPI / Erytheia-Razorfen",
 	},
 
 }
