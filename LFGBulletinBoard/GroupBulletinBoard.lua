@@ -396,7 +396,7 @@ function GBB.Init()
 	GBB.DBChar=GroupBulletinBoardDBChar
 	
 	-- Needed for the people who it got initialized as a table not a string
-	if (type(elem) == "table") then
+	if (type(GBB.DB.FontSize) == "table") then
     		GBB.DB.FontSize = nil
 	end
 	
