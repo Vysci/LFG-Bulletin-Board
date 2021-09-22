@@ -55,6 +55,12 @@ local function FixFilters()
 			end
 		end
 	end	
+
+	for eventName, eventData in pairs(GBB.Seasonal) do
+        if GBB.Tool.InDateRange(eventData.startDate, eventData.endDate) == false then
+			GBB.DBChar["FilterDungeon"..eventName]=false
+        end
+    end
 end
 
 local isChat=false
@@ -221,9 +227,17 @@ function GBB.OptionsInit ()
 		GBB.Options.Indent(10)
 
 		TbcChkBox_FilterDungeon={}
+		
+		local offSet = 0
+		for k, _ in pairs(GBB.SeasonalActiveEvents) do
+			offSet = offSet + 1
+			TbcChkBox_FilterDungeon[GBB.TBCDUNGEONSTART - offSet]= CheckBoxFilter(k, false)
+		end
+
 		for index=GBB.TBCDUNGEONSTART,GBB.TBCDUNGEONBREAK do
 			TbcChkBox_FilterDungeon[index]=CheckBoxFilter(GBB.dungeonSort[index],true)
-		end	
+		end
+
 		GBB.Options.SetRightSide()
 		--GBB.Options.AddCategory("")
 		GBB.Options.Indent(10)	
@@ -241,12 +255,13 @@ function GBB.OptionsInit ()
 		
 		--GBB.Options.AddSpace()
 
+		local startIndex = GBB.TBCDUNGEONSTART - offSet
 		GBB.Options.InLine()
 		GBB.Options.AddButton(GBB.L["BtnSelectAll"],function()
-			DoSelectFilter(true, TbcChkBox_FilterDungeon, GBB.TBCDUNGEONSTART, GBB.TBCMAXDUNGEON-2) -- Doing -2 to not select trade and misc
+			DoSelectFilter(true, TbcChkBox_FilterDungeon, startIndex, GBB.TBCMAXDUNGEON-2) -- Doing -2 to not select trade and misc
 		end)
 		GBB.Options.AddButton(GBB.L["BtnUnselectAll"],function()
-			DoSelectFilter(false, TbcChkBox_FilterDungeon, GBB.TBCDUNGEONSTART, GBB.TBCMAXDUNGEON)
+			DoSelectFilter(false, TbcChkBox_FilterDungeon, startIndex, GBB.TBCMAXDUNGEON)
 		end)
 		GBB.Options.EndInLine()
 		
