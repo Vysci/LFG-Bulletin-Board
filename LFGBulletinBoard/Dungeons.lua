@@ -526,8 +526,8 @@ GBB.Raids = {
 }
 
 GBB.Seasonal = {
-    ["BREW"] = { startDate = "09/20", endDate = "10/06"},
-	["HOLLOW"] = { startDate = "10/17", endDate = "10/31"}
+    ["BREW"] = { startDate = "09/19", endDate = "10/07"},
+	["HOLLOW"] = { startDate = "10/16", endDate = "11/01"}
 }
 
 GBB.SeasonalActiveEvents = {}
@@ -559,11 +559,22 @@ local function ConcatenateLists(Names)
 end
 
 function GBB.GetDungeonSort()
-	local dungeonOrder = { GBB.VanillDungeonNames, GBB.Events, GBB.TbcDungeonNames, GBB.PvpNames, GBB.Misc, GBB.DebugNames}
+	for eventName, eventData in pairs(GBB.Seasonal) do
+        if GBB.Tool.InDateRange(eventData.startDate, eventData.endDate) then
+			table.insert(GBB.TbcDungeonNames, 1, eventName)
+		else
+			table.insert(GBB.DebugNames, 1, eventName)
+		end
+    end
+	
+	local dungeonOrder = { GBB.VanillDungeonNames, GBB.TbcDungeonNames, GBB.PvpNames, GBB.Misc, GBB.DebugNames}
 
 	-- Why does Lua not having a fucking size function
-	local _, vanillaDungeonSize = ConcatenateLists({ GBB.VanillDungeonNames, GBB.Events})
-		
+	 local vanillaDungeonSize = 0
+	 for _, _ in pairs(GBB.VanillDungeonNames) do
+		vanillaDungeonSize = vanillaDungeonSize + 1
+	 end
+
 	local debugSize = 0
 	for _, _ in pairs(GBB.DebugNames) do
 		debugSize = debugSize+1
