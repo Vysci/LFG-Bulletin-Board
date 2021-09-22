@@ -11,6 +11,18 @@ local function DetermineGameVersion()
 	end
 end
 
+local function getSeasonalDungeons()
+    local events = {}
+
+    for eventName, eventData in pairs(GBB.Seasonal) do
+		table.insert(events, eventName)
+        if GBB.Tool.InDateRange(eventData.startDate, eventData.endDate) then
+			GBB.SeasonalActiveEvents[eventName] = true
+        end
+    end
+	return events
+end
+
 DetermineGameVersion()
 
 function GBB.GetDungeonNames()
@@ -62,7 +74,7 @@ function GBB.GetDungeonNames()
 		["GL"] = 	"Gruul's Lair",
 		["MAG"] = 	"Hellfire Citadel: Magtheridon's Lair",
 		["SSC"] = 	"Coilfang Reservoir: Serpentshrine Cavern",
-		["EYE"] = 	"The Eye",
+		["EYE"] = 	"Tempest Keep: The Eye",
 		["ZA"] = 	"Zul-Aman",
 		["HYJAL"] = "The Battle For Mount Hyjal",
 		["BT"] = 	"Black Temple",
@@ -83,6 +95,8 @@ function GBB.GetDungeonNames()
 		["TRADE"] =	"Trade",
 		["DEBUG"] = "DEBUG INFO",
 		["BAD"] =	"DEBUG BAD WORDS - REJECTED",
+		["BREW"] =  "Brewfest - Coren Direbrew",
+		["HOLLOW"] =  "Hallow's End - Headless Horseman",
 		}
 		
 	local dungeonNamesLocales={ 
@@ -476,16 +490,14 @@ GBB.TbcDungeonLevels = {
 	["SETH"] =   {67,69},  	["OHB"] = 	 {66,68},     ["MECH"] =   {69,70},    ["BM"] =      {69,70},    ["MGT"] =	 {70,70},    ["SH"] =	 {70,70}, 
 	["BOT"] =    {70,70},    ["SL"] = 	 {70,70},    ["SV"] =     {70,70},   ["ARC"] = 	 {70,70},    ["KARA"] = 	 {70,70},    ["GL"] = 	 {70,70}, 
 	["MAG"] =    {70,70},    ["SSC"] =    {70,70}, 	["EYE"] =    {70,70},   ["ZA"] = 	 {70,70},    ["HYJAL"] =  {70,70}, 	["BT"] =     {70,70}, 
-	["SWP"] =    {70,70}, 	["EOTS"] =   {15,70},   ["ARENA"] = {70,70}, 	
+	["SWP"] =    {70,70}, 	["EOTS"] =   {15,70},   ["ARENA"] = {70,70}, 	["BREW"] = {65,70},      ["HOLLOW"] = {65,70},
 }	
 
 GBB.TbcDungeonNames = { 
-	"RAMPS", "BF", "SP", "UB", "MT", "CRYPTS",
-	"SETH", "OHB", "MECH", "BM", "MGT", "SH", 
-	"BOT", "SL", "SV", "ARC", "KARA", "GL", 
-	"MAG", "SSC", "EYE", "ZA", "HYJAL", "BT", 
-	"SWP",   	
-}	
+	"RAMPS", "BF", "SH", "MAG", "SP", "UB", "SV", "SSC", "MT", "CRYPTS",
+	"SETH", "SL", "OHB", "BM", "MECH", "BOT", "ARC", "EYE", "MGT", "KARA",
+	"GL", "ZA", "HYJAL", "BT", "SWP",
+}
 
 GBB.VanillDungeonNames  = { 
 	"RFC", "WC" , "DM" , "SFK", "STK", "BFD", "GNO",
@@ -510,7 +522,16 @@ GBB.Raids = {
 	"ONY", "MC", "ZG", "AQ20", "BWL", "AQ40", "NAX", 
 	"KARA", "GL", "MAG", "SSC", "EYE", "ZA", "HYJAL", 
 	"BT", "SWP", "ARENA", "WSG", "AV", "AB", "EOTS",
+	"BREW", "HOLLOW",
 }
+
+GBB.Seasonal = {
+    ["BREW"] = { startDate = "09/20", endDate = "10/06"},
+	["HOLLOW"] = { startDate = "10/17", endDate = "10/31"}
+}
+
+GBB.SeasonalActiveEvents = {}
+GBB.Events = getSeasonalDungeons()
 
 function GBB.GetRaids()
 	local arr = {}
@@ -538,14 +559,11 @@ local function ConcatenateLists(Names)
 end
 
 function GBB.GetDungeonSort()
-	local dungeonOrder = {GBB.VanillDungeonNames, GBB.TbcDungeonNames, GBB.PvpNames, GBB.Misc, GBB.DebugNames}
-	local vanillaDungeonSize = 0
+	local dungeonOrder = { GBB.VanillDungeonNames, GBB.Events, GBB.TbcDungeonNames, GBB.PvpNames, GBB.Misc, GBB.DebugNames}
 
 	-- Why does Lua not having a fucking size function
-	for _, _ in pairs(GBB.VanillDungeonNames) do 
-		vanillaDungeonSize = vanillaDungeonSize + 1
-	end
-
+	local _, vanillaDungeonSize = ConcatenateLists({ GBB.VanillDungeonNames, GBB.Events})
+		
 	local debugSize = 0
 	for _, _ in pairs(GBB.DebugNames) do
 		debugSize = debugSize+1

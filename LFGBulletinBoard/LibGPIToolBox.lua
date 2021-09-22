@@ -723,3 +723,15 @@ function Tool.SlashCommand(cmds,subcommand)
 	SlashCmdList[TOCNAME]=mySlashs
 end
 
+function Tool.InDateRange(startDate, endDate)
+	local currentMonth, currentDay = date("%m/%d"):match("(%d+)/(%d+)")
+	local startMonth, startDay = startDate:match("(%d+)/(%d+)")
+	local endMonth, endDay = endDate:match("(%d+)/(%d+)")
+
+	if (startMonth <= currentMonth and currentMonth <= endMonth) and 
+	((currentMonth == startMonth and currentDay >= startDay) or (currentMonth == endMonth and currentDay < endDay)) then --Current month is between starting month and end month if same month as end month check to see if it hasn't ended
+		return true
+	else 
+		return false
+	end
+end

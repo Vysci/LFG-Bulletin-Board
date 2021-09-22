@@ -2,6 +2,11 @@
 
 Group Bulletin Board 	
 
+2.62
+- No really, I fixed the bug that broke the addon
+- More Chinesse localization
+- Seasonal Events
+
 2.61
 - Added option to adjust font size. 3 whole options, don't ask for more
 - Fixed the thing that made the addon not working for everyone except me 

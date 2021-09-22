@@ -112,9 +112,11 @@ GBB.dungeonTagsLoc={
 		["NAX"] = 	"naxxramas nax naxx",
 		["WSG"] = 	"wsg warsong ws",
 		["AB"]  = 	"basin",
-		["AV"]  = 	"av valley",	
+		["AV"]  = 	"av valley",
 		["EOTS"] =  "storm eots",
 		["ARENA"] = "2s 3s 5s 3v3 5v5 2v2 2vs2 3vs3 5vs5",
+		["BREW"] =  "brewfest brew coren dire direbrew",
+		["HOLLOW"] = "headless horseman hollow",
 		["TRADE"] = "buy buying sell selling wts wtb hitem henchant htrade enchanter", --hlink
 	}),
 	deDE =langSplit({
