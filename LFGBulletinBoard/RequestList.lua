@@ -301,11 +301,10 @@ local function IgnoreRequest(name)
 		end
 	end
 	GBB.ClearNeeded=true
-	GBB.UpdateList()
 	C_FriendList.AddIgnore(name)
 end
 
-function GBB.Clear  ()
+function GBB.Clear()
 	if GBB.ClearNeeded or GBB.ClearTimer<time() then
 		local newRequest={}
 		GBB.ClearTimer=GBB.MAXTIME
@@ -456,8 +455,6 @@ function GBB.UpdateList()
 
 	GroupBulletinBoardFrame_ScrollChildFrame:SetHeight(yy)
 	GroupBulletinBoardFrameStatusText:SetText(string.format(GBB.L["msgNbRequest"], count))
-
-	GBB.AutoUpdateTimer=time()+GBB.UPDATETIMER
 end
 
 function GBB.GetDungeons(msg,name)
@@ -606,7 +603,7 @@ function GBB.GetDungeons(msg,name)
 
 end
 
-function GBB.PhraseMessage(msg,name,guid,channel)
+function GBB.ParseMessage(msg,name,guid,channel)
 	if GBB.Initalized==false or name==nil or name=="" or msg==nil or msg=="" or string.len(msg)<4 then
 		return
 	end
@@ -640,7 +637,6 @@ function GBB.PhraseMessage(msg,name,guid,channel)
 		end
 	end
 	if updated==true then
-		GBB.UpdateList()
 		return
 	end
 	--flm RFD need healer and 3 dps
@@ -733,8 +729,6 @@ function GBB.PhraseMessage(msg,name,guid,channel)
 			end
 		end
 
-		GBB.UpdateList()
-
 	elseif GBB.DB.OnDebug then
 
 		local index=#GBB.RequestList +1
@@ -751,7 +745,6 @@ function GBB.PhraseMessage(msg,name,guid,channel)
 		GBB.RequestList[index].message=msg
 		GBB.RequestList[index].IsHeroic = isHeroic
 		GBB.RequestList[index].last=requestTime
-		GBB.UpdateList()
 	end
 
 end

@@ -86,7 +86,6 @@ function GBB.OptionsUpdate()
 	GBB.CreateTagList()
 	GBB.MinimapButton.UpdatePosition()
 	GBB.ClearNeeded=true
-	GBB.UpdateList()
 	
 	isChat=GBB.DB.ChatStyle 
 end
