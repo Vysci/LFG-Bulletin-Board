@@ -2,6 +2,9 @@
 
 Group Bulletin Board 	
 
+2.63
+- Improved performance (fingers crossed). All thanks to dkcas11 who made the changes unless it doesn't work then blame him
+
 2.62
 - No really, I fixed the bug that broke the addon
 - More Chinesse localization
