@@ -219,61 +219,53 @@ function GBB.OptionsInit ()
 	GBB.Options.AddSpace()
 	CheckBox("OnDebug",false)
 	
-	if GBB.GameType == "TBC" then
 	-- Second Panel for TBC Dungeons
-		GBB.Options.AddPanel(GBB.L["TBCPanelFilter"])
-		GBB.Options.AddCategory(GBB.L["HeaderDungeon"])
-		GBB.Options.Indent(10)
+	GBB.Options.AddPanel(GBB.L["TBCPanelFilter"])
+	GBB.Options.AddCategory(GBB.L["HeaderDungeon"])
+	GBB.Options.Indent(10)
 
-		TbcChkBox_FilterDungeon={}
+	TbcChkBox_FilterDungeon={}
 		
-		for index=GBB.TBCDUNGEONSTART,GBB.TBCDUNGEONBREAK do
-			TbcChkBox_FilterDungeon[index]=CheckBoxFilter(GBB.dungeonSort[index],true)
-		end
-
-		GBB.Options.SetRightSide()
-		--GBB.Options.AddCategory("")
-		GBB.Options.Indent(10)	
-		for index=GBB.TBCDUNGEONBREAK+1,GBB.TBCMAXDUNGEON do
-			TbcChkBox_FilterDungeon[index]=CheckBoxFilter(GBB.dungeonSort[index],true)
-		end
-		--GBB.Options.AddSpace()
-		CheckBoxChar("FilterLevel",false)
-		CheckBoxChar("DontFilterOwn",false)
-
-		if(GBB.GameType ~= "VANILLA") then
-			CheckBoxChar("HeroicOnly", false)
-			CheckBoxChar("NormalOnly", false)
-		end
-		
-		--GBB.Options.AddSpace()
-
-		GBB.Options.InLine()
-		GBB.Options.AddButton(GBB.L["BtnSelectAll"],function()
-			DoSelectFilter(true, TbcChkBox_FilterDungeon, GBB.TBCDUNGEONSTART, GBB.TBCMAXDUNGEON-2) -- Doing -2 to not select trade and misc
-		end)
-		GBB.Options.AddButton(GBB.L["BtnUnselectAll"],function()
-			DoSelectFilter(false, TbcChkBox_FilterDungeon, GBB.TBCDUNGEONSTART, GBB.TBCMAXDUNGEON)
-		end)
-		GBB.Options.EndInLine()
-		
-		GBB.Options.Indent(-10)
-		
-		--GBB.Options.AddSpace()
-		if GBB.GameType == "TBC" then
-			SetChatOption()
-		end
-
+	for index=GBB.TBCDUNGEONSTART,GBB.TBCDUNGEONBREAK do
+		TbcChkBox_FilterDungeon[index]=CheckBoxFilter(GBB.dungeonSort[index],true)
 	end
+
+	GBB.Options.SetRightSide()
+	--GBB.Options.AddCategory("")
+	GBB.Options.Indent(10)	
+	for index=GBB.TBCDUNGEONBREAK+1,GBB.TBCMAXDUNGEON do
+		TbcChkBox_FilterDungeon[index]=CheckBoxFilter(GBB.dungeonSort[index],true)
+	end
+		--GBB.Options.AddSpace()
+	CheckBoxChar("FilterLevel",false)
+	CheckBoxChar("DontFilterOwn",false)
+
+	CheckBoxChar("HeroicOnly", false)
+	CheckBoxChar("NormalOnly", false)
+
+		
+		--GBB.Options.AddSpace()
+
+	GBB.Options.InLine()
+	GBB.Options.AddButton(GBB.L["BtnSelectAll"],function()
+	DoSelectFilter(true, TbcChkBox_FilterDungeon, GBB.TBCDUNGEONSTART, GBB.TBCMAXDUNGEON-2) -- Doing -2 to not select trade and misc
+	end)
+	GBB.Options.AddButton(GBB.L["BtnUnselectAll"],function()
+	DoSelectFilter(false, TbcChkBox_FilterDungeon, GBB.TBCDUNGEONSTART, GBB.TBCMAXDUNGEON)
+	end)
+	GBB.Options.EndInLine()
+		
+	GBB.Options.Indent(-10)
+		
+	--GBB.Options.AddSpace()
+	SetChatOption()
+
 	-- Third panel - Filter
 	GBB.Options.AddPanel(GBB.L["PanelFilter"])
 	GBB.Options.AddCategory(GBB.L["HeaderDungeon"])
 	GBB.Options.Indent(10)
 
-	local defaultChecked = true
-	if GBB.GameType ~= "VANILLA" then
-		defaultChecked = false
-	end
+	local defaultChecked = false
 
 	ChkBox_FilterDungeon={}
 	for index=1,GBB.DUNGEONBREAK do
@@ -304,9 +296,6 @@ function GBB.OptionsInit ()
 	GBB.Options.Indent(-10)
 	
 	--GBB.Options.AddSpace()	
-	if GBB.GameType == "VANILLA" then
-		SetChatOption()
-	end
 
 	-- Tags
 	GBB.Options.AddPanel(GBB.L["PanelTags"],false,true)

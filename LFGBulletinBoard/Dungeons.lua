@@ -1,15 +1,5 @@
 local TOCNAME,GBB=...
 
-local function DetermineGameVersion()
-	local version, _, _, _ = GetBuildInfo()
-	if version:sub(1, 1) == "2" then
-		GBB.GameType = "TBC"
-		GBB.PANELOFFSET = 1
-	else 
-		GBB.GameType = "VANILLA"
-		GBB.PANELOFFSET = 0
-	end
-end
 
 local function getSeasonalDungeons()
     local events = {}
@@ -23,7 +13,6 @@ local function getSeasonalDungeons()
 	return events
 end
 
-DetermineGameVersion()
 
 function GBB.GetDungeonNames()
 	local DefaultEnGB={
@@ -603,11 +592,8 @@ end
 	
 local function DetermineVanillDungeonRange() 
 
-	if GBB.GameType == "TBC" then
-		return GBB.PostTbcDungeonLevels
-	end
+	return GBB.PostTbcDungeonLevels
 
-	return GBB.VanillaDungeonLevels
 end
 
 GBB.dungeonLevel = Union(DetermineVanillDungeonRange(), GBB.TbcDungeonLevels)
