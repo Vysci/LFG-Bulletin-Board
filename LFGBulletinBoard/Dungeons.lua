@@ -71,7 +71,7 @@ function GBB.GetDungeonNames()
 		["VH"] =	"The Violet Hold",
 		["UK"] =	"Utgarde Keep",
 		["UP"] =	"Utgarde Pinnacle",
-		["TOC5"] =	"AT: Trial of the Champion",
+		["TOC"] =	"AT: Trial of the Champion",
 		["FOS"] =	"ICC: The Forge of Souls",
 		["POS"] =	"ICC: Pit of Saron",
 		["HOR"] =	"ICC: Halls of Reflection",
@@ -80,7 +80,7 @@ function GBB.GetDungeonNames()
 		["EOE"] =	"Nexus: The Eye of Eternity",
 		["OS"] =	"The Obsidian Sanctum",
 		["ULDR"] =	"Ulduar",
-		["TOC"] =	"Trial of the Crusader",
+		["TOGC"] =	"Trial of the Crusader",
 		["ONY"] =	"Onyxia's Lair",
 		["ICC"] =	"Icecrown Citadel",
 		["RS"] =	"The Ruby Sanctum",
@@ -510,15 +510,15 @@ GBB.TbcDungeonLevels = {
 GBB.WotlkDungeonLevels = {
 	["AK"] =	{73,75}, ["AN"] =	{72,74}, ["DTK"] =	{74,76}, ["GUN"] =	{79,80}, ["HOL"] =	{79,80}, ["HOS"] =	{77,79}, 	
 	["COS"] =	{79,80}, ["NEX"] =	{71,73}, ["OCU"] =	{79,80}, ["VH"] =	{75,77}, ["UK"] =	{69,72}, ["UP"] =	{79,80},
-	["TOC5"] =	{79,80}, ["FOS"] =	{79,80}, ["POS"] =	{79,80}, ["HOR"] =	{79,80}, ["VOA"] =	{80,80}, ["NAXX"] =	{80,80},
-	["EOE"] =	{80,80}, ["OS"] =	{80,80}, ["ULDR"] =	{80,80}, ["TOC"] =	{80,80}, ["ONY"] =	{80,80}, ["ICC"] =	{80,80}, 
+	["TOC"] =	{79,80}, ["FOS"] =	{79,80}, ["POS"] =	{79,80}, ["HOR"] =	{79,80}, ["VOA"] =	{80,80}, ["NAXX"] =	{80,80},
+	["EOE"] =	{80,80}, ["OS"] =	{80,80}, ["ULDR"] =	{80,80}, ["TOGC"] =	{80,80}, ["ONY"] =	{80,80}, ["ICC"] =	{80,80}, 
 	["RS"] =	{80,80} 
 }
 
 GBB.WotlkDungeonNames = {
 	"AK", "AN", "DTK", "GUN", "HOL", "HOS", "COS", "NEX", "OCU", "VH", 
-	"UK", "UP", "TOC5", "FOS", "POS", "HOR", "VOA", "NAXX", "EOE", "OS", 
-	"ULDR", "TOC", "ONY", "ICC", "RS" 
+	"UK", "UP", "TOC", "FOS", "POS", "HOR", "VOA", "NAXX", "EOE", "OS", 
+	"ULDR", "TOGC", "ONY", "ICC", "RS" 
 }
 
 GBB.TbcDungeonNames = { 
