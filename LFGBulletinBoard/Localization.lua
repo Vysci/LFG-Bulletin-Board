@@ -29,7 +29,8 @@ GBB.locales = {
 		
 		["HeaderSettings"]="Settings",
 		["PanelFilter"]="Vanilla Filter",
-		["TBCPanelFilter"]="Filter",
+		["TBCPanelFilter"]="TBC Filter",
+		["WotlkPanelFilter"]="Filter",
 		["HeaderTags"]="Search patterns",	
 		["HeaderTagsCustom"]="Custom search patterns",
 		["PanelTags"]="Search patterns",
