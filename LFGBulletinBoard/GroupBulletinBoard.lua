@@ -303,7 +303,7 @@ function GBB.CreateTagList ()
 		GBB.heroicTagsLoc["custom"]=GBB.Split(GBB.DB.Custom.Heroic)
 		
 		GBB.dungeonTagsLoc["custom"]={}
-		for index=1,GBB.TBCMAXDUNGEON do
+		for index=1,GBB.WOTLKMAXDUNGEON do
 			GBB.dungeonTagsLoc["custom"][GBB.dungeonSort[index]]= GBB.Split(GBB.DB.Custom[GBB.dungeonSort[index]])
 		end
 		
@@ -356,7 +356,7 @@ function GBB.Popup_Minimap(frame,notminimap)
 
 	GBB.PopupDynamic:AddItem(GBB.L["HeaderSettings"],false, GBB.Options.Open, 1)
 
-	GBB.PopupDynamic:AddItem(GBB.L["TBCPanelFilter"], false, GBB.Options.Open, 2)
+	GBB.PopupDynamic:AddItem(GBB.L["WotlkPanelFilter"], false, GBB.Options.Open, 2)
 
 
 	GBB.PopupDynamic:AddItem(GBB.L["PanelAbout"], false, GBB.Options.Open, 6)
