@@ -436,7 +436,7 @@ function GBB.UpdateList()
 
 	if GBB.DB.EnableShowOnly then
 		local hi=GBB.dungeonSort[LastDungeon] or 0
-		while hi<GBB.TBCMAXDUNGEON do
+		while hi<GBB.WOTLKMAXDUNGEON do
 			if LastDungeon~="" and GBB.FoldedDungeons[LastDungeon]~=true and GBB.DB.EnableShowOnly then
 				yy=yy+ itemHight*(GBB.DB.ShowOnlyNb-cEntrys)
 			end
@@ -753,7 +753,7 @@ function GBB.UnfoldAllDungeon()
 	GBB.UpdateList()
 end
 function GBB.FoldAllDungeon()
-	for i=1,GBB.TBCMAXDUNGEON do
+	for i=1,GBB.WOTLKMAXDUNGEON do
 		GBB.FoldedDungeons[GBB.dungeonSort[i]]=true
 	end
 	GBB.UpdateList()
@@ -788,7 +788,7 @@ local function createMenu(DungeonID,req)
 	GBB.PopupDynamic:AddItem("",true)
 	GBB.PopupDynamic:AddItem(GBB.L["HeaderSettings"],false, GBB.Options.Open, 1)
 
-	GBB.PopupDynamic:AddItem(GBB.L["TBCPanelFilter"], false, GBB.Options.Open, 2)
+	GBB.PopupDynamic:AddItem(GBB.L["WotlkPanelFilter"], false, GBB.Options.Open, 2)
 
 	GBB.PopupDynamic:AddItem(GBB.L["PanelAbout"], false, GBB.Options.Open, 6)
 	GBB.PopupDynamic:AddItem(GBB.L["BtnCancel"],false)

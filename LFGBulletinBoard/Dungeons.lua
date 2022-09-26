@@ -59,6 +59,31 @@ function GBB.GetDungeonNames()
 		["SL"] = 	"Auchindoun: Shadow Labyrinth",
 		["SV"] = 	"Coilfang Reservoir: Steamvault",
 		["ARC"] = 	"Tempest Keep: The Arcatraz",
+		["AK"] =	"Azjol: Ahn'kahet: The Old Kingdom",
+		["AN"] =	"Azjol: Azjol-Nerub",
+		["DTK"] =	"Drak'Tharon Keep",
+		["GUN"] =	"Gundrak",
+		["HOL"] =	"Ulduar: Halls of Lightning",
+		["HOS"] =	"Ulduar: Halls of Stone",
+		["COS"] =	"CoT: The Culling of Stratholme",
+		["NEX"] =	"Nexus: The Nexus",
+		["OCU"] =	"Nexus: The Oculus",
+		["VH"] =	"The Violet Hold",
+		["UK"] =	"Utgarde Keep",
+		["UP"] =	"Utgarde Pinnacle",
+		["TOC"] =	"AT: Trial of the Champion",
+		["FOS"] =	"ICC: The Forge of Souls",
+		["POS"] =	"ICC: Pit of Saron",
+		["HOR"] =	"ICC: Halls of Reflection",
+		["VOA"] =	"Vault of Archavon",
+		["NAXX"] =	"Naxxramas",
+		["EOE"] =	"Nexus: The Eye of Eternity",
+		["OS"] =	"The Obsidian Sanctum",
+		["ULDR"] =	"Ulduar",
+		["TOGC"] =	"Trial of the Crusader",
+		["ONY"] =	"Onyxia's Lair",
+		["ICC"] =	"Icecrown Citadel",
+		["RS"] =	"The Ruby Sanctum",
 		["KARA"] = 	"Karazhan",
 		["GL"] = 	"Gruul's Lair",
 		["MAG"] = 	"Hellfire Citadel: Magtheridon's Lair",
@@ -68,7 +93,7 @@ function GBB.GetDungeonNames()
 		["HYJAL"] = "The Battle For Mount Hyjal",
 		["BT"] = 	"Black Temple",
 		["SWP"] = 	"Sunwell Plateau",
-		["ONY"] = 	"Onyxia's Lair (40)",
+		["ONY40"] = "Onyxia's Lair (40)",
 		["MC"] = 	"Molten Core (40)",
 		["ZG"] = 	"Zul'Gurub (20)",
 		["AQ20"] = 	"Ruins of Ahn'Qiraj (20)",
@@ -459,7 +484,7 @@ GBB.VanillaDungeonLevels ={
 	["GNO"] = 	{29,38}, ["RFK"] = 	{30,40}, ["SMG"] = 	{28,38}, ["SML"] = 	{29,39}, ["SMA"] = 	{32,42}, ["SMC"] = 	{35,45},
 	["RFD"] = 	{40,50}, ["ULD"] = 	{42,52}, ["ZF"] = 	{44,54}, ["MAR"] = 	{46,55}, ["ST"] = 	{50,60}, ["BRD"] = 	{52,60},
 	["LBRS"] = 	{55,60}, ["DME"] = 	{58,60}, ["DMN"] = 	{58,60}, ["DMW"] = 	{58,60}, ["STR"] = 	{58,60}, ["SCH"] = 	{58,60},
-	["UBRS"] = 	{58,60}, ["ONY"] = 	{60,60}, ["MC"] = 	{60,60}, ["ZG"] = 	{60,60}, ["AQ20"]= 	{60,60}, ["BWL"] = {60,60},
+	["UBRS"] = 	{58,60}, ["ONY40"] = 	{60,60}, ["MC"] = 	{60,60}, ["ZG"] = 	{60,60}, ["AQ20"]= 	{60,60}, ["BWL"] = {60,60},
 	["AQ40"] = 	{60,60}, ["NAX"] = 	{60,60}, ["WSG"] = 	{10,70}, ["AB"] = 	{20,70}, ["AV"] = 	{51,70}, ["MISC"]= {0,100},  
 	["DEBUG"] = {0,100}, ["BAD"] =	{0,100}, ["TRADE"]=	{0,100}, ["SM2"] =  {28,42}, ["DM2"] =	{58,60}, ["DEADMINES"]={18,23},
 }
@@ -469,7 +494,7 @@ GBB.PostTbcDungeonLevels = {
 	["GNO"] = 	{24,40}, ["RFK"] = 	{23,31}, ["SMG"] = 	{28,34}, ["SML"] = 	{30,38}, ["SMA"] = 	{32,42}, ["SMC"] = 	{35,44},
 	["RFD"] = 	{33,41}, ["ULD"] = 	{36,44}, ["ZF"] = 	{42,50}, ["MAR"] = 	{40,52}, ["ST"] = 	{45,54}, ["BRD"] = 	{48,60},
 	["LBRS"] = 	{54,60}, ["DME"] = 	{54,61}, ["DMN"] = 	{54,61}, ["DMW"] = 	{54,61}, ["STR"] = 	{56,61}, ["SCH"] = 	{56,61},
-	["UBRS"] = 	{53,61}, ["ONY"] = 	{60,60}, ["MC"] = 	{60,60}, ["ZG"] = 	{60,60}, ["AQ20"]= 	{60,60}, ["BWL"] = {60,60},
+	["UBRS"] = 	{53,61}, ["ONY40"] = 	{60,60}, ["MC"] = 	{60,60}, ["ZG"] = 	{60,60}, ["AQ20"]= 	{60,60}, ["BWL"] = {60,60},
 	["AQ40"] = 	{60,60}, ["NAX"] = 	{60,60}, ["WSG"] = 	{10,70}, ["AB"] = 	{20,70}, ["AV"] = 	{51,70}, ["MISC"]= {0,100},  
 	["DEBUG"] = {0,100}, ["BAD"] =	{0,100}, ["TRADE"]=	{0,100}, ["SM2"] =  {28,42}, ["DM2"] =	{58,60}, ["DEADMINES"]={16,24},
 }
@@ -479,8 +504,22 @@ GBB.TbcDungeonLevels = {
 	["SETH"] =   {67,69},  	["OHB"] = 	 {66,68},     ["MECH"] =   {69,70},    ["BM"] =      {69,70},    ["MGT"] =	 {70,70},    ["SH"] =	 {70,70}, 
 	["BOT"] =    {70,70},    ["SL"] = 	 {70,70},    ["SV"] =     {70,70},   ["ARC"] = 	 {70,70},    ["KARA"] = 	 {70,70},    ["GL"] = 	 {70,70}, 
 	["MAG"] =    {70,70},    ["SSC"] =    {70,70}, 	["EYE"] =    {70,70},   ["ZA"] = 	 {70,70},    ["HYJAL"] =  {70,70}, 	["BT"] =     {70,70}, 
-	["SWP"] =    {70,70}, 	["EOTS"] =   {15,70},   ["ARENA"] = {70,70}, 	["BREW"] = {65,70},      ["HOLLOW"] = {65,70},
+	["SWP"] =    {70,70}, 	["EOTS"] =   {15,70},   ["ARENA"] = {70,70}, 	["BREW"] = {65,70},      ["HOLLOW"] = {75,80},
 }	
+
+GBB.WotlkDungeonLevels = {
+	["AK"] =	{73,75}, ["AN"] =	{72,74}, ["DTK"] =	{74,76}, ["GUN"] =	{79,80}, ["HOL"] =	{79,80}, ["HOS"] =	{77,79}, 	
+	["COS"] =	{79,80}, ["NEX"] =	{71,73}, ["OCU"] =	{79,80}, ["VH"] =	{75,77}, ["UK"] =	{69,72}, ["UP"] =	{79,80},
+	["TOC"] =	{79,80}, ["FOS"] =	{79,80}, ["POS"] =	{79,80}, ["HOR"] =	{79,80}, ["VOA"] =	{80,80}, ["NAXX"] =	{80,80},
+	["EOE"] =	{80,80}, ["OS"] =	{80,80}, ["ULDR"] =	{80,80}, ["TOGC"] =	{80,80}, ["ONY"] =	{80,80}, ["ICC"] =	{80,80}, 
+	["RS"] =	{80,80} 
+}
+
+GBB.WotlkDungeonNames = {
+	"AK", "AN", "DTK", "GUN", "HOL", "HOS", "COS", "NEX", "OCU", "VH", 
+	"UK", "UP", "TOC", "FOS", "POS", "HOR", "VOA", "NAXX", "EOE", "OS", 
+	"ULDR", "TOGC", "ONY", "ICC", "RS" 
+}
 
 GBB.TbcDungeonNames = { 
 	"RAMPS", "BF", "SH", "MAG", "SP", "UB", "SV", "SSC", "MT", "CRYPTS",
@@ -492,7 +531,7 @@ GBB.VanillDungeonNames  = {
 	"RFC", "WC" , "DM" , "SFK", "STK", "BFD", "GNO",
     "RFK", "SMG", "SML", "SMA", "SMC", "RFD", "ULD", 
     "ZF", "MAR", "ST" , "BRD", "LBRS", "DME", "DMN", 
-    "DMW", "STR", "SCH", "UBRS", "ONY", "MC", "ZG", 
+    "DMW", "STR", "SCH", "UBRS", "ONY40", "MC", "ZG", 
     "AQ20", "BWL", "AQ40", "NAX",
 }	
 
@@ -515,8 +554,8 @@ GBB.Raids = {
 }
 
 GBB.Seasonal = {
-    ["BREW"] = { startDate = "09/19", endDate = "10/07"},
-	["HOLLOW"] = { startDate = "10/16", endDate = "11/01"}
+    ["BREW"] = { startDate = "09/20", endDate = "10/06"},
+	["HOLLOW"] = { startDate = "10/18", endDate = "11/01"}
 }
 
 GBB.SeasonalActiveEvents = {}
@@ -550,18 +589,23 @@ end
 function GBB.GetDungeonSort()
 	for eventName, eventData in pairs(GBB.Seasonal) do
         if GBB.Tool.InDateRange(eventData.startDate, eventData.endDate) then
-			table.insert(GBB.TbcDungeonNames, 1, eventName)
+			table.insert(GBB.WotlkDungeonNames, 1, eventName)
 		else
 			table.insert(GBB.DebugNames, 1, eventName)
 		end
     end
 	
-	local dungeonOrder = { GBB.VanillDungeonNames, GBB.TbcDungeonNames, GBB.PvpNames, GBB.Misc, GBB.DebugNames}
+	local dungeonOrder = { GBB.VanillDungeonNames, GBB.TbcDungeonNames, GBB.WotlkDungeonNames, GBB.PvpNames, GBB.Misc, GBB.DebugNames}
 
 	-- Why does Lua not having a fucking size function
 	 local vanillaDungeonSize = 0
 	 for _, _ in pairs(GBB.VanillDungeonNames) do
 		vanillaDungeonSize = vanillaDungeonSize + 1
+	 end
+
+	 local tbcDungeonSize = 0
+	 for _, _ in pairs(GBB.TbcDungeonNames) do
+		tbcDungeonSize = tbcDungeonSize + 1
 	 end
 
 	local debugSize = 0
@@ -570,12 +614,14 @@ function GBB.GetDungeonSort()
 	end
 	
 	GBB.TBCDUNGEONSTART = vanillaDungeonSize + 1
+	GBB.WOTLKDUNGEONSTART = vanillaDungeonSize + tbcDungeonSize + 1
 	GBB.MAXDUNGEON = vanillaDungeonSize
 
 	local tmp_dsort, concatenatedSize = ConcatenateLists(dungeonOrder)
 	local dungeonSort = {}
 	
-	GBB.TBCMAXDUNGEON = concatenatedSize - debugSize - 1
+	GBB.TBCMAXDUNGEON = vanillaDungeonSize + tbcDungeonSize
+	GBB.WOTLKMAXDUNGEON = concatenatedSize - debugSize - 1
 	
 	for dungeon,nb in pairs(tmp_dsort) do
 		dungeonSort[nb]=dungeon
@@ -596,4 +642,4 @@ local function DetermineVanillDungeonRange()
 
 end
 
-GBB.dungeonLevel = Union(DetermineVanillDungeonRange(), GBB.TbcDungeonLevels)
+GBB.dungeonLevel = Union(Union(DetermineVanillDungeonRange(), GBB.TbcDungeonLevels), GBB.WotlkDungeonLevels)
