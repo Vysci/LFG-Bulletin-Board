@@ -219,67 +219,68 @@ function GBB.OptionsInit ()
 	GBB.Options.AddSpace()
 	CheckBox("OnDebug",false)
 	
-	-- Third Panel for WotLK Dungeons
+	-- Second Panel for Wotlk Dungeons
 	GBB.Options.AddPanel(GBB.L["WotlkPanelFilter"])
 	GBB.Options.AddCategory(GBB.L["HeaderDungeon"])
 	GBB.Options.Indent(10)
 
 	WotlkChkBox_FilterDungeon={}
 		
-	for index=GBB.WOTLKDUNGEONSTART,GBB.WOTLKDUNGEONSTART + GBB.DUNGEONBREAK - 1 do
+	for index=GBB.WOTLKDUNGEONSTART,GBB.WOTLKDUNGEONBREAK do
 		WotlkChkBox_FilterDungeon[index]=CheckBoxFilter(GBB.dungeonSort[index],true)
 	end
-	
+
 	GBB.Options.SetRightSide()
 	--GBB.Options.AddCategory("")
 	GBB.Options.Indent(10)	
-	for index=GBB.WOTLKDUNGEONSTART + GBB.DUNGEONBREAK,GBB.WOTLKMAXDUNGEON do
+	for index=GBB.WOTLKDUNGEONBREAK+1,GBB.WOTLKMAXDUNGEON do
 		WotlkChkBox_FilterDungeon[index]=CheckBoxFilter(GBB.dungeonSort[index],true)
 	end
-		--GBB.Options.AddSpace()
+	--GBB.Options.AddSpace()
 	CheckBoxChar("FilterLevel",false)
 	CheckBoxChar("DontFilterOwn",false)
-
 	CheckBoxChar("HeroicOnly", false)
 	CheckBoxChar("NormalOnly", false)
 
+	--GBB.Options.AddSpace()
+
 	GBB.Options.InLine()
 	GBB.Options.AddButton(GBB.L["BtnSelectAll"],function()
-	DoSelectFilter(true, TbcChkBox_FilterDungeon, GBB.TBCDUNGEONSTART, GBB.TBCMAXDUNGEON-2) -- Doing -2 to not select trade and misc
+		DoSelectFilter(true, WotlkChkBox_FilterDungeon, GBB.WOTLKDUNGEONSTART, GBB.WOTLKMAXDUNGEON-2) -- Doing -2 to not select trade and misc
 	end)
 	GBB.Options.AddButton(GBB.L["BtnUnselectAll"],function()
-	DoSelectFilter(false, TbcChkBox_FilterDungeon, GBB.TBCDUNGEONSTART, GBB.TBCMAXDUNGEON)
+		DoSelectFilter(false, WotlkChkBox_FilterDungeon, GBB.WOTLKDUNGEONSTART, GBB.WOTLKMAXDUNGEON)
 	end)
 	GBB.Options.EndInLine()
 		
 	GBB.Options.Indent(-10)
-	
 	SetChatOption()
 
-	-- Second Panel for TBC Dungeons
+
+	-- Third Panel for TBC Dungeons
 	GBB.Options.AddPanel(GBB.L["TBCPanelFilter"])
 	GBB.Options.AddCategory(GBB.L["HeaderDungeon"])
 	GBB.Options.Indent(10)
 
 	TbcChkBox_FilterDungeon={}
 		
-	for index=GBB.TBCDUNGEONSTART,GBB.TBCDUNGEONSTART + GBB.DUNGEONBREAK - 1 do
+	for index=GBB.TBCDUNGEONSTART,GBB.TBCDUNGEONBREAK do
 		TbcChkBox_FilterDungeon[index]=CheckBoxFilter(GBB.dungeonSort[index],true)
 	end
 
 	GBB.Options.SetRightSide()
 	--GBB.Options.AddCategory("")
 	GBB.Options.Indent(10)	
-	for index=GBB.TBCDUNGEONSTART + GBB.DUNGEONBREAK, GBB.TBCMAXDUNGEON do
+	for index=GBB.TBCDUNGEONBREAK+1,GBB.TBCMAXDUNGEON do
 		TbcChkBox_FilterDungeon[index]=CheckBoxFilter(GBB.dungeonSort[index],true)
 	end
 
 	GBB.Options.InLine()
 	GBB.Options.AddButton(GBB.L["BtnSelectAll"],function()
-	DoSelectFilter(true, TbcChkBox_FilterDungeon, GBB.TBCDUNGEONSTART, GBB.TBCMAXDUNGEON-2) -- Doing -2 to not select trade and misc
+		DoSelectFilter(true, TbcChkBox_FilterDungeon, GBB.TBCDUNGEONSTART, GBB.TBCMAXDUNGEON)
 	end)
 	GBB.Options.AddButton(GBB.L["BtnUnselectAll"],function()
-	DoSelectFilter(false, TbcChkBox_FilterDungeon, GBB.TBCDUNGEONSTART, GBB.TBCMAXDUNGEON)
+		DoSelectFilter(false, TbcChkBox_FilterDungeon, GBB.TBCDUNGEONSTART, GBB.TBCMAXDUNGEON)
 	end)
 	GBB.Options.EndInLine()
 		

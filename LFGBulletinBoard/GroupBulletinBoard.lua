@@ -33,6 +33,8 @@ GBB.Initalized = false
 GBB.ElapsedSinceListUpdate = 0
 GBB.LFG_Timer=0
 GBB.LFG_UPDATETIME=10
+GBB.TBCDUNGEONBREAK = 50
+GBB.WOTLKDUNGEONBREAK = 81
 GBB.DUNGEONBREAK = 25
 GBB.COMBINEMSGTIMER=10
 GBB.MAXCOMPACTWIDTH=350
@@ -127,7 +129,7 @@ function GBB.FilterDungeon(dungeon, isHeroic, isRaid)
 	if isRaid == nil then isRaid = false end
 
 	-- If the user is within the level range, or if they're max level and it's heroic.
-	local inLevelRange = (not isHeroic and GBB.dungeonLevel[dungeon][1] <= GBB.UserLevel and GBB.UserLevel <= GBB.dungeonLevel[dungeon][2]) or (isHeroic and GBB.UserLevel == 70)
+	local inLevelRange = (not isHeroic and GBB.dungeonLevel[dungeon][1] <= GBB.UserLevel and GBB.UserLevel <= GBB.dungeonLevel[dungeon][2]) or (isHeroic and GBB.UserLevel == 80)
 	
 	return GBB.DBChar["FilterDungeon"..dungeon] and 
 		(isRaid or ((GBB.DBChar["HeroicOnly"] == false or isHeroic) and (GBB.DBChar["NormalOnly"] == false or isHeroic == false))) and
@@ -359,7 +361,7 @@ function GBB.Popup_Minimap(frame,notminimap)
 	GBB.PopupDynamic:AddItem(GBB.L["WotlkPanelFilter"], false, GBB.Options.Open, 2)
 
 
-	GBB.PopupDynamic:AddItem(GBB.L["PanelAbout"], false, GBB.Options.Open, 6)
+	GBB.PopupDynamic:AddItem(GBB.L["PanelAbout"], false, GBB.Options.Open, 7)
 	
 	GBB.PopupDynamic:AddItem("",true)
 	GBB.PopupDynamic:AddItem(GBB.L["CboxNotifyChat"],false,GBB.DB,"NotifyChat")
@@ -489,7 +491,7 @@ function GBB.Init()
 				GBB.ShowWindow()
 			end},
 		{{"config","setup","options"},GBB.L["SlashConfig"],GBB.Options.Open,1},
-		{"about",GBB.L["SlashAbout"],GBB.Options.Open,6},
+		{"about",GBB.L["SlashAbout"],GBB.Options.Open,7},
 		{"",GBB.L["SlashDefault"],GBB.ToggleWindow},
 		{"chat","",{
 			{{"organize", "clean"},GBB.L["SlashChatOrganizer"],function()

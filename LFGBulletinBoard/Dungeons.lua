@@ -1,6 +1,5 @@
 local TOCNAME,GBB=...
 
-
 local function getSeasonalDungeons()
     local events = {}
 
@@ -12,7 +11,6 @@ local function getSeasonalDungeons()
     end
 	return events
 end
-
 
 function GBB.GetDungeonNames()
 	local DefaultEnGB={
@@ -59,41 +57,43 @@ function GBB.GetDungeonNames()
 		["SL"] = 	"Auchindoun: Shadow Labyrinth",
 		["SV"] = 	"Coilfang Reservoir: Steamvault",
 		["ARC"] = 	"Tempest Keep: The Arcatraz",
-		["AK"] =	"Azjol: Ahn'kahet: The Old Kingdom",
-		["AN"] =	"Azjol: Azjol-Nerub",
-		["DTK"] =	"Drak'Tharon Keep",
-		["GUN"] =	"Gundrak",
-		["HOL"] =	"Ulduar: Halls of Lightning",
-		["HOS"] =	"Ulduar: Halls of Stone",
-		["COS"] =	"CoT: The Culling of Stratholme",
-		["NEX"] =	"Nexus: The Nexus",
-		["OCU"] =	"Nexus: The Oculus",
-		["VH"] =	"The Violet Hold",
-		["UK"] =	"Utgarde Keep",
-		["UP"] =	"Utgarde Pinnacle",
-		["TOC"] =	"AT: Trial of the Champion",
-		["FOS"] =	"ICC: The Forge of Souls",
-		["POS"] =	"ICC: Pit of Saron",
-		["HOR"] =	"ICC: Halls of Reflection",
-		["VOA"] =	"Vault of Archavon",
-		["NAXX"] =	"Naxxramas",
-		["EOE"] =	"Nexus: The Eye of Eternity",
-		["OS"] =	"The Obsidian Sanctum",
-		["ULDR"] =	"Ulduar",
-		["TOGC"] =	"Trial of the Crusader",
-		["ONY"] =	"Onyxia's Lair",
-		["ICC"] =	"Icecrown Citadel",
-		["RS"] =	"The Ruby Sanctum",
 		["KARA"] = 	"Karazhan",
 		["GL"] = 	"Gruul's Lair",
 		["MAG"] = 	"Hellfire Citadel: Magtheridon's Lair",
 		["SSC"] = 	"Coilfang Reservoir: Serpentshrine Cavern",
+
+		["UK"] = 	"Utgarde Keep",
+		["NEX"] = 	"The Nexus",
+		["AZN"] = 	"Azjol-Nerub",
+		["ANK"] = 	"Ahn’kahet: The Old Kingdom",
+		["DTK"] = 	"Drak’Tharon Keep",
+		["VH"] = 	"Violet Hold",
+		["GD"] = 	"Gundrak",
+		["HOS"] = 	"Halls of Stone",
+		["HOL"] = 	"Halls of Lightning",
+		["COS"] = 	"The Culling of Stratholme",
+		["OCC"] = 	"The Oculus",
+		["UP"] = 	"Utgarde Pinnacle",
+		["FOS"] = 	"Forge of Souls",
+		["POS"] = 	"Pit of Saron",
+		["HOR"] = 	"Halls of Reflection",
+		["CHAMP"] = "Trial of the Champion",
+		["NAXX"] = 	"Naxxramas",
+
+		["OS"]   =  "Obsidian Sanctum",
+		["VOA"] = 	"Vault of Archavon",
+		["EOE"] = 	"Eye of Eternity",
+		["ULDAR"] =   "Ulduar",
+		["TOTC"] = 	"Trial of the Crusader",
+		["RS"] = 	"Ruby Sanctum",
+		["ICC"] = 	"Icecrown Citadel",
+
 		["EYE"] = 	"Tempest Keep: The Eye",
 		["ZA"] = 	"Zul-Aman",
 		["HYJAL"] = "The Battle For Mount Hyjal",
 		["BT"] = 	"Black Temple",
 		["SWP"] = 	"Sunwell Plateau",
-		["ONY40"] = "Onyxia's Lair (40)",
+		["ONY"] = 	"Onyxia's Lair (40)",
 		["MC"] = 	"Molten Core (40)",
 		["ZG"] = 	"Zul'Gurub (20)",
 		["AQ20"] = 	"Ruins of Ahn'Qiraj (20)",
@@ -104,6 +104,8 @@ function GBB.GetDungeonNames()
 		["AB"] = 	"Arathi Basin (PvP)",
 		["AV"] = 	"Alterac Valley (PvP)",
 		["EOTS"] =  "Eye of the Storm (PvP)",
+		["SOTA"] =   "Stand of the Ancients (PvP)",
+		["WG"]  =   "Wintergrasp (PvP)",
 		["ARENA"] = "Arena (PvP)",
 		["MISC"] = 	"Miscellaneous",
 		["TRADE"] =	"Trade",
@@ -484,8 +486,9 @@ GBB.VanillaDungeonLevels ={
 	["GNO"] = 	{29,38}, ["RFK"] = 	{30,40}, ["SMG"] = 	{28,38}, ["SML"] = 	{29,39}, ["SMA"] = 	{32,42}, ["SMC"] = 	{35,45},
 	["RFD"] = 	{40,50}, ["ULD"] = 	{42,52}, ["ZF"] = 	{44,54}, ["MAR"] = 	{46,55}, ["ST"] = 	{50,60}, ["BRD"] = 	{52,60},
 	["LBRS"] = 	{55,60}, ["DME"] = 	{58,60}, ["DMN"] = 	{58,60}, ["DMW"] = 	{58,60}, ["STR"] = 	{58,60}, ["SCH"] = 	{58,60},
-	["UBRS"] = 	{58,60}, ["ONY40"] = 	{60,60}, ["MC"] = 	{60,60}, ["ZG"] = 	{60,60}, ["AQ20"]= 	{60,60}, ["BWL"] = {60,60},
-	["AQ40"] = 	{60,60}, ["NAX"] = 	{60,60}, ["WSG"] = 	{10,70}, ["AB"] = 	{20,70}, ["AV"] = 	{51,70}, ["MISC"]= {0,100},  
+	["UBRS"] = 	{58,60}, ["MC"] = 	{60,60}, ["ZG"] = 	{60,60}, ["AQ20"]= 	{60,60}, ["BWL"] = {60,60},
+	["AQ40"] = 	{60,60}, ["NAX"] = 	{60,60}, 
+	["MISC"]= {0,100},  
 	["DEBUG"] = {0,100}, ["BAD"] =	{0,100}, ["TRADE"]=	{0,100}, ["SM2"] =  {28,42}, ["DM2"] =	{58,60}, ["DEADMINES"]={18,23},
 }
 
@@ -494,31 +497,37 @@ GBB.PostTbcDungeonLevels = {
 	["GNO"] = 	{24,40}, ["RFK"] = 	{23,31}, ["SMG"] = 	{28,34}, ["SML"] = 	{30,38}, ["SMA"] = 	{32,42}, ["SMC"] = 	{35,44},
 	["RFD"] = 	{33,41}, ["ULD"] = 	{36,44}, ["ZF"] = 	{42,50}, ["MAR"] = 	{40,52}, ["ST"] = 	{45,54}, ["BRD"] = 	{48,60},
 	["LBRS"] = 	{54,60}, ["DME"] = 	{54,61}, ["DMN"] = 	{54,61}, ["DMW"] = 	{54,61}, ["STR"] = 	{56,61}, ["SCH"] = 	{56,61},
-	["UBRS"] = 	{53,61}, ["ONY40"] = 	{60,60}, ["MC"] = 	{60,60}, ["ZG"] = 	{60,60}, ["AQ20"]= 	{60,60}, ["BWL"] = {60,60},
-	["AQ40"] = 	{60,60}, ["NAX"] = 	{60,60}, ["WSG"] = 	{10,70}, ["AB"] = 	{20,70}, ["AV"] = 	{51,70}, ["MISC"]= {0,100},  
+	["UBRS"] = 	{53,61}, ["MC"] = 	{60,60}, ["ZG"] = 	{60,60}, ["AQ20"]= 	{60,60}, ["BWL"] = {60,60},
+	["AQ40"] = 	{60,60}, ["NAX"] = 	{60,60}, 
+	["MISC"]= {0,100},  
 	["DEBUG"] = {0,100}, ["BAD"] =	{0,100}, ["TRADE"]=	{0,100}, ["SM2"] =  {28,42}, ["DM2"] =	{58,60}, ["DEADMINES"]={16,24},
 }
+
 
 GBB.TbcDungeonLevels = { 
 	["RAMPS"] =  {60,62}, 	["BF"] = 	 {61,63},     ["SP"] = 	 {62,64},    ["UB"] = 	 {63,65},     ["MT"] = 	 {64,66},     ["CRYPTS"] = {65,67},
 	["SETH"] =   {67,69},  	["OHB"] = 	 {66,68},     ["MECH"] =   {69,70},    ["BM"] =      {69,70},    ["MGT"] =	 {70,70},    ["SH"] =	 {70,70}, 
 	["BOT"] =    {70,70},    ["SL"] = 	 {70,70},    ["SV"] =     {70,70},   ["ARC"] = 	 {70,70},    ["KARA"] = 	 {70,70},    ["GL"] = 	 {70,70}, 
 	["MAG"] =    {70,70},    ["SSC"] =    {70,70}, 	["EYE"] =    {70,70},   ["ZA"] = 	 {70,70},    ["HYJAL"] =  {70,70}, 	["BT"] =     {70,70}, 
-	["SWP"] =    {70,70}, 	["EOTS"] =   {15,70},   ["ARENA"] = {70,70}, 	["BREW"] = {65,70},      ["HOLLOW"] = {75,80},
-}	
+	["SWP"] =    {70,70},
+}
+
+GBB.PvpLevels = {
+	["WSG"] = 	{10,70}, ["AB"] = 	{20,70}, ["AV"] = 	{51,70},   ["WG"] = {80,80}, ["SOTA"] = {80,80},  ["EOTS"] =   {15,70},   ["ARENA"] = {70,80},
+}
 
 GBB.WotlkDungeonLevels = {
-	["AK"] =	{73,75}, ["AN"] =	{72,74}, ["DTK"] =	{74,76}, ["GUN"] =	{79,80}, ["HOL"] =	{79,80}, ["HOS"] =	{77,79}, 	
-	["COS"] =	{79,80}, ["NEX"] =	{71,73}, ["OCU"] =	{79,80}, ["VH"] =	{75,77}, ["UK"] =	{69,72}, ["UP"] =	{79,80},
-	["TOC"] =	{79,80}, ["FOS"] =	{79,80}, ["POS"] =	{79,80}, ["HOR"] =	{79,80}, ["VOA"] =	{80,80}, ["NAXX"] =	{80,80},
-	["EOE"] =	{80,80}, ["OS"] =	{80,80}, ["ULDR"] =	{80,80}, ["TOGC"] =	{80,80}, ["ONY"] =	{80,80}, ["ICC"] =	{80,80}, 
-	["RS"] =	{80,80} 
+	["UK"] =    {68,80},    ["NEX"] =    {69,80},    ["AZN"] =    {70,80},    ["ANK"] =    {71,80},    ["DTK"] =    {72,80},    ["VH"] =    {73,80},    
+	["GD"] =    {74,80},    ["HOS"] =    {75,80},    ["HOL"] =    {76,80},    ["COS"] =    {78,80},    ["OCC"] =    {77,80},    ["UP"] =    {77,80},    
+	["FOS"] =    {80,80},   ["POS"] =    {80,80},    ["HOR"] =    {80,80},    ["CHAMP"] =  {78,80},    ["OS"] =    {80,80},    ["VOA"] =    {80,80},    
+	["EOE"] =    {80,80},   ["ULDAR"] =  {80,80},    ["TOTC"] =     {80,80},    ["RS"] =     {80,80},    ["ICC"] =    {80,80},    ["ONY"] =    {80,80},    
+	["NAXX"] =   {80,80},   ["BREW"] = {65,70},      ["HOLLOW"] = {65,70},
 }
 
 GBB.WotlkDungeonNames = {
-	"AK", "AN", "DTK", "GUN", "HOL", "HOS", "COS", "NEX", "OCU", "VH", 
-	"UK", "UP", "TOC", "FOS", "POS", "HOR", "VOA", "NAXX", "EOE", "OS", 
-	"ULDR", "TOGC", "ONY", "ICC", "RS" 
+	"UK", "NEX", "AZN", "ANK", "DTK", "VH", "GD", "HOS", "HOL", "COS", 
+	"OCC", "UP", "FOS", "POS", "HOR", "CHAMP", "OS", "VOA", "EOE", "ULDAR", 
+	"TOTC", "RS", "ICC", "ONY", "NAXX"
 }
 
 GBB.TbcDungeonNames = { 
@@ -531,13 +540,13 @@ GBB.VanillDungeonNames  = {
 	"RFC", "WC" , "DM" , "SFK", "STK", "BFD", "GNO",
     "RFK", "SMG", "SML", "SMA", "SMC", "RFD", "ULD", 
     "ZF", "MAR", "ST" , "BRD", "LBRS", "DME", "DMN", 
-    "DMW", "STR", "SCH", "UBRS", "ONY40", "MC", "ZG", 
+    "DMW", "STR", "SCH", "UBRS", "MC", "ZG", 
     "AQ20", "BWL", "AQ40", "NAX",
 }	
 
 
 GBB.PvpNames = {
-	"WSG", "AB", "AV", "EOTS", "ARENA",
+	"WSG", "AB", "AV", "EOTS", "WG", "SOTA", "ARENA",
 }
 
 GBB.Misc = {"MISC", "TRADE",}
@@ -550,11 +559,12 @@ GBB.Raids = {
 	"ONY", "MC", "ZG", "AQ20", "BWL", "AQ40", "NAX", 
 	"KARA", "GL", "MAG", "SSC", "EYE", "ZA", "HYJAL", 
 	"BT", "SWP", "ARENA", "WSG", "AV", "AB", "EOTS",
-	"BREW", "HOLLOW",
+	"WG", "SOTA", "BREW", "HOLLOW", "OS", "VOA", "EOE", 
+	"ULDAR", "TOTC", "RS", "ICC", "NAXX",
 }
 
 GBB.Seasonal = {
-    ["BREW"] = { startDate = "09/20", endDate = "10/06"},
+    ["BREW"] = { startDate = "9/20", endDate = "10/06"},
 	["HOLLOW"] = { startDate = "10/18", endDate = "11/01"}
 }
 
@@ -613,14 +623,14 @@ function GBB.GetDungeonSort()
 		debugSize = debugSize+1
 	end
 	
-	GBB.TBCDUNGEONSTART = vanillaDungeonSize + 1
-	GBB.WOTLKDUNGEONSTART = vanillaDungeonSize + tbcDungeonSize + 1
-	GBB.MAXDUNGEON = vanillaDungeonSize
 
 	local tmp_dsort, concatenatedSize = ConcatenateLists(dungeonOrder)
 	local dungeonSort = {}
 	
-	GBB.TBCMAXDUNGEON = vanillaDungeonSize + tbcDungeonSize
+	GBB.TBCDUNGEONSTART = vanillaDungeonSize + 1
+	GBB.MAXDUNGEON = vanillaDungeonSize
+	GBB.TBCMAXDUNGEON = vanillaDungeonSize  + tbcDungeonSize
+	GBB.WOTLKDUNGEONSTART = GBB.TBCMAXDUNGEON + 1
 	GBB.WOTLKMAXDUNGEON = concatenatedSize - debugSize - 1
 	
 	for dungeon,nb in pairs(tmp_dsort) do
@@ -642,4 +652,4 @@ local function DetermineVanillDungeonRange()
 
 end
 
-GBB.dungeonLevel = Union(Union(DetermineVanillDungeonRange(), GBB.TbcDungeonLevels), GBB.WotlkDungeonLevels)
+GBB.dungeonLevel = Union(Union(Union(DetermineVanillDungeonRange(), GBB.TbcDungeonLevels), GBB.WotlkDungeonLevels), GBB.PvpLevels)
