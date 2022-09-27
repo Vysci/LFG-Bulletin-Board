@@ -790,7 +790,7 @@ local function createMenu(DungeonID,req)
 
 	GBB.PopupDynamic:AddItem(GBB.L["WotlkPanelFilter"], false, GBB.Options.Open, 2)
 
-	GBB.PopupDynamic:AddItem(GBB.L["PanelAbout"], false, GBB.Options.Open, 6)
+	GBB.PopupDynamic:AddItem(GBB.L["PanelAbout"], false, GBB.Options.Open, 7)
 	GBB.PopupDynamic:AddItem(GBB.L["BtnCancel"],false)
 	GBB.PopupDynamic:Show()
 end
