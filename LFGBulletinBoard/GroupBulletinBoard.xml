@@ -96,6 +96,17 @@
 				</Scripts>
 			</Button>
 
+			<Button name="$parentRefreshButton" inherits="GroupBulletinBoard_MiniButton" Text="|TInterface\Buttons\UI-RefreshButton:0|t">
+				<Anchors>
+					<Anchor point="RIGHT" relativeTo="$parentSettingsButton" relativePoint="LEFT"/>
+				</Anchors>
+				<Scripts>
+					<OnMouseDown>
+						GroupBulletinBoard_Addon.BtnRefresh(button )
+					</OnMouseDown>
+				</Scripts>
+			</Button>
+
 			<!-- announcebox -->
 			<Button name="$parentSelectChannel" inherits="UIPanelButtonTemplate" text="channel">
 				<Anchors>
@@ -172,6 +183,34 @@
 				</Size>
 				<ScrollChild>
 					<Frame name="GroupBulletinBoardFrame_ScrollChildFrame">
+						<Size>
+							<AbsDimension x="100" y="100"/>
+						</Size>
+					</Frame>
+				</ScrollChild>
+			</ScrollFrame>
+
+
+			<!-- lfgframe -->
+			
+			<ScrollFrame name="GroupBulletinBoardFrame_LfgFrame" inherits="UIPanelScrollFrameTemplate">
+				<Backdrop name="$parentBackdrop" bgFile="Interface\TutorialFrame\TutorialFrameBackground" tile="true">
+					<BackgroundInsets>
+						<AbsInset left="-3" right="-23" top="-3" bottom="-3"/>
+					</BackgroundInsets>
+				</Backdrop>	
+				<Anchors>
+					<Anchor point="TOPLEFT">
+						<Offset>
+							<AbsDimension x="10" y="-30"/>
+						</Offset>						
+					</Anchor>				
+				</Anchors>
+				<Size>
+					<AbsDimension x="100" y="100"/>
+				</Size>
+				<ScrollChild>
+					<Frame name="GroupBulletinBoardFrame_LfgChildFrame">
 						<Size>
 							<AbsDimension x="100" y="100"/>
 						</Size>
@@ -266,6 +305,53 @@
 			</OnEnter>
 			<OnLeave>
 				GroupBulletinBoard_Addon.RequestHideTooltip(self)
+			</OnLeave>					
+		</Scripts>
+		
+	</Frame>	
+
+		<Frame hidden="false" name="GroupBulletinBoard_LfgTmpHeader" virtual="true">
+		<Layers>
+			<Layer level="ARTWORK">
+				<FontString name="$parent_name" text="samplename" inherits="GameFontNormal" maxLines="1" justifyH="LEFT" justifyV="TOP"/>					
+			</Layer>
+		</Layers>
+		<Scripts>
+			<OnMouseDown>
+				GroupBulletinBoard_Addon.LfgClickDungeon(self,button)
+			</OnMouseDown>
+		</Scripts>
+	</Frame>
+	<Frame hidden="false" name="GroupBulletinBoard_LfgTmpRequest" virtual="true">
+	
+		<Layers>
+			<Layer level="ARTWORK">				
+				<FontString name="$parent_name" text="samplename" inherits="GameFontNormal" maxLines="1" justifyH="LEFT" justifyV="TOP">
+					<Size>
+						<AbsDimension x="100" y=""/>
+					</Size>
+					<color b="1" g="1" r="1" a="1"/>
+				</FontString>
+				<FontString name="$parent_message" text="samplemsg" inherits="GameFontNormal" maxLines="1" justifyH="LEFT" justifyV="TOP">
+					<color b="1" g="1" r="1" a="1"/>
+				</FontString>
+				<FontString name="$parent_time" text="samplename" inherits="GameFontNormal" maxLines="1" justifyH="RIGHT" justifyV="TOP">
+					<Size>
+						<AbsDimension x="75" y=""/>
+					</Size>
+					<color b="1" g="1" r="1" a="1"/>
+				</FontString>
+			</Layer>
+		</Layers>
+		<Scripts>
+			<OnMouseDown>
+				GroupBulletinBoard_Addon.LfgClickRequest(self,button)
+			</OnMouseDown>
+			<OnEnter>
+				GroupBulletinBoard_Addon.LfgRequestShowTooltip(self)
+			</OnEnter>
+			<OnLeave>
+				GroupBulletinBoard_Addon.LfgRequestHideTooltip(self)
 			</OnLeave>					
 		</Scripts>
 		

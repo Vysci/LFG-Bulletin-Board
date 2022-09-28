@@ -33,6 +33,8 @@ GBB.Initalized = false
 GBB.ElapsedSinceListUpdate = 0
 GBB.LFG_Timer=0
 GBB.LFG_UPDATETIME=10
+GBB.TBCDUNGEONBREAK = 50
+GBB.WOTLKDUNGEONBREAK = 81
 GBB.DUNGEONBREAK = 25
 GBB.COMBINEMSGTIMER=10
 GBB.MAXCOMPACTWIDTH=350
@@ -127,7 +129,7 @@ function GBB.FilterDungeon(dungeon, isHeroic, isRaid)
 	if isRaid == nil then isRaid = false end
 
 	-- If the user is within the level range, or if they're max level and it's heroic.
-	local inLevelRange = (not isHeroic and GBB.dungeonLevel[dungeon][1] <= GBB.UserLevel and GBB.UserLevel <= GBB.dungeonLevel[dungeon][2]) or (isHeroic and GBB.UserLevel == 70)
+	local inLevelRange = (not isHeroic and GBB.dungeonLevel[dungeon][1] <= GBB.UserLevel and GBB.UserLevel <= GBB.dungeonLevel[dungeon][2]) or (isHeroic and GBB.UserLevel == 80)
 	
 	return GBB.DBChar["FilterDungeon"..dungeon] and 
 		(isRaid or ((GBB.DBChar["HeroicOnly"] == false or isHeroic) and (GBB.DBChar["NormalOnly"] == false or isHeroic == false))) and
@@ -198,12 +200,18 @@ function GBB.ResizeFrameList()
 	w=GroupBulletinBoardFrame:GetWidth() -20-10-10
 	GroupBulletinBoardFrame_ScrollFrame:SetWidth( w )
 	GroupBulletinBoardFrame_ScrollChildFrame:SetWidth( w )
+
+	GroupBulletinBoardFrame_LfgFrame:SetHeight(GroupBulletinBoardFrame:GetHeight() -55-25 )
+	w=GroupBulletinBoardFrame:GetWidth() -20-10-10
+	GroupBulletinBoardFrame_LfgFrame:SetWidth( w )
+	GroupBulletinBoardFrame_LfgChildFrame:SetWidth( w )
 end
 
 function GBB.ShowWindow()
 	GroupBulletinBoardFrame:Show()
 	GBB.ClearNeeded=true	 
 	GBB.UpdateList()
+	GBB.UpdateLfgTool()
 	GBB.UpdateGroupList()
 	GBB.ResizeFrameList()
 end
@@ -231,6 +239,10 @@ function GBB.BtnSettings(button )
 		GBB.Popup_Minimap("cursor",false)
 		--GBB.Options.Open(1)
 	end
+end
+
+function GBB.BtnRefresh(button)
+	GBB.UpdateLfgTool()
 end
 
 
@@ -359,7 +371,7 @@ function GBB.Popup_Minimap(frame,notminimap)
 	GBB.PopupDynamic:AddItem(GBB.L["WotlkPanelFilter"], false, GBB.Options.Open, 2)
 
 
-	GBB.PopupDynamic:AddItem(GBB.L["PanelAbout"], false, GBB.Options.Open, 6)
+	GBB.PopupDynamic:AddItem(GBB.L["PanelAbout"], false, GBB.Options.Open, 7)
 	
 	GBB.PopupDynamic:AddItem("",true)
 	GBB.PopupDynamic:AddItem(GBB.L["CboxNotifyChat"],false,GBB.DB,"NotifyChat")
@@ -423,9 +435,12 @@ function GBB.Init()
 
 	-- Reset Request-List
 	GBB.RequestList={}
+	GBB.LfgRequestList={}
 	GBB.FramesEntries={}
+	GBB.LfgFramesEntries = {}
 
 	GBB.FoldedDungeons={}
+	GBB.LfgFoldedDungeons = {}
 	
 	-- Timer-Stuff
 	GBB.MAXTIME=time() +60*60*24*365 --add a year!
@@ -489,7 +504,7 @@ function GBB.Init()
 				GBB.ShowWindow()
 			end},
 		{{"config","setup","options"},GBB.L["SlashConfig"],GBB.Options.Open,1},
-		{"about",GBB.L["SlashAbout"],GBB.Options.Open,6},
+		{"about",GBB.L["SlashAbout"],GBB.Options.Open,7},
 		{"",GBB.L["SlashDefault"],GBB.ToggleWindow},
 		{"chat","",{
 			{{"organize", "clean"},GBB.L["SlashChatOrganizer"],function()
@@ -556,15 +571,17 @@ function GBB.Init()
 	
 	GBB.InitGroupList()
 	GBB.Tool.AddTab(GroupBulletinBoardFrame,GBB.L.TabRequest,GroupBulletinBoardFrame_ScrollFrame)
+	GBB.Tool.AddTab(GroupBulletinBoardFrame,GBB.L.TabLfg,GroupBulletinBoardFrame_LfgFrame)
 	GBB.Tool.AddTab(GroupBulletinBoardFrame,GBB.L.TabGroup,GroupBulletinBoardFrame_GroupFrame)
 	GBB.Tool.SelectTab(GroupBulletinBoardFrame,1)
 	if GBB.DB.EnableGroup then
-		GBB.Tool.TabShow(GroupBulletinBoardFrame)
+		GBB.Tool.TabShow(GroupBulletinBoardFrame, 3)
 	else		
-		GBB.Tool.TabHide(GroupBulletinBoardFrame)
+		GBB.Tool.TabHide(GroupBulletinBoardFrame, 3)
 	end
 	
-	GBB.Tool.TabOnSelect(GroupBulletinBoardFrame,2,GBB.UpdateGroupList)
+	GBB.Tool.TabOnSelect(GroupBulletinBoardFrame,3,GBB.UpdateGroupList)
+	GBB.Tool.TabOnSelect(GroupBulletinBoardFrame,2,GBB.UpdateLfgTool)
 	
 	GameTooltip:HookScript("OnTooltipSetUnit", hooked_createTooltip)
 		
@@ -717,9 +734,12 @@ function GBB.OnUpdate(elapsed)
 		end
 
 		if GBB.ElapsedSinceListUpdate > 0.5 then
-			if GroupBulletinBoardFrame:IsVisible() then
+			if GBB.Tool.GetSelectedTab(GroupBulletinBoardFrame)==1 then
 				GBB.UpdateList()
+			elseif  GBB.Tool.GetSelectedTab(GroupBulletinBoardFrame)==2 then
+				GBB.UpdateLfgToolNoSearch()
 			end
+				
 			GBB.ElapsedSinceListUpdate = 0;
 		else
 			GBB.ElapsedSinceListUpdate = GBB.ElapsedSinceListUpdate + elapsed;

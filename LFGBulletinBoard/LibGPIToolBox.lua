@@ -15,6 +15,7 @@ Tool.IconClass={
   ["PRIEST"]=	"|TInterface\\WorldStateFrame\\ICONS-CLASSES:0:0:0:0:256:256:128:192:64:128|t",
   ["WARLOCK"]=	"|TInterface\\WorldStateFrame\\ICONS-CLASSES:0:0:0:0:256:256:192:256:64:128|t",
   ["PALADIN"]=	"|TInterface\\WorldStateFrame\\ICONS-CLASSES:0:0:0:0:256:256:0:64:128:192|t",
+  ["DEATHKNIGHT"]=	"|TInterface\\WorldStateFrame\\ICONS-CLASSES:0:0:0:0:256:256:64:128:128:192|t",
   }
 Tool.IconClassBig={
   ["WARRIOR"]=	"|TInterface\\WorldStateFrame\\ICONS-CLASSES:18:18:-4:4:256:256:0:64:0:64|t",
@@ -26,6 +27,7 @@ Tool.IconClassBig={
   ["PRIEST"]=	"|TInterface\\WorldStateFrame\\ICONS-CLASSES:18:18:-4:4:256:256:128:192:64:128|t",
   ["WARLOCK"]=	"|TInterface\\WorldStateFrame\\ICONS-CLASSES:18:18:-4:4:256:256:192:256:64:128|t",
   ["PALADIN"]=	"|TInterface\\WorldStateFrame\\ICONS-CLASSES:18:18:-4:4:256:256:0:64:128:192|t",
+  ["DEATHKNIGHT"]=	"|TInterface\\WorldStateFrame\\ICONS-CLASSES:18:18:-4:4:256:256:64:128:128:192|t",
   }  
   
 Tool.RaidIconNames=ICON_TAG_LIST
@@ -38,6 +40,12 @@ Tool.RaidIcon={
 	"|TInterface\\TargetingFrame\\UI-RaidTargetingIcon_6:0|t", -- [6]
 	"|TInterface\\TargetingFrame\\UI-RaidTargetingIcon_7:0|t", -- [7]
 	"|TInterface\\TargetingFrame\\UI-RaidTargetingIcon_8:0|t", -- [8]
+}
+
+Tool.RoleIcon = {
+	["DAMAGER"]=	"|TInterface\\LFGFrame\\UI-LFG-ICON-PORTRAITROLES.blp:16:16:0:%d:64:64:20:39:22:41|t",
+	["HEALER"] =	"|TInterface\\LFGFrame\\UI-LFG-ICON-PORTRAITROLES.blp:16:16:0:%d:64:64:20:39:1:20|t",
+	["TANK"] =	"|TInterface\\LFGFrame\\UI-LFG-ICON-PORTRAITROLES.blp:16:16:0:%d:64:64:0:19:22:41|t",
 }
   
 Tool.Classes=CLASS_SORT_ORDER
