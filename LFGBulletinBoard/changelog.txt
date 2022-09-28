@@ -2,6 +2,9 @@
 
 Group Bulletin Board 	
 
+3.05
+- Removed the clicking noise in background
+
 3.04
 - Added auto refresh for lfg tool
 - Semi fixed add-on exploding on custom
