@@ -80,7 +80,7 @@ function GBB.OptionsUpdate()
 		GBB.Tool.TabShow(GroupBulletinBoardFrame)
 	else
 		GBB.Tool.SelectTab(GroupBulletinBoardFrame,1)
-		GBB.Tool.TabHide(GroupBulletinBoardFrame)
+		GBB.Tool.TabHide(GroupBulletinBoardFrame, 3)
 	end
 	
 	GBB.CreateTagList()
@@ -389,7 +389,7 @@ function GBB.OptionsInit ()
 		GBB.Options.AddEditBox(GBB.DB.CustomLocalesDungeon,key,"",col..locales[key],450,200,false,locales[key],txt)
 	end
 	
-	for i=GBB.TBCDUNGEONSTART,GBB.TBCMAXDUNGEON do
+	for i=GBB.TBCDUNGEONSTART,GBB.WOTLKMAXDUNGEON do
 
 		local key=GBB.dungeonSort[i]
 		

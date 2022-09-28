@@ -95,7 +95,7 @@ GBB.dungeonTagsLoc={
 		["SV"] = 	"sv steamvault steamvaults steam vault valts",
 		["ARC"] = 	"arc arcatraz alcatraz",
 
-		["UK"] = 	"uk utk",
+		["UK"] = 	"uk utk utgarde",
 		["NEX"] = 	"nexus nex",
 		["AZN"] = 	"azn an nerub",
 		["ANK"] = 	"ank old ako ok kingdom",

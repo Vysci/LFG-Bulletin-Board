@@ -200,12 +200,18 @@ function GBB.ResizeFrameList()
 	w=GroupBulletinBoardFrame:GetWidth() -20-10-10
 	GroupBulletinBoardFrame_ScrollFrame:SetWidth( w )
 	GroupBulletinBoardFrame_ScrollChildFrame:SetWidth( w )
+
+	GroupBulletinBoardFrame_LfgFrame:SetHeight(GroupBulletinBoardFrame:GetHeight() -55-25 )
+	w=GroupBulletinBoardFrame:GetWidth() -20-10-10
+	GroupBulletinBoardFrame_LfgFrame:SetWidth( w )
+	GroupBulletinBoardFrame_LfgChildFrame:SetWidth( w )
 end
 
 function GBB.ShowWindow()
 	GroupBulletinBoardFrame:Show()
 	GBB.ClearNeeded=true	 
 	GBB.UpdateList()
+	GBB.UpdateLfgTool()
 	GBB.UpdateGroupList()
 	GBB.ResizeFrameList()
 end
@@ -233,6 +239,10 @@ function GBB.BtnSettings(button )
 		GBB.Popup_Minimap("cursor",false)
 		--GBB.Options.Open(1)
 	end
+end
+
+function GBB.BtnRefresh(button)
+	GBB.UpdateLfgTool()
 end
 
 
@@ -425,9 +435,12 @@ function GBB.Init()
 
 	-- Reset Request-List
 	GBB.RequestList={}
+	GBB.LfgRequestList={}
 	GBB.FramesEntries={}
+	GBB.LfgFramesEntries = {}
 
 	GBB.FoldedDungeons={}
+	GBB.LfgFoldedDungeons = {}
 	
 	-- Timer-Stuff
 	GBB.MAXTIME=time() +60*60*24*365 --add a year!
@@ -558,15 +571,17 @@ function GBB.Init()
 	
 	GBB.InitGroupList()
 	GBB.Tool.AddTab(GroupBulletinBoardFrame,GBB.L.TabRequest,GroupBulletinBoardFrame_ScrollFrame)
+	GBB.Tool.AddTab(GroupBulletinBoardFrame,GBB.L.TabLfg,GroupBulletinBoardFrame_LfgFrame)
 	GBB.Tool.AddTab(GroupBulletinBoardFrame,GBB.L.TabGroup,GroupBulletinBoardFrame_GroupFrame)
 	GBB.Tool.SelectTab(GroupBulletinBoardFrame,1)
 	if GBB.DB.EnableGroup then
-		GBB.Tool.TabShow(GroupBulletinBoardFrame)
+		GBB.Tool.TabShow(GroupBulletinBoardFrame, 3)
 	else		
-		GBB.Tool.TabHide(GroupBulletinBoardFrame)
+		GBB.Tool.TabHide(GroupBulletinBoardFrame, 3)
 	end
 	
-	GBB.Tool.TabOnSelect(GroupBulletinBoardFrame,2,GBB.UpdateGroupList)
+	GBB.Tool.TabOnSelect(GroupBulletinBoardFrame,3,GBB.UpdateGroupList)
+	GBB.Tool.TabOnSelect(GroupBulletinBoardFrame,2,GBB.UpdateLfgTool)
 	
 	GameTooltip:HookScript("OnTooltipSetUnit", hooked_createTooltip)
 		
@@ -719,9 +734,12 @@ function GBB.OnUpdate(elapsed)
 		end
 
 		if GBB.ElapsedSinceListUpdate > 0.5 then
-			if GroupBulletinBoardFrame:IsVisible() then
+			if GBB.Tool.GetSelectedTab(GroupBulletinBoardFrame)==1 then
 				GBB.UpdateList()
+			elseif  GBB.Tool.GetSelectedTab(GroupBulletinBoardFrame)==2 then
+				GBB.UpdateLfgToolNoSearch()
 			end
+				
 			GBB.ElapsedSinceListUpdate = 0;
 		else
 			GBB.ElapsedSinceListUpdate = GBB.ElapsedSinceListUpdate + elapsed;

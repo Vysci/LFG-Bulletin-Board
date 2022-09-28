@@ -530,6 +530,7 @@ function GBB.GetDungeons(msg,name)
 		else
 			for dungeon,id in pairs(dungeons) do
 				if GBB.dungeonLevel[dungeon][1]>0 and nameLevel<GBB.dungeonLevel[dungeon][1] then
+
 					nameLevel=GBB.dungeonLevel[dungeon][1]
 				end
 			end
