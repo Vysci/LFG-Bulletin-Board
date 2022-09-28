@@ -2,6 +2,11 @@
 
 Group Bulletin Board 	
 
+3.04
+- Added auto refresh for lfg tool
+- Semi fixed add-on exploding on custom
+- BB should be honoring users selected lfg tool category unless it's not set
+
 3.03
 - Added tab for LFG Tool requests 
 - Never use custom in lfg tool because it makes things blow up

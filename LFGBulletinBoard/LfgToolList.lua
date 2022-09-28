@@ -198,15 +198,35 @@ function GBB.GetLfgList()
 end
 
 function GBB.UpdateLfgTool()
+    if LFGBrowseFrame.CategoryDropDown.selectedValue == 120 then return end
+    if  LFGBrowseFrame.CategoryDropDown.selectedValue == nil then  
+        LFGBrowseFrame.CategoryDropDown.selectedValue = 2
+    end
+
     LastUpdateTime = time()
     GBB.LfgRequestList = {}
-	local activities = C_LFGList.GetAvailableActivities(2)
-	C_LFGList.Search(2, activities)
+    
+    local category = 2
+    if LFGBrowseFrame.CategoryDropDown.selectedValue ~= nil then 
+        category = LFGBrowseFrame.CategoryDropDown.selectedValue
+    end
+
+	local activities = C_LFGList.GetAvailableActivities(category)
+	C_LFGList.Search(category, activities)
+    if LFGBrowseFrame.searching then return end
+
 	GBB.GetLfgList()
     GBB.LfgUpdateList()
 end
 
 function GBB.UpdateLfgToolNoSearch()
+    if LFGBrowseFrame.CategoryDropDown.selectedValue == 120 then return end
+    if  LFGBrowseFrame.CategoryDropDown.selectedValue == nil then  
+        LFGBrowseFrame.CategoryDropDown.selectedValue = 2
+    end
+
+if LFGBrowseFrame.searching then return end
+
     GBB.LfgRequestList = {}
     GBB.GetLfgList()
     GBB.LfgUpdateList()
@@ -629,7 +649,7 @@ function GBB.LfgClickRequest(self,button)
             local searchResult = C_LFGList.GetSearchResultInfo(req.resultId)
             if UnitIsGroupLeader("player", LE_PARTY_CATEGORY_HOME) or searchResult.numMembers == 1 then
                 InviteRequest(req.name)
-            elseif searchResult.isDelisted == false and searchResult.numMembers ~= 5 then
+            elseif searchResult.isDelisted == false and searchResult.numMembers ~= 5 then 
                 RequestInviteFromUnit(searchResult.leaderName)
             end
 		end

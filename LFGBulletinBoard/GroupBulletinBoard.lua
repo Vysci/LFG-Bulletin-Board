@@ -31,6 +31,7 @@ GBB.TAGSEARCH="+++"
 
 GBB.Initalized = false
 GBB.ElapsedSinceListUpdate = 0
+GBB.ElapsedSinceLfgUpdate = 0
 GBB.LFG_Timer=0
 GBB.LFG_UPDATETIME=10
 GBB.TBCDUNGEONBREAK = 50
@@ -744,6 +745,14 @@ function GBB.OnUpdate(elapsed)
 		else
 			GBB.ElapsedSinceListUpdate = GBB.ElapsedSinceListUpdate + elapsed;
 		end;
+
+		if GBB.ElapsedSinceLfgUpdate > 8 and GBB.Tool.GetSelectedTab(GroupBulletinBoardFrame)==2 then
+			LFGBrowseFrameRefreshButton:Click()
+			GBB.UpdateLfgTool()
+			GBB.ElapsedSinceLfgUpdate = 0
+		else
+			GBB.ElapsedSinceLfgUpdate = GBB.ElapsedSinceLfgUpdate + elapsed
+		end
 	end
 end
 
