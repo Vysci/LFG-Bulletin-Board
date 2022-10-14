@@ -333,6 +333,7 @@ function GBB.OptionsInit ()
 	CheckBox("TagsRussian", locale == "ruRU")
 	CheckBox("TagsFrench", locale == "frFR")
 	CheckBox("TagsZhtw",locale == "zhTW")
+	CheckBox("TagsZhcn",locale == "zhCN")
 
 	CheckBox("TagsCustom",true)
 	GBB.Options.EndInLine()
