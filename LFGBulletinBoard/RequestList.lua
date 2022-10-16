@@ -471,7 +471,25 @@ function GBB.GetDungeons(msg,name)
 
 	local wordcount=0
 
-	if GBB.DB.TagsZhtw then
+	if GBB.DB.TagsZhcn then
+		for key, v in pairs(GBB.tagList) do
+			if strfind(msg:lower(), key) then
+				if v==GBB.TAGSEARCH then
+					isGood=true
+				elseif v==GBB.TAGBAD then
+					break
+				elseif v~=nil then
+					dungeons[v]=true
+				end
+			end
+		end
+		for key, v in pairs(GBB.HeroicKeywords) do
+			if strfind(msg:lower(), key) then
+				isHeroic = true
+			end
+		end
+		wordcount = string.len(msg)
+	elseif GBB.DB.TagsZhtw then
 		for key, v in pairs(GBB.tagList) do
 			if strfind(msg:lower(), key) then
 				if v==GBB.TAGSEARCH then
