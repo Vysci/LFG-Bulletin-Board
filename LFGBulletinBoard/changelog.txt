@@ -2,6 +2,10 @@
 
 Group Bulletin Board 	
 
+3.06
+- Fix for Naxx
+- Transaltion for Chinese 
+
 3.05
 - Removed the clicking noise in background
 
