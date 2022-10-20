@@ -737,7 +737,7 @@ function GBB.OnUpdate(elapsed)
 			GBB.LFG_Timer=time()+GBB.LFG_UPDATETIME
 		end
 
-		if GBB.ElapsedSinceListUpdate > 0.5 then
+		if GBB.ElapsedSinceListUpdate > 1 then
 			if GBB.Tool.GetSelectedTab(GroupBulletinBoardFrame)==1 then
 				GBB.UpdateList()
 			elseif  GBB.Tool.GetSelectedTab(GroupBulletinBoardFrame)==2 then
@@ -749,7 +749,7 @@ function GBB.OnUpdate(elapsed)
 			GBB.ElapsedSinceListUpdate = GBB.ElapsedSinceListUpdate + elapsed;
 		end;
 
-		if GBB.ElapsedSinceLfgUpdate > 8 and GBB.Tool.GetSelectedTab(GroupBulletinBoardFrame)==2 and GroupBulletinBoardFrame:IsVisible() then
+		if GBB.ElapsedSinceLfgUpdate > 18 and GBB.Tool.GetSelectedTab(GroupBulletinBoardFrame)==2 and GroupBulletinBoardFrame:IsVisible() then
 			LFGBrowseFrameRefreshButton:Click()
 			GBB.UpdateLfgTool()
 			GBB.ElapsedSinceLfgUpdate = 0
