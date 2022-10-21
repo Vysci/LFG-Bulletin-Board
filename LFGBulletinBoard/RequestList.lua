@@ -294,6 +294,11 @@ local function InviteRequest(name)
 	GBB.Tool.RunSlashCmd("/invite " .. name)
 end
 
+local function InviteRequestWithRole(name)
+	if not GBB.DB.InviteRole then GBB.DB.InviteRole = "DPS" end
+	SendChatMessage("Invite for "..string.lower(GBB.DB.InviteRole), "WHISPER", nil, name)
+end
+
 local function IgnoreRequest(name)
 	for ir,req in pairs(GBB.RequestList) do
 		if type(req) == "table" and req.name == name then
@@ -847,6 +852,8 @@ function GBB.ClickRequest(self,button)
 		if IsShiftKeyDown() then
 			WhoRequest(req.name)
 			--SendWho( req.name )
+		elseif IsAltKeyDown() then
+			InviteRequestWithRole(req.name)
 		elseif IsControlKeyDown() then
 			InviteRequest(req.name)
 		else
