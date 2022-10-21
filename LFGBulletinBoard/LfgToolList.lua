@@ -75,9 +75,10 @@ local function InviteRequest(name)
 	GBB.Tool.RunSlashCmd("/invite " .. name)
 end
 
-local function InviteRequestWithRole(name)
+local function InviteRequestWithRole(name,dungeon)
 	if not GBB.DB.InviteRole then GBB.DB.InviteRole = "DPS" end
-	SendChatMessage("Invite for "..string.lower(GBB.DB.InviteRole), "WHISPER", nil, name)
+	if dungeon == "Miscellaneous" then dungeon = "party" end
+	SendChatMessage(string.format(GBB.L["msgLeaderOutbound"], dungeon, GBB.DB.InviteRole), "WHISPER", nil, name)
 end
 
 local function IgnoreRequest(name)
@@ -130,7 +131,6 @@ end
 function GBB.GetLfgList()
 
 	local totalResultsFound, results = C_LFGList.GetSearchResults()
-
 
 	for _, v in pairs(results) do
 		local dungeonTXT=""
@@ -649,7 +649,9 @@ function GBB.LfgClickRequest(self,button)
 			WhoRequest(req.name)
 			--SendWho( req.name )
 		elseif IsAltKeyDown() then
-			InviteRequestWithRole(req.name)
+			-- Leaving this here for a message without the automatic invite request
+			-- as it obviously doesn't affect overall functionality. 
+			InviteRequestWithRole(req.name,req.dungeon) 
 		elseif IsControlKeyDown() then
 			InviteRequest(req.name)
 		else
@@ -657,7 +659,8 @@ function GBB.LfgClickRequest(self,button)
             if UnitIsGroupLeader("player", LE_PARTY_CATEGORY_HOME) or searchResult.numMembers == 1 then
                 InviteRequest(req.name)
             elseif searchResult.isDelisted == false and searchResult.numMembers ~= 5 then 
-                RequestInviteFromUnit(searchResult.leaderName)
+				InviteRequestWithRole(req.name,req.dungeon) -- sends message telling leader your role
+                RequestInviteFromUnit(searchResult.leaderName) -- requests the actual invite. 
             end
 		end
 	else

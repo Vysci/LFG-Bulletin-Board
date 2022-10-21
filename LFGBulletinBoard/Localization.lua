@@ -25,6 +25,7 @@ GBB.locales = {
 		["normalAbr"]="N",
 		["raidAbr"]="R",
 		["msgFontSize"] = "Font Size (Requires /reload)",
+		["msgLeaderOutbound"]="Please invite for %s, I am a %s.",
 		
 		-- option panel
 		
