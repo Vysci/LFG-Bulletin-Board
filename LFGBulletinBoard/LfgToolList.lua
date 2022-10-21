@@ -212,7 +212,7 @@ function GBB.UpdateLfgTool()
     end
 
 	local activities = C_LFGList.GetAvailableActivities(category)
-	C_LFGList.Search(category, activities)
+	--C_LFGList.Search(category, activities)
     if LFGBrowseFrame.searching then return end
 
 	GBB.GetLfgList()
@@ -394,7 +394,9 @@ local function CreateItem(yy,i,doCompact,req,forceHight)
         local roles = ""
         
         for _, v in pairs(req.partyInfo) do 
-            if (v.class == "DAMAGER") then
+			if (v.classLocalized == "ROGUE" or v.classLocalized == "WARLOCK" or v.classLocalized == "MAGE") then 
+				roles = roles..GBB.Tool.RoleIcon["DAMAGER"]
+			elseif (v.class == "DAMAGER") then
                 roles = roles..GBB.Tool.RoleIcon["DAMAGER"]
             elseif (v.class == "TANK") then
                 roles = roles..GBB.Tool.RoleIcon["TANK"]
