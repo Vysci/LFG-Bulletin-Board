@@ -316,7 +316,6 @@ function GBB.OptionsInit ()
 	GBB.Options.AddButton(GBB.L["BtnUnselectAll"],function()
 		DoSelectFilter(false, ChkBox_FilterDungeon, 1, GBB.MAXDUNGEON)
 	end)
-	GBB.Options.AddDrop(GBB.DB,"InviteRole", "DPS", {"DPS", "Tank", "Healer"})
 	GBB.Options.EndInLine()
 	
 	GBB.Options.Indent(-10)
