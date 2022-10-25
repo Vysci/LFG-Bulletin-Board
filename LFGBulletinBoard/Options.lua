@@ -251,11 +251,10 @@ function GBB.OptionsInit ()
 	GBB.Options.AddButton(GBB.L["BtnUnselectAll"],function()
 		DoSelectFilter(false, WotlkChkBox_FilterDungeon, GBB.WOTLKDUNGEONSTART, GBB.WOTLKMAXDUNGEON)
 	end)
+	GBB.Options.AddDrop(GBB.DB,"InviteRole", "DPS", {"DPS", "Tank", "Healer"})
 	GBB.Options.EndInLine()
-		
 	GBB.Options.Indent(-10)
 	SetChatOption()
-
 
 	-- Third Panel for TBC Dungeons
 	GBB.Options.AddPanel(GBB.L["TBCPanelFilter"])
@@ -316,7 +315,6 @@ function GBB.OptionsInit ()
 		DoSelectFilter(false, ChkBox_FilterDungeon, 1, GBB.MAXDUNGEON)
 	end)
 	GBB.Options.EndInLine()
-	
 	GBB.Options.Indent(-10)
 	
 	--GBB.Options.AddSpace()	

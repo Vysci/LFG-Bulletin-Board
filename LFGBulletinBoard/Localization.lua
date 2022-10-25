@@ -6,7 +6,7 @@ GBB.locales = {
 		["world_channel"]="World", -- must be the default chat-name!
 		["GuildChannel"]="Guild Channel",
 				
-		["msgNbRequest"]="%d request(s) - click to whisper - shift+click to 'who' - ctrl+click to 'invite'",
+		["msgNbRequest"]="%d request(s) - click to whisper - shift+click to 'who' - ctrl+click to 'invite' - alt+click to 'send role message'",
 		["msgLfgRequest"] = "Time since last update %s --- %d requests(s) - click to invite/apply to group",
 		["msgRequestHere"] = "Enter here your lfg message.",
 		["msgStartWho"]="request who on %s...",
@@ -25,6 +25,7 @@ GBB.locales = {
 		["normalAbr"]="N",
 		["raidAbr"]="R",
 		["msgFontSize"] = "Font Size (Requires /reload)",
+		["msgLeaderOutbound"]="Please invite for %s, I am a %s.",
 		
 		-- option panel
 		

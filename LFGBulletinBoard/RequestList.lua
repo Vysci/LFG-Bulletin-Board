@@ -186,9 +186,6 @@ local function CreateItem(yy,i,doCompact,req,forceHight)
 			suffix=" ("..GBB.RealLevel[req.name]..")"..suffix
 		end
 
-
-
-
 		local ti
 		if GBB.DB.ShowTotalTime then
 			ti=GBB.formatTime(time()-req.start)
@@ -276,7 +273,6 @@ local function CreateItem(yy,i,doCompact,req,forceHight)
 	end
 
 	return h
-
 end
 
 local function WhoRequest(name)
@@ -292,6 +288,12 @@ end
 
 local function InviteRequest(name)
 	GBB.Tool.RunSlashCmd("/invite " .. name)
+end
+
+local function InviteRequestWithRole(name,dungeon)
+	if not GBB.DB.InviteRole then GBB.DB.InviteRole = "DPS" end
+	if dungeon == "Miscellaneous" then dungeon = "party" end
+	SendChatMessage(string.format(GBB.L["msgLeaderOutbound"], dungeon, GBB.DB.InviteRole), "WHISPER", nil, name)
 end
 
 local function IgnoreRequest(name)
@@ -847,6 +849,8 @@ function GBB.ClickRequest(self,button)
 		if IsShiftKeyDown() then
 			WhoRequest(req.name)
 			--SendWho( req.name )
+		elseif IsAltKeyDown() then
+			InviteRequestWithRole(req.name,req.dungeon)
 		elseif IsControlKeyDown() then
 			InviteRequest(req.name)
 		else

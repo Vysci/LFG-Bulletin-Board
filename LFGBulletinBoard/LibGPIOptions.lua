@@ -240,6 +240,7 @@ function Options.AddButton(Text,func)
 	Options.Btn[ButtonName]:SetScript("OnClick", func)
 	Options.Btn[ButtonName]:SetText(Text)
 	Options.Btn[ButtonName]:SetWidth( Options.Btn[ButtonName]:GetTextWidth()+20 )
+	Options.Btn[ButtonName]:SetHeight(25)
 	return Options.Btn[ButtonName]
 end
 
@@ -418,7 +419,7 @@ function Options.AddDrop(DB,Var,Init,MenuItems)
 		Options.NextRelativY=0
 	else
 		Options.Btn[ButtonName]:SetPoint("TOP", Options.LineRelativ,"TOP", 0, 0)
-		Options.Btn[ButtonName]:SetPoint("LEFT", Options.LineRelativ.."Text","RIGHT", 0, 0)
+		Options.Btn[ButtonName]:SetPoint("LEFT", Options.LineRelativ.."Text","RIGHT", 0, 3)
 		Options.LineRelativ=ButtonName
 	end
 
