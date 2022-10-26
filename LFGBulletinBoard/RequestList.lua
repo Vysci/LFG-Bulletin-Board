@@ -298,10 +298,17 @@ local function InviteRequest(name)
 	GBB.Tool.RunSlashCmd("/invite " .. name)
 end
 
-local function InviteRequestWithRole(name,dungeon)
+local function InviteRequestWithRole(gbbName,gbbDungeon,gbbHeroic)
 	if not GBB.DB.InviteRole then GBB.DB.InviteRole = "DPS" end
-	if dungeon == "Miscellaneous" then dungeon = "party" end
-	SendChatMessage(string.format(GBB.L["msgLeaderOutbound"], dungeon, GBB.DB.InviteRole), "WHISPER", nil, name)
+
+	-- Not sure if necessary, but Heroic Miscellaneous sounds like a dangerous place.
+	if gbbDungeon == "Miscellaneous"
+	or gbbDungeon == "Trade"
+	then gbbDungeon = "party" end
+
+	local gbbDungeonPrefix = gbbHeroic and "H " or "N " -- spaces here instead of doing multiple concats in the return
+
+	SendChatMessage(string.format(GBB.L["msgLeaderOutbound"], gbbDungeonPrefix .. GBB.dungeonNames[gbbDungeon], GBB.DB.InviteRole), "WHISPER", nil, gbbName)
 end
 
 local function IgnoreRequest(name)
@@ -856,7 +863,7 @@ function GBB.ClickRequest(self,button)
 			WhoRequest(req.name)
 			--SendWho( req.name )
 		elseif IsAltKeyDown() then
-			InviteRequestWithRole(req.name,req.dungeon)
+			InviteRequestWithRole(req.name,req.dungeon,req.IsHeroic)
 		elseif IsControlKeyDown() then
 			InviteRequest(req.name)
 		else

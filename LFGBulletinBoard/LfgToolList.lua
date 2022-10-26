@@ -75,10 +75,17 @@ local function InviteRequest(name)
 	GBB.Tool.RunSlashCmd("/invite " .. name)
 end
 
-local function InviteRequestWithRole(name,dungeon)
+local function InviteRequestWithRole(gbbName,gbbDungeon,gbbHeroic)
 	if not GBB.DB.InviteRole then GBB.DB.InviteRole = "DPS" end
-	if dungeon == "Miscellaneous" then dungeon = "party" end
-	SendChatMessage(string.format(GBB.L["msgLeaderOutbound"], dungeon, GBB.DB.InviteRole), "WHISPER", nil, name)
+
+	-- Not sure if necessary, but Heroic Miscellaneous sounds like a dangerous place.
+	if gbbDungeon == "Miscellaneous"
+	or gbbDungeon == "Trade"
+	then gbbDungeon = "party" end
+
+	local gbbDungeonPrefix = gbbHeroic and "H " or "N " -- spaces here instead of doing multiple concats in the return
+
+	SendChatMessage(string.format(GBB.L["msgLeaderOutbound"], gbbDungeonPrefix .. GBB.dungeonNames[gbbDungeon], GBB.DB.InviteRole), "WHISPER", nil, gbbName)
 end
 
 local function IgnoreRequest(name)
@@ -651,7 +658,7 @@ function GBB.LfgClickRequest(self,button)
 		elseif IsAltKeyDown() then
 			-- Leaving this here for a message without the automatic invite request
 			-- as it obviously doesn't affect overall functionality. 
-			InviteRequestWithRole(req.name,req.dungeon) 
+			InviteRequestWithRole(req.name,req.dungeon,req.IsHeroic)
 		elseif IsControlKeyDown() then
 			InviteRequest(req.name)
 		else
@@ -659,7 +666,7 @@ function GBB.LfgClickRequest(self,button)
             if UnitIsGroupLeader("player", LE_PARTY_CATEGORY_HOME) or searchResult.numMembers == 1 then
                 InviteRequest(req.name)
             elseif searchResult.isDelisted == false and searchResult.numMembers ~= 5 then 
-				InviteRequestWithRole(req.name,req.dungeon) -- sends message telling leader your role
+				InviteRequestWithRole(req.name,req.dungeon,req.IsHeroic) -- sends message telling leader your role
                 RequestInviteFromUnit(searchResult.leaderName) -- requests the actual invite. 
             end
 		end
