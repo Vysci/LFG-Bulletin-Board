@@ -448,12 +448,7 @@ function Options.AddDrop(DB,Var,Init,MenuItems)
 		UIDropDownMenu_AddButton(info)
 	   end
 	end)
-
 end
-
-
-
-
 
 function Options.EditCheckBox(toEdit,DB,Var,Init,Text,width)
 	local ButtonName=toEdit:GetName()
@@ -494,9 +489,7 @@ function Options.AddText(TXT,width,centre)
 	textbox:SetText(TXT)
 	textbox:SetPoint("TOPLEFT",Options.NextRelativ,"BOTTOMLEFT", Options.NextRelativX, Options.NextRelativY-2)
 	textbox:SetScale(Options.scale)
-	
-	
-	
+
 	if width==nil or width==0 then 
 		textbox:SetWidth(textbox:GetStringWidth())
 	elseif width<0 then

@@ -75,15 +75,19 @@ local function InviteRequest(name)
 	GBB.Tool.RunSlashCmd("/invite " .. name)
 end
 
-local function InviteRequestWithRole(gbbName,gbbDungeon,gbbHeroic)
+local function InviteRequestWithRole(gbbName,gbbDungeon,gbbHeroic,gbbRaid)
 	if not GBB.DB.InviteRole then GBB.DB.InviteRole = "DPS" end
+	local gbbDungeonPrefix = ""	
+	if gbbHeroic then
+		gbbDungeonPrefix = "H "
+	elseif not gbbHeroic and not gbbRaid then
+		gbbDungeonPrefix = "N "
+	end
 
 	-- Not sure if necessary, but Heroic Miscellaneous sounds like a dangerous place.
-	if gbbDungeon == "Miscellaneous"
-	or gbbDungeon == "Trade"
-	then gbbDungeon = "party" end
-
-	local gbbDungeonPrefix = gbbHeroic and "H " or "N " -- spaces here instead of doing multiple concats in the return
+	if gbbDungeon == "MISC" or gbbDungeon == "TRADE" then
+		gbbDungeonPrefix = ""
+	end
 
 	SendChatMessage(string.format(GBB.L["msgLeaderOutbound"], gbbDungeonPrefix .. GBB.dungeonNames[gbbDungeon], GBB.DB.InviteRole), "WHISPER", nil, gbbName)
 end
@@ -658,7 +662,7 @@ function GBB.LfgClickRequest(self,button)
 		elseif IsAltKeyDown() then
 			-- Leaving this here for a message without the automatic invite request
 			-- as it obviously doesn't affect overall functionality. 
-			InviteRequestWithRole(req.name,req.dungeon,req.IsHeroic)
+			InviteRequestWithRole(req.name,req.dungeon,req.IsHeroic,req.IsRaid)
 		elseif IsControlKeyDown() then
 			InviteRequest(req.name)
 		else
@@ -666,7 +670,7 @@ function GBB.LfgClickRequest(self,button)
             if UnitIsGroupLeader("player", LE_PARTY_CATEGORY_HOME) or searchResult.numMembers == 1 then
                 InviteRequest(req.name)
             elseif searchResult.isDelisted == false and searchResult.numMembers ~= 5 then 
-				InviteRequestWithRole(req.name,req.dungeon,req.IsHeroic) -- sends message telling leader your role
+				InviteRequestWithRole(req.name,req.dungeon,req.IsHeroic,req.IsRaid) -- sends message telling leader your role
                 RequestInviteFromUnit(searchResult.leaderName) -- requests the actual invite. 
             end
 		end
