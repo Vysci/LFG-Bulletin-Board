@@ -188,9 +188,17 @@ local function CreateItem(yy,i,doCompact,req,forceHight)
 
 		local ti
 		if GBB.DB.ShowTotalTime then
-			ti=GBB.formatTime(time()-req.start)
+			if (time() - req.start < 0) then -- Quick fix for negative timers that happen as a result of new time calculation.
+				ti=GBB.formatTime(0) 
+			else
+				ti=GBB.formatTime(time()-req.start)
+			end
 		else
-			ti=GBB.formatTime(time()-req.last)
+			if (time() - req.last < 0) then
+				ti=GBB.formatTime(0)
+			else
+				ti=GBB.formatTime(time()-req.last)
+			end
 		end
 
 		local typePrefix
@@ -290,10 +298,21 @@ local function InviteRequest(name)
 	GBB.Tool.RunSlashCmd("/invite " .. name)
 end
 
-local function InviteRequestWithRole(name,dungeon)
+local function InviteRequestWithRole(gbbName,gbbDungeon,gbbHeroic,gbbRaid)
 	if not GBB.DB.InviteRole then GBB.DB.InviteRole = "DPS" end
-	if dungeon == "Miscellaneous" then dungeon = "party" end
-	SendChatMessage(string.format(GBB.L["msgLeaderOutbound"], dungeon, GBB.DB.InviteRole), "WHISPER", nil, name)
+	local gbbDungeonPrefix = ""	
+	if gbbHeroic then
+		gbbDungeonPrefix = "H "
+	elseif not gbbHeroic and not gbbRaid then
+		gbbDungeonPrefix = "N "
+	end
+
+	-- Not sure if necessary, but Heroic Miscellaneous sounds like a dangerous place.
+	if gbbDungeon == "MISC" or gbbDungeon == "TRADE" then
+		gbbDungeonPrefix = ""
+	end
+
+	SendChatMessage(string.format(GBB.L["msgLeaderOutbound"], gbbDungeonPrefix .. GBB.dungeonNames[gbbDungeon], GBB.DB.InviteRole), "WHISPER", nil, gbbName)
 end
 
 local function IgnoreRequest(name)
@@ -352,9 +371,6 @@ function GBB.UpdateList()
 			table.sort(GBB.RequestList, requestSort_nTOP_nTOTAL)
 		end
 	end
-
-
-
 
 	for i, f in pairs(GBB.FramesEntries) do
 		f:Hide()
@@ -619,16 +635,17 @@ function GBB.GetDungeons(msg,name)
 		end
 	end
 
-
 	return dungeons, isGood, isBad, wordcount, isHeroic
-
 end
 
 function GBB.ParseMessage(msg,name,guid,channel)
 	if GBB.Initalized==false or name==nil or name=="" or msg==nil or msg=="" or string.len(msg)<4 then
 		return
 	end
-	local requestTime=time()
+
+	local appendTime = tonumber("0." .. math.random(100,999)) -- Append a random "millisecond" value. 
+	local requestTime=tonumber(time() + appendTime)
+
 	local doUpdate=false
 
 	local locClass,engClass,locRace,engRace,Gender,gName,gRealm = GetPlayerInfoByGUID(guid)
@@ -850,7 +867,7 @@ function GBB.ClickRequest(self,button)
 			WhoRequest(req.name)
 			--SendWho( req.name )
 		elseif IsAltKeyDown() then
-			InviteRequestWithRole(req.name,req.dungeon)
+			InviteRequestWithRole(req.name,req.dungeon,req.IsHeroic,req.IsRaid)
 		elseif IsControlKeyDown() then
 			InviteRequest(req.name)
 		else
