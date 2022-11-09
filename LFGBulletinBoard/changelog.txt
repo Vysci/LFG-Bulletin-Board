@@ -2,6 +2,13 @@
 
 Group Bulletin Board 	
 
+3.08 
+- Fix for entries rapidly swapping places - Thanks to mnejing for fixing this
+- Russian localization - Shout out to tierggg for doing this
+
+3.07 
+- Updated left click to whisper the person what role you are and for which dungeon you are applying - Thanks to mnejing for adding this
+
 3.06
 - Fix for Naxx
 - Transaltion for Chinese 
