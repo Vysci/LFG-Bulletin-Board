@@ -379,7 +379,7 @@ GBB.dungeonTagsLoc={
 
 		["OS"]   =  "sarth sart sanctum sartha sartha10 sartha25",
 		["VOA"] = 	"archa acha archavon",
-		["EOE"] = 	"maly malygos",
+		["EOE"] = 	"maly malygos may",
 		["ULDAR"] = "uldu uld uldu10 uldu25 ulduar ulduar10 ulduar25",
 		["TOTC"] = 	"tc totc totc10 totc25 toc10 toc25 togc",
 		--["RS"] = 	"rs ruby sanctum hal hal10 hal25",
