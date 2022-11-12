@@ -377,7 +377,7 @@ GBB.dungeonTagsLoc={
 		--["HOR"] = 	"",
 		["CHAMP"] = "champ toc champion",
 
-		["OS"]   =  "sarth sart sanctum",
+		["OS"]   =  "sarth sart sanctum sartha sartha10 sartha25",
 		["VOA"] = 	"archa acha archavon",
 		["EOE"] = 	"maly malygos",
 		["ULDAR"] = "uldu uld uldu10 uldu25 ulduar ulduar10 ulduar25",
