@@ -250,7 +250,6 @@ GBB.locales = {
 	["lfg_channel"]="RechercheDeGroupe",
 	["world_channel"] = "Général"
 	["GuildChannel"]="Guilde",
-
 	["msgNbRequest"]="%d Requête(s) - cliquez pour envoyer un message - shift+click pour regarder les informations - ctrl+click pour inviter - alt+clic pour envoyer un message de role",
 	["msgLfgRequest"] = "Temps depuis la dernière mise à jour %s --- %d requête(s) - cliquez to inviter/postuler à un groupe",
 	["msgRequestHere"] = "Entrez ici vôtre requête de RdG.",
@@ -263,7 +262,7 @@ GBB.locales = {
 	["msgTotalTime"]="Temps total %s",
 	["msgLastTime"]="Dernière mise à jour %s",
 	["msgLocalRestart"]="Le réglage n'est transféré qu'après un redémarrage (/reload).",
-	["msgCustomList"]="EIntroduisez ici vos propres modèles de recherche uniques. S'il n'y a rien, les modèles anglais sont affichés sous forme d'exemple grisé.",
+	["msgCustomList"]="Introduisez ici vos propres motifs de recherche uniques. S'il n'y a rien, les motifs anglais sont affichés sous forme d'exemple grisé.",
 	["msgAddNote"]="%s note",
 	["msgLastSeen"]="Dernière vue:",
 	["heroicAbr"]="H",
@@ -271,9 +270,6 @@ GBB.locales = {
 	["raidAbr"]="R",
 	["msgFontSize"] = "Taille de fonte (nécéssite un /reload)",
 	["msgLeaderOutbound"]="Je cherche un groupe pour %s, Je suis %s.",
-
-	-- option panel
-
 	["HeaderSettings"]="Réglages",
 	["PanelFilter"]="Filtres Vanilla",
 	["TBCPanelFilter"]="Filtres BC",
@@ -289,7 +285,6 @@ GBB.locales = {
 	["HeaderInfo"]="Information",
 	["HeaderUsage"]="Utilisation",
 	["HeaderDungeon"]="Donjon",
-
 	["Cboxshowminimapbutton"]="Montrer le bouton de la minimap",
 	["CboxLockMinimapButton"]="Bloquer la position du bouton de la minimap",
 	["CboxLockMinimapButtonDistance"]="Minimaliser la distance du bouton de la minimap",
@@ -325,22 +320,18 @@ GBB.locales = {
 	["CboxEnableGuild"]="Ajouter la guilde dans l'infobulle du joueur",
 	["CboxCombineSubDungeons"]="Combiner des sous-donjons comme Hache-Tripes (uniquement nouvelle demande)",
 	["CboxAdditionalInfo"]="Ajouter plus d'infos au chat sur /who et quand quelqu'un se connecte",
-
 	["CboxNotfiyInnone"]="Activer sur la carte du monde",
 	["CboxNotfiyInpvp"]="Activer sur le champ de bataille",
 	["CboxNotfiyInparty"]="Activé dans les donjons",
 	["CboxNotfiyInraid"]="Activation dans les donjons de raid",
-
 	["EditShowOnlyNb"]="Nombre de requêtes :",
 	["EditTimeOut"]="Temps avant suppression (sec) :",
 	["EditCustom_Search"]="Mots à rechercher (lfg, lfm,...)",
 	["EditCustom_Bad"]="Mots de la liste noire",
 	["EditCustom_Suffix"]="Suffixes",
 	["EditCustom_Heroic"] = "Héroïque",
-
 	["BtnUnselectAll"]="Tout désélectionner",
 	["BtnSelectAll"]="Tout sélectionner",
-
 	["BtnWhisper"]="Chuchoter %s",
 	["BtnInvite"]="Inviter %s",
 	["BtnWho"]="Qui %s",
@@ -357,22 +348,16 @@ GBB.locales = {
 	["BtnPlayerNoteColor"]="Couleur de la note du joueur",
 	["BtnColorGuild"]="Couleur du texte de la guilde",
 	["BtnPostMsg"] = "Poster",
-
 	["SlashReset"]="Réinitialiser la position de la fenêtre principale",
 	["SlashConfig"]="Ouvrir la configuration",
 	["SlashDefault"]="Ouvrir la fenêtre principale",
 	["SlashAbout"]="ouvrir à propos",
 	["SlashChatOrganizer"]="Crée un nouvel onglet de chat s'il n'en existe pas déjà un, nommé \"LFG\" avec tous les canaux souscrits. Supprime les canaux de spam LFG de l'onglet de chat par défaut",
-
 	["TabRequest"]="Demandes",
 	["TabGroup"]="Membres",
 	["TabLfg"]="Demandes d'outils",
-
 	["AboutUsage"]="GBB recherche dans les messages de chat les demandes de donjon en arrière-plan. Pour contacter une personne, il suffit de cliquer sur l'entrée avec le bouton gauche de la souris. Pour un '/who', un shift + clic gauche est suffisant. La liste des donjons peut être filtrée dans les paramètres. Vous pouvez également la plier en cliquant avec le bouton gauche de la souris sur le nom du donjon.|nLes anciennes entrées sont filtrées après 150 secondes.",
-
 	["AboutSlashCommand"]="<value> peut être true, 1, enable, false, 0, disable. Si <value> est omise, l'état actuel commute.",
-
-
 	["AboutInfo"]="GBB fournit un aperçu des demandes sans fin dans les canaux de discussion. Il détecte toutes les demandes concernant les donjons classiques, les trie et les présente de manière claire. De nombreuses options de filtrage réduisent le nombre gigantesque à exactement les donjons qui vous intéressent. Et si cela ne suffit pas, GBB vous informe de toute nouvelle demande par une notification sonore ou par chat. Et enfin, GBB peut poster votre demande à plusieurs reprises",
 	["AboutCredits"]="Original par GPI / Erytheia-Razorfen",
 	},
