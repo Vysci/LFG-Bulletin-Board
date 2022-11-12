@@ -248,7 +248,7 @@ GBB.locales = {
 	},
 	frFR = {
 	["lfg_channel"]="RechercheDeGroupe",
-	["world_channel"] = "Général"
+	["world_channel"] = "Général",
 	["GuildChannel"]="Guilde",
 	["msgNbRequest"]="%d Requête(s) - cliquez pour envoyer un message - shift+click pour regarder les informations - ctrl+click pour inviter - alt+clic pour envoyer un message de role",
 	["msgLfgRequest"] = "Temps depuis la dernière mise à jour %s --- %d requête(s) - cliquez to inviter/postuler à un groupe",
