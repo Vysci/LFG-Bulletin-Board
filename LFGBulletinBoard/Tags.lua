@@ -5,7 +5,7 @@ local TOCNAME,GBB=...
 local function langSplit(source)
 	local ret={}
 	for lang,pat in pairs(source) do
-		if pat~="-" then 
+		if pat~="-" then
 			ret[lang]=GBB.Tool.Split(pat," ")
 		end
 	end
@@ -22,7 +22,7 @@ GBB.suffixTagsLoc=langSplit({
 })
 
 GBB.searchTagsLoc =langSplit({
-	enGB = "group lfg lf lfm lftank lfheal lfhealer lfdps lfdd dd heal healer tank dps xdd xheal xhealer xtank druid hunter mage pala paladin priest rogue rouge shaman warlock warrior elite quest elitequest elitequests",				
+	enGB = "group lfg lf lfm lftank lfheal lfhealer lfdps lfdd dd heal healer tank dps xdd xheal xhealer xtank druid hunter mage pala paladin priest rogue rouge shaman warlock warrior elite quest elitequest elitequests",
 
 	deDE = "gesucht suche suchen sucht such gruppe grp sfg sfm druide dudu jäger magier priester warri schurke rschami schamane hexer hexenmeister hm krieger heiler xheiler go run",
 
@@ -46,7 +46,7 @@ GBB.heroicTagsLoc=langSplit({
 	enGB ="h hc heroic",
 	deDE ="h hc heroic",
 	ruRU ="гер героик",
-	frFR = "h hc heroic hm hero",
+	frFR = "h hc heroic hm hero heroique",
 	zhTW = "h 英雄",
 	zhCN = "h H 英雄",
 })
@@ -57,7 +57,7 @@ GBB.dungeonTagsLoc={
 	enGB = langSplit({
 		["RFC"] = 	"rfc ragefire chasm" ,
 		["DM"]  = 	"deadmines vc vancleef dead mines mine" ,
-		["WC"]  = 	"wc wailing caverns" ,	
+		["WC"]  = 	"wc wailing caverns" ,
 		["SFK"] = 	"sfk shadowfang" ,
 		["STK"] = 	"stk stock stockade stockades" ,
 		["BFD"] = 	"bfd blackfathom fathom" ,
@@ -155,7 +155,7 @@ GBB.dungeonTagsLoc={
 	deDE =langSplit({
 		["RFC"] = 	"rfa ragefireabgrund flammenschlund flamenschlund rf rfg" ,
 		["DM"]  = 	"todesminen todesmine tm" ,
-		["WC"]  = 	"hdw wehklagens" ,	
+		["WC"]  = 	"hdw wehklagens" ,
 		["SFK"] = 	"burg bsf schattenfang" ,
 		["STK"] = 	"verlies verließ verliess" ,
 		["BFD"] = 	"bft blackfathomtiefen tiefschwarze grotte tsg" ,
@@ -212,14 +212,14 @@ GBB.dungeonTagsLoc={
 		["HYJAL"] = 	"hdz3 mount hyjal mounthyjal " ,
 		["BT"] = 	"tempel bt black blacktempel blacktemple temple" ,
 		--["SWP"] = {},
- 
+
 		["WSG"] = 	"warsongschlucht schlucht",
 		--["AB"]  = 	{},
 		--["AV"]  = 	{},
 		["EOTS"] =  "ads",
-		["ARENA"] = "2s 3s 5s 3v3 5v5 2v2 2vs2 3vs3 5vs5",	
+		["ARENA"] = "2s 3s 5s 3v3 5v5 2v2 2vs2 3vs3 5vs5",
 		["TRADE"] =	"kaufe verkauf kauf verkaufe ah vk tg trinkgeld trinkgold vz schneider verzauberer verzaubere schliesskassetten schließkassetten kassetten schlossknacken schloßknacken alchimie",
-	}),	
+	}),
  	 ruRU = langSplit({
 		["AB"] = "низина арати",
 		["ANK"] = "анкахет акнахет анк",
@@ -314,8 +314,8 @@ GBB.dungeonTagsLoc={
 		["ZA"] = "зул'аман за зуламан",
 		["ZF"] = "зф фарак фаррак зул'фаррак зулфарак зулфаррак зульфарак",
 		["ZG"] = "зг гуруб зул'гуруб  зулгуруб  зул?гуруб зул`гуруб зул'гуруба",
-	}),	
-	
+	}),
+
 	frFR = langSplit({
 		["RFC"] = "rfc ragefeu",
 		["DM"] = "mm mortemines mine mortemine",
@@ -360,6 +360,32 @@ GBB.dungeonTagsLoc={
 		["SL"] = "labyrinth lab laby shadowlab",
 		["SV"] = "steam vault réservoir reservoir caveau caveaux",
 		["ARC"] = "arca",
+		--["UK"] = 	"",
+		["NEX"] = 	"nexus nex",
+		["AZN"] = 	"azjol nerub az azol azjob",
+		["ANK"] = 	"ank ahn",
+		["DTK"] = 	"dtk drak draktharon drak'tharon drak",
+		["VH"] = 	"fp fort",
+		["GD"] = 	"gd gundrak",
+		["HOS"] = 	"sdp",
+		["HOL"] = 	"sdf",
+		["COS"] = 	"gt4",
+		["OCC"] = 	"occulus oculus",
+		["UP"] = 	"cime",
+		--["FOS"] = 	"",
+		--["POS"] = 	"",
+		--["HOR"] = 	"",
+		["CHAMP"] = "champ toc champion",
+
+		["OS"]   =  "sarth sart sanctum sartha sartha10 sartha25 sarta10 sarta25",
+		["VOA"] = 	"archa acha archavon",
+		["EOE"] = 	"maly malygos may",
+		["ULDAR"] = "uldu uld uldu10 uldu25 ulduar ulduar10 ulduar25",
+		["TOTC"] = 	"tc totc totc10 totc25 toc10 toc25 togc",
+		--["RS"] = 	"rs ruby sanctum hal hal10 hal25",
+		["ICC"] = 	"icc icecrown citadel icc10 icc25",
+		["NAXX"] = 	"naxxramas nax naxx nax10 naxx10 nax25 naxx25",
+
 		--["KARA"] = "",
 		--["GL"] = "",
 		--["MAG"] = "",
@@ -386,7 +412,7 @@ GBB.dungeonTagsLoc={
 	zhTW = langSplit({
 		["RFC"] = 	"怒焰裂谷 怒驗 怒焰" ,
 		["DM"]  = 	"死亡礦坑 死況 死礦" ,
-		["WC"]  = 	"哀嚎洞穴 哀號 哀嚎" ,	
+		["WC"]  = 	"哀嚎洞穴 哀號 哀嚎" ,
 		["SFK"] = 	"影牙城堡 影牙" ,
 		-- ["STK"] = 	"" ,
 		["BFD"] = 	"黑暗深淵" ,
@@ -445,7 +471,7 @@ GBB.dungeonTagsLoc={
 		["NAX"] = 	"NAXX 老克 納克",
 		["WSG"] = 	"戰哥 戰歌",
 		["AB"]  = 	"阿拉溪 阿拉希 阿拉西",
-		["AV"]  = 	"奧山 奧特蘭",	
+		["AV"]  = 	"奧山 奧特蘭",
 		["EOTS"] = 	"暴風眼 暴風之眼",
 		["ARENA"] =	"競技 22 33 3v3 5v5 2v2 2vs2 3vs3 5vs5",
 		["TRADE"] = 	"買 賣 售 收 代工 出售 附魔 COD", --hlink
@@ -468,7 +494,7 @@ GBB.dungeonTagsLoc={
 		["HOR"] = 	"映像大厅",
 		["CHAMP"] = "冠军的试炼",
 		["NAXX"] = 	"naxx NAXX 纳克萨玛斯",
-		
+
 		["OS"]   =  "黑曜石圣殿 红龙",
 		["VOA"] = 	"阿尔卡冯的宝库 宝库 色球",
 		["EOE"] = 	"永恒之眼 蓝龙",
@@ -479,7 +505,7 @@ GBB.dungeonTagsLoc={
 
 		["RFC"] = 	"怒焰峡谷 怒焰" ,
 		["DM"]  = 	"死亡矿坑 死矿" ,
-		["WC"]  = 	"哀嚎洞穴 哀嚎" ,	
+		["WC"]  = 	"哀嚎洞穴 哀嚎" ,
 		["SFK"] = 	"影牙城堡 影牙" ,
 		-- ["STK"] = 	"监狱" ,
 		["BFD"] = 	"黑暗深渊" ,
@@ -538,7 +564,7 @@ GBB.dungeonTagsLoc={
 		["NAX"] = 	"NAXX 纳克萨玛斯",
 		["WSG"] = 	"战歌",
 		["AB"]  = 	"阿拉希",
-		["AV"]  = 	"奧山 奥特兰",	
+		["AV"]  = 	"奧山 奥特兰",
 		["EOTS"] = 	"风暴之眼",
 		["ARENA"] =	"竞技 22 33 3v3 5v5 2v2 2vs2 3vs3 5vs5",
 		["TRADE"] = "买 卖 收 代工 出售 附魔",
