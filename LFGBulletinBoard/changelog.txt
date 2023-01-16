@@ -2,6 +2,11 @@
 
 Group Bulletin Board 	
 
+3.09
+- Fixed RU tags (courtesy of tierggg)
+- French localization (shout out to Isilorn for doing it)
+- Fixes 
+
 3.08 
 - Fix for entries rapidly swapping places - Thanks to mnejing for fixing this
 - Russian localization - Shout out to tierggg for doing this
