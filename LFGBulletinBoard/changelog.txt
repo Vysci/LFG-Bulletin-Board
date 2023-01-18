@@ -2,6 +2,9 @@
 
 Group Bulletin Board 	
 
+3.10 
+= Hopefully mixed new patch issues
+
 3.09
 - Fixed RU tags (courtesy of tierggg)
 - French localization (shout out to Isilorn for doing it)
