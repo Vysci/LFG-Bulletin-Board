@@ -343,7 +343,7 @@ local SizingEnter=function(self)
 	if not (GetCursorInfo()) then
 		ResizeCursor:Show()
 		ResizeCursor.Texture:SetTexture(self.GPI_Cursor)
-		ResizeCursor.Texture:SetRotation(math.rad(self.GPI_Rotation),0.5,0.5)
+		ResizeCursor.Texture:SetRotation(math.rad(self.GPI_Rotation),CreateVector2D(0.5,0.5))
 	end
 end
 

@@ -393,7 +393,7 @@ function GBB.Popup_Minimap(frame,notminimap)
 end
 
 function GBB.Init()
-	GroupBulletinBoardFrame:SetMinResize(300,170)	
+	GroupBulletinBoardFrame:SetResizeBounds(300,170)	
 	
 	GBB.UserLevel=UnitLevel("player")
 	GBB.UserName=(UnitFullName("player"))
