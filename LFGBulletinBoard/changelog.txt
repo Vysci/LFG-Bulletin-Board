@@ -2,6 +2,12 @@
 
 Group Bulletin Board 	
 
+3.11
+- Added realm to character names in request list
+- Removed the display of the additional tabs that aren't supported by Classic Era based on version. Will still display in WotLK+
+    - I only play Classic Era so I'm not verifying the functionality of this on WotLK+ besides it's display
+- Updated some APIs to new client versions
+
 3.10 
 = Hopefully mixed new patch issues
 
