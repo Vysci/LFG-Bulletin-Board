@@ -209,11 +209,16 @@ function GBB.ResizeFrameList()
 end
 
 function GBB.ShowWindow()
+	local version, build, date, tocversion = GetBuildInfo()
+
+    -- Check if classic or not
+    if string.sub(version, 1, 2) ~= "1." then
+		GBB.UpdateLfgTool()
+		GBB.UpdateGroupList()
+    end
 	GroupBulletinBoardFrame:Show()
 	GBB.ClearNeeded=true	 
 	GBB.UpdateList()
-	GBB.UpdateLfgTool()
-	GBB.UpdateGroupList()
 	GBB.ResizeFrameList()
 end
 
@@ -573,10 +578,17 @@ function GBB.Init()
 	
 	GBB.PopupDynamic=GBB.Tool.CreatePopup(GBB.OptionsUpdate)
 	
+	-- Get build version to check against classic
+	local version, build, date, tocversion = GetBuildInfo()
+
 	GBB.InitGroupList()
-	GBB.Tool.AddTab(GroupBulletinBoardFrame,GBB.L.TabRequest,GroupBulletinBoardFrame_ScrollFrame)
-	GBB.Tool.AddTab(GroupBulletinBoardFrame,GBB.L.TabLfg,GroupBulletinBoardFrame_LfgFrame)
-	GBB.Tool.AddTab(GroupBulletinBoardFrame,GBB.L.TabGroup,GroupBulletinBoardFrame_GroupFrame)
+	if string.sub(version, 1, 2) == "1." then
+		GBB.Tool.AddTab(GroupBulletinBoardFrame,GBB.L.TabRequest,GroupBulletinBoardFrame_ScrollFrame)
+	else
+		GBB.Tool.AddTab(GroupBulletinBoardFrame,GBB.L.TabRequest,GroupBulletinBoardFrame_ScrollFrame)
+		GBB.Tool.AddTab(GroupBulletinBoardFrame,GBB.L.TabLfg,GroupBulletinBoardFrame_LfgFrame)
+		GBB.Tool.AddTab(GroupBulletinBoardFrame,GBB.L.TabGroup,GroupBulletinBoardFrame_GroupFrame)
+	end
 	GBB.Tool.SelectTab(GroupBulletinBoardFrame,1)
 	if GBB.DB.EnableGroup then
 		GBB.Tool.TabShow(GroupBulletinBoardFrame, 3)
