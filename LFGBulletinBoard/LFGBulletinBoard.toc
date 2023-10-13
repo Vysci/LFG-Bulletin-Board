@@ -1,4 +1,4 @@
-## Interface: 30402
+## Interface: 30403
 ## Title: LFG Bulletin Board
 ## Notes: Sort LFG/LFM Messages
 ## Version: 3.11
