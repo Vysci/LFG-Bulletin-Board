@@ -14,24 +14,24 @@ Old entries are filtered out after 150 seconds.
 Slash Commands
 <value> can be true, 1, enable, false, 0, disable. If <value> is omitted, the current status switches.
  
-/gbb notify chat <value> - On new request make a chat notification
+`/gbb notify chat <value>` - On new request make a chat notification
  
-/gbb notify sound <value> - On new request make a sound notification
+`/gbb notify sound <value>` - On new request make a sound notification
  
-/gbb debug <value> - Show debug information
+`/gbb debug <value>` - Show debug information
  
-/gbb reset - Reset main window position
+`/gbb reset` - Reset main window position
  
-/gbb config/setup/options - Open configuration
+`/gbb config/setup/options` - Open configuration
  
-/gbb about - open about
+`/gbb about` - open about
  
-/gbb help - Print help
+`/gbb help` - Print help
  
-/gbb chat organize/clean - Creates a new chat tab if one doesn't already exist, named "LFG" with all channels subscribed. Removes LFG heavy spam channels from default chat tab
+`/gbb chat organize/clean` - Creates a new chat tab if one doesn't already exist, named "LFG" with all channels subscribed. Removes LFG heavy spam channels from default chat tab
 
- 
- /gbb - open main window
+
+ `/gbb` - open main window
 
  
 
