@@ -284,7 +284,7 @@ function GBB.OptionsInit ()
 	end)
 	GBB.Options.EndInLine()
 		
--- Third panel - Filter
+	-- Third panel - Filter
 	GBB.Options.AddPanel(GBB.L["PanelFilter"])
 	GBB.Options.AddCategory(GBB.L["HeaderDungeon"])
 	GBB.Options.Indent(10)
