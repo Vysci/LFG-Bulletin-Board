@@ -190,6 +190,7 @@ function GBB.OptionsInit ()
 	CheckBox("ShowClassIcon",true)
 	GBB.Options.EndInLine()
 	CheckBox("RemoveRaidSymbols",true)	
+	CheckBox("RemoveRealm",false)
 	CheckBox("ChatStyle",false)
 	CheckBox("CompactStyle",false)
 	CheckBox("DontTrunicate",false)
@@ -283,7 +284,7 @@ function GBB.OptionsInit ()
 	end)
 	GBB.Options.EndInLine()
 		
-	-- Third panel - Filter
+-- Third panel - Filter
 	GBB.Options.AddPanel(GBB.L["PanelFilter"])
 	GBB.Options.AddCategory(GBB.L["HeaderDungeon"])
 	GBB.Options.Indent(10)
