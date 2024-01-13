@@ -120,6 +120,7 @@ GBB.locales = {
 		["SlashChatOrganizer"]="Creates a new chat tab if one doesn't already exist, named \"LFG\" with all channels subscribed. Removes LFG heavy spam channels from default chat tab",
 
 		["TabRequest"]="Requests",
+		["TabWhispers"]="Whispers",
 		["TabGroup"]="Members",
 		["TabLfg"]="Tool Requests",
 

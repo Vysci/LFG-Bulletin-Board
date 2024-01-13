@@ -202,6 +202,11 @@ function GBB.ResizeFrameList()
 	GroupBulletinBoardFrame_ScrollFrame:SetWidth( w )
 	GroupBulletinBoardFrame_ScrollChildFrame:SetWidth( w )
 
+	GroupBulletinBoardFrame_WhispersFrame:SetHeight(GroupBulletinBoardFrame:GetHeight() -55-25 )
+	w=GroupBulletinBoardFrame:GetWidth() -20-10-10
+	GroupBulletinBoardFrame_WhispersFrame:SetWidth( w )
+	GroupBulletinBoardFrame_WhispersChildFrame:SetWidth( w )
+
 	GroupBulletinBoardFrame_LfgFrame:SetHeight(GroupBulletinBoardFrame:GetHeight() -55-25 )
 	w=GroupBulletinBoardFrame:GetWidth() -20-10-10
 	GroupBulletinBoardFrame_LfgFrame:SetWidth( w )
@@ -219,6 +224,7 @@ function GBB.ShowWindow()
 	GroupBulletinBoardFrame:Show()
 	GBB.ClearNeeded=true	 
 	GBB.UpdateList()
+	GBB.UpdateWhispersList()
 	GBB.ResizeFrameList()
 end
 
@@ -441,12 +447,16 @@ function GBB.Init()
 	GBB.RaidList = GBB.GetRaids()
 	--GBB.dungeonLevel
 	GBB.dungeonSort = GBB.GetDungeonSort()	
+	GBB.whispersSort = {}
 
 	-- Reset Request-List
 	GBB.RequestList={}
 	GBB.LfgRequestList={}
 	GBB.FramesEntries={}
 	GBB.LfgFramesEntries = {}
+	GBB.WhispersFramesEntries = {}
+
+	GBB.WhispersList={}
 
 	GBB.FoldedDungeons={}
 	GBB.LfgFoldedDungeons = {}
@@ -562,6 +572,7 @@ function GBB.Init()
 		GBB.ResizeFrameList()
 		GBB.SaveAnchors()
 		GBB.UpdateList()
+		--GBB.UpdateWhispersList()
 		end
 	)
 	GBB.Tool.EnableMoving(GroupBulletinBoardFrame,GBB.SaveAnchors)
@@ -584,20 +595,22 @@ function GBB.Init()
 	GBB.InitGroupList()
 	if string.sub(version, 1, 2) == "1." then
 		GBB.Tool.AddTab(GroupBulletinBoardFrame,GBB.L.TabRequest,GroupBulletinBoardFrame_ScrollFrame)
+		GBB.Tool.AddTab(GroupBulletinBoardFrame,GBB.L.TabWhispers,GroupBulletinBoardFrame_WhispersFrame)
 	else
 		GBB.Tool.AddTab(GroupBulletinBoardFrame,GBB.L.TabRequest,GroupBulletinBoardFrame_ScrollFrame)
+		GBB.Tool.AddTab(GroupBulletinBoardFrame,GBB.L.TabWhispers,GroupBulletinBoardFrame_WhispersFrame)
 		GBB.Tool.AddTab(GroupBulletinBoardFrame,GBB.L.TabLfg,GroupBulletinBoardFrame_LfgFrame)
 		GBB.Tool.AddTab(GroupBulletinBoardFrame,GBB.L.TabGroup,GroupBulletinBoardFrame_GroupFrame)
 	end
 	GBB.Tool.SelectTab(GroupBulletinBoardFrame,1)
 	if GBB.DB.EnableGroup then
-		GBB.Tool.TabShow(GroupBulletinBoardFrame, 3)
+		GBB.Tool.TabShow(GroupBulletinBoardFrame, 4)
 	else		
-		GBB.Tool.TabHide(GroupBulletinBoardFrame, 3)
+		GBB.Tool.TabHide(GroupBulletinBoardFrame, 4)
 	end
 	
-	GBB.Tool.TabOnSelect(GroupBulletinBoardFrame,3,GBB.UpdateGroupList)
-	GBB.Tool.TabOnSelect(GroupBulletinBoardFrame,2,GBB.UpdateLfgTool)
+	GBB.Tool.TabOnSelect(GroupBulletinBoardFrame,4,GBB.UpdateGroupList)
+	GBB.Tool.TabOnSelect(GroupBulletinBoardFrame,3,GBB.UpdateLfgTool)
 	
 	GameTooltip:HookScript("OnTooltipSetUnit", hooked_createTooltip)
 		
@@ -700,6 +713,12 @@ local function Event_CHAT_MSG_CHANNEL(msg,name,_3,_4,_5,_6,_7,channelID,channel,
 	end
 end
 
+local function Event_CHAT_MSG_WHISPER(msg,name,_3,_4,_5,_6,_7,channelID,channel,_10,_11,guid)
+	if not GBB.Initalized then return end
+	--print("channel:"..tostring(channelID))
+	GBB.ParseMessageWhisper(msg,name,guid,channel)
+end
+
 local function Event_GuildMessage(msg,name,_3,_4,_5,_6,_7,channelID,channel,_10,_11,guid)
 	Event_CHAT_MSG_CHANNEL(msg,name,_3,_4,_5,_6,_7,20,GBB.L.GuildChannel,_10,_11,guid)
 end
@@ -728,6 +747,7 @@ function GBB.OnLoad()
 	GBB.Tool.RegisterEvent("CHAT_MSG_CHANNEL",Event_CHAT_MSG_CHANNEL)
 	GBB.Tool.RegisterEvent("CHAT_MSG_GUILD",Event_GuildMessage)
 	GBB.Tool.RegisterEvent("CHAT_MSG_OFFICER",Event_GuildMessage)
+	GBB.Tool.RegisterEvent("CHAT_MSG_WHISPER",Event_CHAT_MSG_WHISPER)
 	
 	for i,event in ipairs(PartyChangeEvent) do
 		GBB.Tool.RegisterEvent(event,GBB.UpdateGroupList)
@@ -753,6 +773,8 @@ function GBB.OnUpdate(elapsed)
 			if GBB.Tool.GetSelectedTab(GroupBulletinBoardFrame)==1 then
 				GBB.UpdateList()
 			elseif  GBB.Tool.GetSelectedTab(GroupBulletinBoardFrame)==2 then
+				GBB.UpdateWhispersList()
+			elseif  GBB.Tool.GetSelectedTab(GroupBulletinBoardFrame)==3 then
 				GBB.UpdateLfgToolNoSearch()
 			end
 				
@@ -761,7 +783,7 @@ function GBB.OnUpdate(elapsed)
 			GBB.ElapsedSinceListUpdate = GBB.ElapsedSinceListUpdate + elapsed;
 		end;
 
-		if GBB.ElapsedSinceLfgUpdate > 18 and GBB.Tool.GetSelectedTab(GroupBulletinBoardFrame)==2 and GroupBulletinBoardFrame:IsVisible() then
+		if GBB.ElapsedSinceLfgUpdate > 18 and GBB.Tool.GetSelectedTab(GroupBulletinBoardFrame)==3 and GroupBulletinBoardFrame:IsVisible() then
 			LFGBrowseFrameRefreshButton:Click()
 			GBB.UpdateLfgTool()
 			GBB.ElapsedSinceLfgUpdate = 0

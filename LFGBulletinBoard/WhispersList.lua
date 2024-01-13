@@ -9,9 +9,12 @@ local requestNil={dungeon="NIL",start=0,last=0,name=""}
 local function requestSort_TOP_TOTAL (a,b)
 	--a=a or requestNil
 	--b=b or requestNil
-	if GBB.dungeonSort[a.dungeon] < GBB.dungeonSort[b.dungeon] then
+    if GBB.whispersSort[a.name] == nil or GBB.whispersSort[b.name] == nil then
+        return false
+    end
+	if GBB.whispersSort[a.name] < GBB.whispersSort[b.name] then
 		return true
-	elseif GBB.dungeonSort[a.dungeon] == GBB.dungeonSort[b.dungeon]then
+	elseif GBB.whispersSort[a.name] == GBB.whispersSort[b.name]then
 		if a.start>b.start then
 			return true
 		elseif (a.start==b.start and a.name>b.name) then
@@ -23,9 +26,12 @@ end
 local function requestSort_TOP_nTOTAL (a,b)
 	--a=a or requestNil
 	--b=b or requestNil
-	if GBB.dungeonSort[a.dungeon] < GBB.dungeonSort[b.dungeon] then
+    if GBB.whispersSort[a.name] == nil or GBB.whispersSort[b.name] == nil then
+        return false
+    end
+	if GBB.whispersSort[a.name] < GBB.whispersSort[b.name] then
 		return true
-	elseif GBB.dungeonSort[a.dungeon] == GBB.dungeonSort[b.dungeon] then
+	elseif GBB.whispersSort[a.name] == GBB.whispersSort[b.name] then
 		if a.last>b.last then
 			return true
 		elseif (a.start==b.start and a.name>b.name) then
@@ -37,9 +43,12 @@ end
 local function requestSort_nTOP_TOTAL (a,b)
 	--a=a or requestNil
 	--b=b or requestNil
-	if GBB.dungeonSort[a.dungeon] < GBB.dungeonSort[b.dungeon] then
+    if GBB.whispersSort[a.name] == nil or GBB.whispersSort[b.name] == nil then
+        return false
+    end
+	if GBB.whispersSort[a.name] < GBB.whispersSort[b.name] then
 		return true
-	elseif GBB.dungeonSort[a.dungeon] == GBB.dungeonSort[b.dungeon] then
+	elseif GBB.whispersSort[a.name] == GBB.whispersSort[b.name] then
 		if a.start<b.start then
 			return true
 		elseif (a.start==b.start and a.name>b.name) then
@@ -51,9 +60,12 @@ end
 local function requestSort_nTOP_nTOTAL (a,b)
 	--a=a or requestNil
 	--b=b or requestNil
-	if GBB.dungeonSort[a.dungeon] < GBB.dungeonSort[b.dungeon] then
+    if GBB.whispersSort[a.name] == nil or GBB.whispersSort[b.name] == nil then
+        return false
+    end
+	if GBB.whispersSort[a.name] < GBB.whispersSort[b.name] then
 		return true
-	elseif GBB.dungeonSort[a.dungeon] == GBB.dungeonSort[b.dungeon] then
+	elseif GBB.whispersSort[a.name] == GBB.whispersSort[b.name] then
 		if a.last<b.last then
 			return true
 		elseif (a.start==b.start and a.name>b.name) then
@@ -63,15 +75,26 @@ local function requestSort_nTOP_nTOTAL (a,b)
 	return false
 end
 
-local function CreateHeader(yy,dungeon)
-	local AnchorTop="GroupBulletinBoardFrame_ScrollChildFrame"
-	local AnchorRight="GroupBulletinBoardFrame_ScrollChildFrame"
-	local ItemFrameName="GBB.Dungeon_"..dungeon
+local function CreateHeader(yy,req)
+	local AnchorTop="GroupBulletinBoardFrame_WhispersChildFrame"
+	local AnchorRight="GroupBulletinBoardFrame_WhispersChildFrame"
+	local ItemFrameName="GBB.DungeonWhispers_"..req.name
 
-	if GBB.FramesEntries[dungeon]==nil then
-		GBB.FramesEntries[dungeon]=CreateFrame("Frame",ItemFrameName , GroupBulletinBoardFrame_ScrollChildFrame, "GroupBulletinBoard_TmpHeader")
-		GBB.FramesEntries[dungeon]:SetPoint("RIGHT", _G[AnchorRight], "RIGHT", 0, 0)
-		_G[ItemFrameName.."_name"]:SetPoint("RIGHT",GBB.FramesEntries[dungeon], "RIGHT", 0,0)
+    local prefix
+    if GBB.DB.ColorByClass and req.class and RAID_CLASS_COLORS[req.class].colorStr then
+        prefix="|c"..RAID_CLASS_COLORS[req.class].colorStr
+    else
+        prefix="|r"
+    end
+    local ClassIcon=""
+    if GBB.DB.ShowClassIcon and req.class and GBB.Tool.IconClass[req.class] then
+        ClassIcon=GBB.Tool.IconClassBig[req.class]
+    end
+
+	if GBB.WhispersFramesEntries[req.name]==nil then
+		GBB.WhispersFramesEntries[req.name]=CreateFrame("Frame",ItemFrameName , GroupBulletinBoardFrame_WhispersChildFrame, "GroupBulletinBoard_WhispersTmpHeader")
+		GBB.WhispersFramesEntries[req.name]:SetPoint("RIGHT", _G[AnchorRight], "RIGHT", 0, 0)
+		_G[ItemFrameName.."_name"]:SetPoint("RIGHT",GBB.WhispersFramesEntries[req.name], "RIGHT", 0,0)
 		local fname,h=_G[ItemFrameName.."_name"]:GetFont()
 		_G[ItemFrameName.."_name"]:SetHeight(h)
 		_G[ItemFrameName]:SetHeight(h+5)
@@ -80,51 +103,38 @@ local function CreateHeader(yy,dungeon)
 	end
 
 	local colTXT
-	if GBB.DB.ColorOnLevel then
-		if GBB.dungeonLevel[dungeon][1] ==0 then
-			colTXT="|r"
-		elseif GBB.dungeonLevel[dungeon][2] < GBB.UserLevel then
-			colTXT="|cFFAAAAAA"
-		elseif GBB.UserLevel<GBB.dungeonLevel[dungeon][1] then
-			colTXT="|cffff4040"
-		else
-			colTXT="|cff00ff00"
-		end
-	else
-		colTXT="|r"
-	end
+	colTXT="|r"
 
-	if LastDungeon~="" and not (lastIsFolded and GBB.FoldedDungeons[dungeon]) then
+	if LastDungeon~="" and not (lastIsFolded and GBB.FoldedDungeons[req.name]) then
 		yy=yy+10
 	end
 
-	if GBB.FoldedDungeons[dungeon]==true then
+	if GBB.FoldedDungeons[req.name]==true then
 		colTXT=colTXT.."[+] "
 		lastIsFolded=true
 	else
 		lastIsFolded=false
 	end
 
-	_G[ItemFrameName.."_name"]:SetText(colTXT..GBB.dungeonNames[dungeon].." |cFFAAAAAA"..GBB.LevelRange(dungeon).."|r")
+	_G[ItemFrameName.."_name"]:SetText(ClassIcon.."["..prefix ..req.name.."]")
 	_G[ItemFrameName.."_name"]:SetFontObject(GBB.DB.FontSize)
-	GBB.FramesEntries[dungeon]:SetPoint("TOPLEFT",_G[AnchorTop], "TOPLEFT", 0,-yy)
-	GBB.FramesEntries[dungeon]:Show()
+	GBB.WhispersFramesEntries[req.name]:SetPoint("TOPLEFT",_G[AnchorTop], "TOPLEFT", 0,-yy)
+	GBB.WhispersFramesEntries[req.name]:Show()
 
 	yy=yy+_G[ItemFrameName]:GetHeight()
-	LastDungeon = dungeon
+	LastDungeon = req.name
 	return yy
 end
 
 local function CreateItem(yy,i,doCompact,req,forceHight)
-	local AnchorTop="GroupBulletinBoardFrame_ScrollChildFrame"
-	local AnchorRight="GroupBulletinBoardFrame_ScrollChildFrame"
-	local ItemFrameName="GBB.Item_"..i
+	local AnchorTop="GroupBulletinBoardFrame_WhispersChildFrame"
+	local AnchorRight="GroupBulletinBoardFrame_WhispersChildFrame"
+	local ItemFrameName="GBB.ItemWhisper_"..i
 
-	
-
-	if GBB.FramesEntries[i]==nil then
-		GBB.FramesEntries[i]=CreateFrame("Frame",ItemFrameName , GroupBulletinBoardFrame_ScrollChildFrame, "GroupBulletinBoard_TmpRequest")
-		GBB.FramesEntries[i]:SetPoint("RIGHT", _G[AnchorRight], "RIGHT", 0, 0)
+    
+	if GBB.WhispersFramesEntries[i]==nil then
+		GBB.WhispersFramesEntries[i]=CreateFrame("Frame",ItemFrameName , GroupBulletinBoardFrame_WhispersChildFrame, "GroupBulletinBoard_WhispersTmpRequest")
+		GBB.WhispersFramesEntries[i]:SetPoint("RIGHT", _G[AnchorRight], "RIGHT", 0, 0)
 
 		_G[ItemFrameName.."_name"]:SetPoint("TOPLEFT")
 		_G[ItemFrameName.."_time"]:SetPoint("TOP",_G[ItemFrameName.."_name"], "TOP",0,0)
@@ -136,10 +146,10 @@ local function CreateItem(yy,i,doCompact,req,forceHight)
 		if GBB.DontTrunicate then
 			GBB.ClearNeeded=true
 		end
-		GBB.Tool.EnableHyperlink(GBB.FramesEntries[i])
+		GBB.Tool.EnableHyperlink(GBB.WhispersFramesEntries[i])
 	end
 
-	GBB.FramesEntries[i]:SetHeight(999)
+	GBB.WhispersFramesEntries[i]:SetHeight(999)
 	_G[ItemFrameName.."_message"]:SetHeight(999)
 
 	if GBB.DB.DontTrunicate then
@@ -226,12 +236,14 @@ local function CreateItem(yy,i,doCompact,req,forceHight)
 		_G[ItemFrameName.."_message"]:SetTextColor(GBB.DB.EntryColor.r,GBB.DB.EntryColor.g,GBB.DB.EntryColor.b,GBB.DB.EntryColor.a)
 		_G[ItemFrameName.."_time"]:SetTextColor(GBB.DB.TimeColor.r,GBB.DB.TimeColor.g,GBB.DB.TimeColor.b,GBB.DB.TimeColor.a)
 
+        _G[ItemFrameName.."_name"]:SetText(ClassIcon..prefix .. req.name .. suffix..FriendIcon)
+			_G[ItemFrameName.."_message"]:SetText(typePrefix .. suffix .. req.message)
+
 	else
 		_G[ItemFrameName.."_name"]:SetText("Aag ")
 		_G[ItemFrameName.."_message"]:SetText("Aag ")
 		_G[ItemFrameName.."_time"]:SetText("Aag ")
 	end
-
 
 	if GBB.DB.ChatStyle then
 		_G[ItemFrameName.."_time"]:Hide()
@@ -272,14 +284,14 @@ local function CreateItem(yy,i,doCompact,req,forceHight)
 		h=forceHight
 	end
 
-	GBB.FramesEntries[i]:SetPoint("TOPLEFT",_G[AnchorTop], "TOPLEFT", 10,-yy)
+	GBB.WhispersFramesEntries[i]:SetPoint("TOPLEFT",_G[AnchorTop], "TOPLEFT", 10,-yy)
 	_G[ItemFrameName.."_message"]:SetHeight(h+10)
-	GBB.FramesEntries[i]:SetHeight(h)
+	GBB.WhispersFramesEntries[i]:SetHeight(h)
 
 	if req then
-		GBB.FramesEntries[i]:Show()
+		GBB.WhispersFramesEntries[i]:Show()
 	else
-		GBB.FramesEntries[i]:Hide()
+		GBB.WhispersFramesEntries[i]:Hide()
 	end
 
 	return h
@@ -318,7 +330,7 @@ local function InviteRequestWithRole(gbbName,gbbDungeon,gbbHeroic,gbbRaid)
 end
 
 local function IgnoreRequest(name)
-	for ir,req in pairs(GBB.RequestList) do
+	for ir,req in pairs(GBB.WhispersList) do
 		if type(req) == "table" and req.name == name then
 			req.last=0
 		end
@@ -327,12 +339,12 @@ local function IgnoreRequest(name)
 	C_FriendList.AddIgnore(name)
 end
 
-function GBB.Clear()
+function GBB.ClearWhispers()
 	if GBB.ClearNeeded or GBB.ClearTimer<time() then
 		local newRequest={}
 		GBB.ClearTimer=GBB.MAXTIME
 
-		for i,req in pairs(GBB.RequestList) do
+		for i,req in pairs(GBB.WhispersList) do
 			if type(req) == "table" then
 				if req.last + GBB.DB.TimeOut * 3 > time() then
 					if req.last < GBB.ClearTimer then
@@ -343,29 +355,18 @@ function GBB.Clear()
 				end
 			end
 		end
-		GBB.RequestList=newRequest
+		GBB.WhispersList=newRequest
 		GBB.ClearTimer=GBB.ClearTimer+GBB.DB.TimeOut * 3
 		GBB.ClearNeeded=false
 	end
 end
 
-function dump(o)
-	if type(o) == 'table' then
-	   local s = '{ '
-	   for k,v in pairs(o) do
-		  if type(k) ~= 'number' then k = '"'..k..'"' end
-		  s = s .. '['..k..'] = ' .. dump(v) .. ','
-	   end
-	   return s .. '} '
-	else
-	   return tostring(o)
-	end
- end
-
 local ownRequestDungeons={}
-function GBB.UpdateList()
+local ownRequestWhispers={}
+local autoinc = 1
+function GBB.UpdateWhispersList()
 
-	GBB.Clear()
+	GBB.ClearWhispers()
 
 	if not GroupBulletinBoardFrame:IsVisible()  then
 		return
@@ -375,24 +376,24 @@ function GBB.UpdateList()
 
 	if GBB.DB.OrderNewTop then
 		if GBB.DB.ShowTotalTime then
-			table.sort(GBB.RequestList, requestSort_TOP_TOTAL)
+			table.sort(GBB.WhispersList, requestSort_TOP_TOTAL)
 		else
-			table.sort(GBB.RequestList, requestSort_TOP_nTOTAL)
+			table.sort(GBB.WhispersList, requestSort_TOP_nTOTAL)
 		end
 	else
 		if GBB.DB.ShowTotalTime then
-			table.sort(GBB.RequestList, requestSort_nTOP_TOTAL)
+			table.sort(GBB.WhispersList, requestSort_nTOP_TOTAL)
 		else
-			table.sort(GBB.RequestList, requestSort_nTOP_nTOTAL)
+			table.sort(GBB.WhispersList, requestSort_nTOP_nTOTAL)
 		end
 	end
 
-	for i, f in pairs(GBB.FramesEntries) do
+	for i, f in pairs(GBB.WhispersFramesEntries) do
 		f:Hide()
 	end
 
-	local AnchorTop="GroupBulletinBoardFrame_ScrollChildFrame"
-	local AnchorRight="GroupBulletinBoardFrame_ScrollChildFrame"
+	local AnchorTop="GroupBulletinBoardFrame_WhispersChildFrame"
+	local AnchorRight="GroupBulletinBoardFrame_WhispersChildFrame"
     local yy=0
 	LastDungeon=""
 	local count=0
@@ -407,13 +408,14 @@ function GBB.UpdateList()
 	lastIsFolded=false
 
 	wipe(ownRequestDungeons)
+    wipe(ownRequestWhispers)
 	if GBB.DBChar.DontFilterOwn then
 
 		local playername=(UnitFullName("player"))
 
-		for i,req in pairs(GBB.RequestList) do
+		for i,req in pairs(GBB.WhispersList) do
 			if type(req) == "table" and req.name==playername and req.last + GBB.DB.TimeOut*2 > time()then
-				ownRequestDungeons[req.dungeon]=true
+				ownRequestWhispers[req.name]=true
 			end
 		end
 	end
@@ -422,60 +424,57 @@ function GBB.UpdateList()
 
 	GroupBulletinBoardFrame_ScrollFrame.ScrollBar.scrollStep=itemHight*2
 
-	if #GBB.FramesEntries<100 then
+	if #GBB.WhispersFramesEntries<100 then
 		for i=1,100 do
 			CreateItem(yy,i,doCompact,nil)
 		end
 	end
 
-	for i,req in pairs(GBB.RequestList) do
+	for i,req in pairs(GBB.WhispersList) do
 		if type(req) == "table" then
+                if GBB.whispersSort[req.name] == nil then
+                    GBB.whispersSort[req.name] = autoinc
+                    autoinc = autoinc + 1
+                end
 
-			if (ownRequestDungeons[req.dungeon]==true or GBB.FilterDungeon(req.dungeon, req.IsHeroic, req.IsRaid)) and req.last + GBB.DB.TimeOut > time() then
-
-				count= count + 1
-
-				--header
-				if LastDungeon ~= req.dungeon then
+                if LastDungeon ~= req.name then
 					local hi
-					if GBB.DB.EnableShowOnly then
-						hi=GBB.dungeonSort[LastDungeon] or 0
-				    else
-						hi=GBB.dungeonSort[req.dungeon]-1
-					end
-					while hi<GBB.dungeonSort[req.dungeon] do
-						if LastDungeon~="" and GBB.FoldedDungeons[GBB.dungeonSort[hi]]~=true and GBB.DB.EnableShowOnly then
+					hi=GBB.whispersSort[req.name]-1
+					while hi<GBB.whispersSort[req.name] do
+						if LastDungeon~="" then
 							yy=yy+ itemHight*(GBB.DB.ShowOnlyNb-cEntrys)
 						end
 						hi=hi+1
 
-						if (ownRequestDungeons[GBB.dungeonSort[hi]]==true or GBB.FilterDungeon(GBB.dungeonSort[hi], req.IsHeroic, req.IsRaid)) then
-							yy=CreateHeader(yy,GBB.dungeonSort[hi])
+							yy=CreateHeader(yy,req)
 							cEntrys=0
-						else
-							cEntrys=GBB.DB.ShowOnlyNb
-						end
 					end
 				end
+			--if req.last + GBB.DB.TimeOut > time() then
 
-				--entry
-				if GBB.FoldedDungeons[req.dungeon]~=true and (not GBB.DB.EnableShowOnly or cEntrys<GBB.DB.ShowOnlyNb) then
+				count= count + 1
+
+				--header
+           
+				--entry GBB.FoldedDungeons[req.dungeon]~=true and (
+				--if not GBB.DB.EnableShowOnly or cEntrys<GBB.DB.ShowOnlyNb then
 					yy=yy+ CreateItem(yy,i,doCompact,req,itemHight)+3
 					cEntrys=cEntrys+1
-				end
-			end
+				--end
+			--end
 		end
 	end
 
+    --[[
 	if GBB.DB.EnableShowOnly then
-		local hi=GBB.dungeonSort[LastDungeon] or 0
+		local hi=GBB.whispersSort[LastDungeon] or 0
 		while hi<GBB.WOTLKMAXDUNGEON do
 			if LastDungeon~="" and GBB.FoldedDungeons[LastDungeon]~=true and GBB.DB.EnableShowOnly then
 				yy=yy+ itemHight*(GBB.DB.ShowOnlyNb-cEntrys)
 			end
 			hi=hi+1
-			if (ownRequestDungeons[GBB.dungeonSort[hi]]==true or GBB.FilterDungeon(GBB.dungeonSort[hi], false, false)) then
-				yy=CreateHeader(yy,GBB.dungeonSort[hi])
+			if (ownRequestDungeons[GBB.whispersSort[hi]-]==true or GBB.FilterDungeon(GBB.whispersSort[hi], false, false)) then
+				yy=CreateHeader(yy,GBB.whispersSort[hi])
 				cEntrys=0
 			else
 				cEntrys=GBB.DB.ShowOnlyNb
@@ -483,14 +482,15 @@ function GBB.UpdateList()
 		end
 
 	end
+    ]]
 
 	yy=yy+GroupBulletinBoardFrame_ScrollFrame:GetHeight()-20
 
-	GroupBulletinBoardFrame_ScrollChildFrame:SetHeight(yy)
+	GroupBulletinBoardFrame_WhispersChildFrame:SetHeight(yy)
 	GroupBulletinBoardFrameStatusText:SetText(string.format(GBB.L["msgNbRequest"], count))
 end
 
-function GBB.GetDungeons(msg,name)
+function GBB.GetDungeonsWhispers(msg,name)
 	if msg==nil then return {} end
 	local dungeons={}
 
@@ -653,8 +653,8 @@ function GBB.GetDungeons(msg,name)
 	return dungeons, isGood, isBad, wordcount, isHeroic
 end
 
-function GBB.ParseMessage(msg,name,guid,channel)
-	if GBB.Initalized==false or name==nil or name=="" or msg==nil or msg=="" or string.len(msg)<4 then
+function GBB.ParseMessageWhisper(msg,name,guid,channel)
+	if GBB.Initalized==false or name==nil or name=="" or msg==nil or msg=="" or string.len(msg)<0 then
 		return
 	end
 
@@ -664,6 +664,39 @@ function GBB.ParseMessage(msg,name,guid,channel)
 	local doUpdate=false
 
 	local locClass,engClass,locRace,engRace,Gender,gName,gRealm = GetPlayerInfoByGUID(guid)
+
+    index=#GBB.WhispersList +1
+    GBB.WhispersList[index]={}
+    GBB.WhispersList[index].name=name
+    GBB.WhispersList[index].class=engClass
+    GBB.WhispersList[index].start=requestTime
+    --GBB.WhispersList[index].dungeon=dungeon
+    GBB.WhispersList[index].IsGuildMember=IsInGuild() and IsGuildMember(guid)
+    GBB.WhispersList[index].IsFriend=C_FriendList.IsFriend(guid)
+    GBB.WhispersList[index].IsPastPlayer=GBB.GroupTrans[name]~=nil
+    GBB.WhispersList[index].last=requestTime
+    GBB.WhispersList[index].message=msg
+
+
+    if GBB.DB.NotifyChat then
+        local FriendIcon=(C_FriendList.IsFriend(guid) and string.format(GBB.TxtEscapePicture,GBB.FriendIcon) or "") ..
+                        ((IsInGuild() and IsGuildMember(guid)) and string.format(GBB.TxtEscapePicture,GBB.GuildIcon) or "") ..
+                        (GBB.GroupTrans[name]~=nil and string.format(GBB.TxtEscapePicture,GBB.PastPlayerIcon) or "" )
+        local linkname=	"|Hplayer:"..name.."|h[|c"..RAID_CLASS_COLORS[engClass].colorStr ..name.."|r]|h"
+        if GBB.DB.OneLineNotification then
+            DEFAULT_CHAT_FRAME:AddMessage(GBB.MSGPREFIX..linkname..FriendIcon..": "..msg,GBB.DB.NotifyColor.r,GBB.DB.NotifyColor.g,GBB.DB.NotifyColor.b)
+        else
+            DEFAULT_CHAT_FRAME:AddMessage(GBB.MSGPREFIX..string.format(GBB.L["msgNewRequest"],linkname..FriendIcon,"dungeonTXT"),GBB.DB.NotifyColor.r*.8,GBB.DB.NotifyColor.g*.8,GBB.DB.NotifyColor.b*.8)
+            DEFAULT_CHAT_FRAME:AddMessage(GBB.MSGPREFIX..msg,GBB.DB.NotifyColor.r,GBB.DB.NotifyColor.g,GBB.DB.NotifyColor.b)
+        end
+    end
+    if GBB.DB.NotifySound then
+        PlaySound(GBB.NotifySound)
+    end
+
+    --[[
+
+    
 
 	-- Add server name to player name by commenting out the split
 	-- name=GBB.Tool.Split(name, "-")[1] -- remove GBB.ServerName
@@ -675,7 +708,7 @@ function GBB.ParseMessage(msg,name,guid,channel)
 	end
 
 	local updated=false
-	for ir,req in pairs(GBB.RequestList) do
+	for ir,req in pairs(GBB.WhispersList) do
 		if type(req) == "table" and req.name == name and req.last+GBB.COMBINEMSGTIMER>=requestTime then
 			if req.dungeon=="TRADE" then
 				updated=true
@@ -694,7 +727,7 @@ function GBB.ParseMessage(msg,name,guid,channel)
 		return
 	end
 	--flm RFD need healer and 3 dps
-	local dungeonList, isGood, isBad, wordcount, isHeroic = GBB.GetDungeons(msg,name)
+	local dungeonList, isGood, isBad, wordcount, isHeroic = GBB.GetDungeonsWhispers(msg,name)
 
 	if type(dungeonList) ~= "table" then return end
 
@@ -715,7 +748,7 @@ function GBB.ParseMessage(msg,name,guid,channel)
 			if id== true and dungeon~=nil then
 
 				if dungeon~="TRADE" then
-					for ir,req in pairs(GBB.RequestList) do
+					for ir,req in pairs(GBB.WhispersList) do
 						if type(req) == "table" and req.name == name and req.dungeon == dungeon then
 							index=ir
 							break
@@ -726,15 +759,15 @@ function GBB.ParseMessage(msg,name,guid,channel)
 				local isRaid = GBB.RaidList[dungeon] ~= nil
 
 				if index==0 then
-					index=#GBB.RequestList +1
-					GBB.RequestList[index]={}
-					GBB.RequestList[index].name=name
-					GBB.RequestList[index].class=engClass
-					GBB.RequestList[index].start=requestTime
-					GBB.RequestList[index].dungeon=dungeon
-					GBB.RequestList[index].IsGuildMember=IsInGuild() and IsGuildMember(guid)
-					GBB.RequestList[index].IsFriend=C_FriendList.IsFriend(guid)
-					GBB.RequestList[index].IsPastPlayer=GBB.GroupTrans[name]~=nil
+					index=#GBB.WhispersList +1
+					GBB.WhispersList[index]={}
+					GBB.WhispersList[index].name=name
+					GBB.WhispersList[index].class=engClass
+					GBB.WhispersList[index].start=requestTime
+					GBB.WhispersList[index].dungeon=dungeon
+					GBB.WhispersList[index].IsGuildMember=IsInGuild() and IsGuildMember(guid)
+					GBB.WhispersList[index].IsFriend=C_FriendList.IsFriend(guid)
+					GBB.WhispersList[index].IsPastPlayer=GBB.GroupTrans[name]~=nil
 
 					if GBB.FilterDungeon(dungeon, isHeroic, isRaid) and dungeon~="TRADE" and dungeon~="MISC" and GBB.FoldedDungeons[dungeon]~= true then
 						if dungeonTXT=="" then
@@ -745,10 +778,10 @@ function GBB.ParseMessage(msg,name,guid,channel)
 					end
 				end
 
-				GBB.RequestList[index].message=msg
-				GBB.RequestList[index].IsHeroic = isHeroic
-				GBB.RequestList[index].IsRaid = isRaid
-				GBB.RequestList[index].last=requestTime
+				GBB.WhispersList[index].message=msg
+				GBB.WhispersList[index].IsHeroic = isHeroic
+				GBB.WhispersList[index].IsRaid = isRaid
+				GBB.WhispersList[index].last=requestTime
 				doUpdate=true
 			end
 		end
@@ -774,10 +807,10 @@ function GBB.ParseMessage(msg,name,guid,channel)
 
 
 	if doUpdate then
-		for i,req in pairs(GBB.RequestList) do
+		for i,req in pairs(GBB.WhispersList) do
 			if type(req) == "table" then
 				if req.name == name and req.last ~= requestTime and req.dungeon~="TRADE" then
-					GBB.RequestList[i]=nil
+					GBB.WhispersList[i]=nil
 					GBB.ClearNeeded=true
 				end
 			end
@@ -785,34 +818,35 @@ function GBB.ParseMessage(msg,name,guid,channel)
 
 	elseif GBB.DB.OnDebug then
 
-		local index=#GBB.RequestList +1
-		GBB.RequestList[index]={}
-		GBB.RequestList[index].name=name
-		GBB.RequestList[index].class=engClass
-		GBB.RequestList[index].start=requestTime
+		local index=#GBB.WhispersList +1
+		GBB.WhispersList[index]={}
+		GBB.WhispersList[index].name=name
+		GBB.WhispersList[index].class=engClass
+		GBB.WhispersList[index].start=requestTime
 		if isBad then
-			GBB.RequestList[index].dungeon="BAD"
+			GBB.WhispersList[index].dungeon="BAD"
 		else
-			GBB.RequestList[index].dungeon="DEBUG"
+			GBB.WhispersList[index].dungeon="DEBUG"
 		end
 
-		GBB.RequestList[index].message=msg
-		GBB.RequestList[index].IsHeroic = isHeroic
-		GBB.RequestList[index].last=requestTime
+		GBB.WhispersList[index].message=msg
+		GBB.WhispersList[index].IsHeroic = isHeroic
+		GBB.WhispersList[index].last=requestTime
 	end
-
+    ]]
 end
-function GBB.UnfoldAllDungeon()
+function GBB.UnfoldAllDungeonWhispers()
 	wipe(GBB.FoldedDungeons)
-	GBB.UpdateList()
-	--GBB.UpdateWhispersList()
+	--GBB.UpdateList()
+    GBB.UpdateWhispersList()
 end
-function GBB.FoldAllDungeon()
+function GBB.FoldAllDungeonWhispers()
 	for i=1,GBB.WOTLKMAXDUNGEON do
-		GBB.FoldedDungeons[GBB.dungeonSort[i]]=true
+		GBB.FoldedDungeons[GBB.whispersSort[i]]=true
 	end
-	GBB.UpdateList()
-	--GBB.UpdateWhispersList()
+	--GBB.UpdateList()
+    GBB.UpdateWhispersList()
+    
 end
 
 local function createMenu(DungeonID,req)
@@ -828,8 +862,8 @@ local function createMenu(DungeonID,req)
 	end
 	if DungeonID then
 		GBB.PopupDynamic:AddItem(GBB.L["BtnFold"], false,GBB.FoldedDungeons,DungeonID)
-		GBB.PopupDynamic:AddItem(GBB.L["BtnFoldAll"], false,GBB.FoldAllDungeon)
-		GBB.PopupDynamic:AddItem(GBB.L["BtnUnFoldAll"], false,GBB.UnfoldAllDungeon)
+		GBB.PopupDynamic:AddItem(GBB.L["BtnFoldAll"], false,GBB.FoldAllDungeonWhispers)
+		GBB.PopupDynamic:AddItem(GBB.L["BtnUnFoldAll"], false,GBB.UnfoldAllDungeonWhispers)
 		GBB.PopupDynamic:AddItem("",true)
 	end
 	GBB.PopupDynamic:AddItem(GBB.L["CboxShowTotalTime"],false,GBB.DB,"ShowTotalTime")
@@ -851,19 +885,14 @@ local function createMenu(DungeonID,req)
 	GBB.PopupDynamic:Show()
 end
 
-function GBB.ClickFrame(self,button)
-	if GBB.Tool.GetSelectedTab(GroupBulletinBoardFrame)==1 then
-		if button=="LeftButton" then
-		else
-			createMenu()
-		end
-	elseif  GBB.Tool.GetSelectedTab(GroupBulletinBoardFrame)==2 then
-		GBB.ClickFrameWhispers(self, button)
+function GBB.ClickFrameWhispers(self,button)
+	if button=="LeftButton" then
+	else
+		createMenu()
 	end
-	
 end
 
-function GBB.ClickDungeon(self,button)
+function GBB.ClickDungeonWhispers(self,button)
 	local id=string.match(self:GetName(), "GBB.Dungeon_(.+)")
 	if id==nil or id==0 then return end
 
@@ -873,19 +902,19 @@ function GBB.ClickDungeon(self,button)
 		else
 			GBB.FoldedDungeons[id]=true
 		end
-		GBB.UpdateList()
-		--GBB.UpdateWhispersList()
+		--GBB.UpdateList()
+		GBB.UpdateWhispersList()
 	else
 		createMenu(id)
 	end
 
 end
 
-function GBB.ClickRequest(self,button)
-	local id = string.match(self:GetName(), "GBB.Item_(.+)")
+function GBB.ClickRequestWhispers(self,button)
+	local id = string.match(self:GetName(), "GBB.ItemWhisper_(.+)")
 	if id==nil or id==0 then return end
 
-	local req=GBB.RequestList[tonumber(id)]
+	local req=GBB.WhispersList[tonumber(id)]
 	if button=="LeftButton" then
 		if IsShiftKeyDown() then
 			WhoRequest(req.name)
@@ -904,10 +933,10 @@ function GBB.ClickRequest(self,button)
 end
 
 
-function GBB.RequestShowTooltip(self)
-	for id in string.gmatch(self:GetName(), "GBB.Item_(.+)") do
+function GBB.RequestShowTooltipWhispers(self)
+	for id in string.gmatch(self:GetName(), "GBB.ItemWhisper_(.+)") do
 		local n=_G[self:GetName().."_message"]
-		local req=GBB.RequestList[tonumber(id)]
+		local req=GBB.WhispersList[tonumber(id)]
 
 		GameTooltip_SetDefaultAnchor(GameTooltip,UIParent)
 		if not GBB.DB.EnableGroup then
@@ -953,6 +982,6 @@ function GBB.RequestShowTooltip(self)
 	end
 end
 
-function GBB.RequestHideTooltip(self)
+function GBB.RequestHideTooltipWhispers(self)
 	GameTooltip:Hide()
 end

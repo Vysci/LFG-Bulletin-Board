@@ -218,6 +218,42 @@ function GBB.OptionsInit ()
 	GBB.Options.Indent(-30)
 	GBB.Options.AddSpace()
 	CheckBox("OnDebug",false)
+
+	-- Third panel - Filter
+	GBB.Options.AddPanel(GBB.L["PanelFilter"])
+	GBB.Options.AddCategory(GBB.L["HeaderDungeon"])
+	GBB.Options.Indent(10)
+
+	local defaultChecked = true
+
+	ChkBox_FilterDungeon={}
+	for index=1,GBB.DUNGEONBREAK do
+		ChkBox_FilterDungeon[index]=CheckBoxFilter(GBB.dungeonSort[index],defaultChecked)
+	end	
+
+	GBB.Options.SetRightSide()
+	--GBB.Options.AddCategory("")
+	GBB.Options.Indent(10)	
+	for index=GBB.DUNGEONBREAK+1,GBB.MAXDUNGEON do
+		ChkBox_FilterDungeon[index]=CheckBoxFilter(GBB.dungeonSort[index],defaultChecked)
+	end
+		
+	--GBB.Options.AddSpace()
+
+	
+	--GBB.Options.AddSpace()
+
+	GBB.Options.InLine()
+	GBB.Options.AddButton(GBB.L["BtnSelectAll"],function()
+		DoSelectFilter(true, ChkBox_FilterDungeon, 1, GBB.MAXDUNGEON - 2)
+	end)
+	GBB.Options.AddButton(GBB.L["BtnUnselectAll"],function()
+		DoSelectFilter(false, ChkBox_FilterDungeon, 1, GBB.MAXDUNGEON)
+	end)
+	GBB.Options.EndInLine()
+	GBB.Options.Indent(-10)
+	
+	--GBB.Options.AddSpace()	
 	
 	-- Second Panel for Wotlk Dungeons
 	GBB.Options.AddPanel(GBB.L["WotlkPanelFilter"])
@@ -227,14 +263,14 @@ function GBB.OptionsInit ()
 	WotlkChkBox_FilterDungeon={}
 		
 	for index=GBB.WOTLKDUNGEONSTART,GBB.WOTLKDUNGEONBREAK do
-		WotlkChkBox_FilterDungeon[index]=CheckBoxFilter(GBB.dungeonSort[index],true)
+		WotlkChkBox_FilterDungeon[index]=CheckBoxFilter(GBB.dungeonSort[index],false)
 	end
 
 	GBB.Options.SetRightSide()
 	--GBB.Options.AddCategory("")
 	GBB.Options.Indent(10)	
 	for index=GBB.WOTLKDUNGEONBREAK+1,GBB.WOTLKMAXDUNGEON do
-		WotlkChkBox_FilterDungeon[index]=CheckBoxFilter(GBB.dungeonSort[index],true)
+		WotlkChkBox_FilterDungeon[index]=CheckBoxFilter(GBB.dungeonSort[index],false)
 	end
 	--GBB.Options.AddSpace()
 	CheckBoxChar("FilterLevel",false)
@@ -246,7 +282,7 @@ function GBB.OptionsInit ()
 
 	GBB.Options.InLine()
 	GBB.Options.AddButton(GBB.L["BtnSelectAll"],function()
-		DoSelectFilter(true, WotlkChkBox_FilterDungeon, GBB.WOTLKDUNGEONSTART, GBB.WOTLKMAXDUNGEON-2) -- Doing -2 to not select trade and misc
+		DoSelectFilter(true, WotlkChkBox_FilterDungeon, GBB.WOTLKDUNGEONSTART, GBB.WOTLKMAXDUNGEON) -- Doing -2 to not select trade and misc
 	end)
 	GBB.Options.AddButton(GBB.L["BtnUnselectAll"],function()
 		DoSelectFilter(false, WotlkChkBox_FilterDungeon, GBB.WOTLKDUNGEONSTART, GBB.WOTLKMAXDUNGEON)
@@ -283,41 +319,6 @@ function GBB.OptionsInit ()
 	end)
 	GBB.Options.EndInLine()
 		
-	-- Third panel - Filter
-	GBB.Options.AddPanel(GBB.L["PanelFilter"])
-	GBB.Options.AddCategory(GBB.L["HeaderDungeon"])
-	GBB.Options.Indent(10)
-
-	local defaultChecked = false
-
-	ChkBox_FilterDungeon={}
-	for index=1,GBB.DUNGEONBREAK do
-		ChkBox_FilterDungeon[index]=CheckBoxFilter(GBB.dungeonSort[index],defaultChecked)
-	end	
-
-	GBB.Options.SetRightSide()
-	--GBB.Options.AddCategory("")
-	GBB.Options.Indent(10)	
-	for index=GBB.DUNGEONBREAK+1,GBB.MAXDUNGEON do
-		ChkBox_FilterDungeon[index]=CheckBoxFilter(GBB.dungeonSort[index],defaultChecked)
-	end
-		
-	--GBB.Options.AddSpace()
-
-	
-	--GBB.Options.AddSpace()
-
-	GBB.Options.InLine()
-	GBB.Options.AddButton(GBB.L["BtnSelectAll"],function()
-		DoSelectFilter(true, ChkBox_FilterDungeon, 1, GBB.MAXDUNGEON)
-	end)
-	GBB.Options.AddButton(GBB.L["BtnUnselectAll"],function()
-		DoSelectFilter(false, ChkBox_FilterDungeon, 1, GBB.MAXDUNGEON)
-	end)
-	GBB.Options.EndInLine()
-	GBB.Options.Indent(-10)
-	
-	--GBB.Options.AddSpace()	
 
 	-- Tags
 	GBB.Options.AddPanel(GBB.L["PanelTags"],false,true)
