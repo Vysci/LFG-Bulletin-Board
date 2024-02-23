@@ -113,6 +113,7 @@ function GBB.GetDungeonNames()
 		["BAD"] =	"DEBUG BAD WORDS - REJECTED",
 		["BREW"] =  "Brewfest - Coren Direbrew",
 		["HOLLOW"] =  "Hallow's End - Headless Horseman",
+    ["TRAVEL"] = "Travel services - Summons/Portals",
 		}
 
 	local dungeonNamesLocales={
@@ -642,7 +643,7 @@ GBB.VanillaDungeonLevels ={
 	["LBRS"] = 	{55,60}, ["DME"] = 	{58,60}, ["DMN"] = 	{58,60}, ["DMW"] = 	{58,60}, ["STR"] = 	{58,60}, ["SCH"] = 	{58,60},
 	["UBRS"] = 	{58,60}, ["MC"] = 	{60,60}, ["ZG"] = 	{60,60}, ["AQ20"]= 	{60,60}, ["BWL"] = {60,60},
 	["AQ40"] = 	{60,60}, ["NAX"] = 	{60,60},
-	["MISC"]= {0,100},
+	["MISC"]=   {0,100}, ["TRAVEL"]={0,100},
 	["DEBUG"] = {0,100}, ["BAD"] =	{0,100}, ["TRADE"]=	{0,100}, ["SM2"] =  {28,42}, ["DM2"] =	{58,60}, ["DEADMINES"]={18,23},
 }
 
@@ -653,7 +654,7 @@ GBB.PostTbcDungeonLevels = {
 	["LBRS"] = 	{54,60}, ["DME"] = 	{54,61}, ["DMN"] = 	{54,61}, ["DMW"] = 	{54,61}, ["STR"] = 	{56,61}, ["SCH"] = 	{56,61},
 	["UBRS"] = 	{53,61}, ["MC"] = 	{60,60}, ["ZG"] = 	{60,60}, ["AQ20"]= 	{60,60}, ["BWL"] = {60,60},
 	["AQ40"] = 	{60,60}, ["NAX"] = 	{60,60},
-	["MISC"]= {0,100},
+	["MISC"] =  {0,100}, ["TRAVEL"]={0,100},
 	["DEBUG"] = {0,100}, ["BAD"] =	{0,100}, ["TRADE"]=	{0,100}, ["SM2"] =  {28,42}, ["DM2"] =	{58,60}, ["DEADMINES"]={16,24},
 }
 
@@ -703,7 +704,7 @@ GBB.PvpNames = {
 	"WSG", "AB", "AV", "EOTS", "WG", "SOTA", "ARENA",
 }
 
-GBB.Misc = {"MISC", "TRADE",}
+GBB.Misc = {"MISC", "TRADE", "TRAVEL"}
 
 GBB.DebugNames = {
 	"DEBUG", "BAD", "NIL",

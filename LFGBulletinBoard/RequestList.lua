@@ -308,7 +308,7 @@ local function InviteRequestWithRole(gbbName,gbbDungeon,gbbHeroic,gbbRaid)
 	end
 
 	-- Not sure if necessary, but Heroic Miscellaneous sounds like a dangerous place.
-	if gbbDungeon == "MISC" or gbbDungeon == "TRADE" then
+	if gbbDungeon == "MISC" or gbbDungeon == "TRADE" or gbbDungeon == "TRAVEL" then
 		gbbDungeonPrefix = ""
 	end
 
@@ -630,6 +630,17 @@ function GBB.GetDungeons(msg,name)
 						dungeons[ip]=true
 						dungeons[subDungeon]=nil
 					end
+				end
+			end
+		end
+	end
+
+	-- isolate travel services so they don't show up in groups
+	if GBB.DB.IsolateTravelServices then
+		if dungeons["TRAVEL"] then
+			for ip,p in pairs(dungeons) do
+				if ip~="TRAVEL" then
+					dungeons[ip]=false
 				end
 			end
 		end
