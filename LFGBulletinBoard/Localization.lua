@@ -81,6 +81,7 @@ GBB.locales = {
 		["CboxEnableGuild"]="Add guild in player tooltip",
 		["CboxCombineSubDungeons"]="Combine sub-dungeons like Dire Maul (only new request)",
 		["CboxAdditionalInfo"]="Add more info to chat on /who and when somebody comes online",
+		["CboxIsolateTravelServices"]="Prevent travel services from appearing in other categories",
 
 		["CboxNotfiyInnone"]="Enable on overworld",
 		["CboxNotfiyInpvp"]="Enable in battleground",

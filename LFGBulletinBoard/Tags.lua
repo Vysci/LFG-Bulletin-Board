@@ -151,6 +151,7 @@ GBB.dungeonTagsLoc={
 		["BREW"] =  "brewfest brew coren dire direbrew beerfest",
 		["HOLLOW"] = "headless horseman hollow",
 		["TRADE"] = "buy buying sell selling wts wtb hitem henchant htrade enchanter", --hlink
+		["TRAVEL"] = "sum summ summon summons summoning port portal travel"
 	}),
 	deDE =langSplit({
 		["RFC"] = 	"rfa ragefireabgrund flammenschlund flamenschlund rf rfg" ,

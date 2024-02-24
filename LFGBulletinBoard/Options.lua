@@ -168,6 +168,7 @@ function GBB.OptionsInit ()
 	GBB.Options.AddDrop(GBB.DB,"FontSize", "GameFontNormal", {"GameFontNormalSmall", "GameFontNormal", "GameFontNormalLarge"}) 
 
 	CheckBox("CombineSubDungeons",false)
+	CheckBox("IsolateTravelServices",false)
 	GBB.Options.AddSpace()
 	CheckBox("NotifySound",false)
 	CheckBox("NotifyChat",false)
