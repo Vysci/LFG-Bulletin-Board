@@ -682,7 +682,7 @@ GBB.WotlkDungeonLevels = {
 GBB.WotlkDungeonNames = {
 	"UK", "NEX", "AZN", "ANK", "DTK", "VH", "GD", "HOS", "HOL", "COS",
 	"OCC", "UP", "FOS", "POS", "HOR", "CHAMP", "OS", "VOA", "EOE", "ULDAR",
-	"TOTC", "RS", "ICC", "ONY", "NAXX"
+	"TOTC", "RS", "ICC", "NAX"
 }
 
 GBB.TbcDungeonNames = {
@@ -696,7 +696,7 @@ GBB.VanillDungeonNames  = {
     "RFK", "SMG", "SML", "SMA", "SMC", "RFD", "ULD",
     "ZF", "MAR", "ST" , "BRD", "LBRS", "DME", "DMN",
     "DMW", "STR", "SCH", "UBRS", "MC", "ZG",
-    "AQ20", "BWL", "AQ40", "NAX",
+    "AQ20", "BWL", "AQ40", "NAXX", "ONY"
 }
 
 
@@ -760,7 +760,7 @@ function GBB.GetDungeonSort()
 		end
     end
 
-	local dungeonOrder = { GBB.VanillDungeonNames, GBB.TbcDungeonNames, GBB.WotlkDungeonNames, GBB.PvpNames, GBB.Misc, GBB.DebugNames}
+	local dungeonOrder = { GBB.VanillDungeonNames, GBB.PvpNames, GBB.Misc, GBB.TbcDungeonNames, GBB.WotlkDungeonNames, GBB.DebugNames}
 
 	-- Why does Lua not having a fucking size function
 	 local vanillaDungeonSize = 0
@@ -778,13 +778,22 @@ function GBB.GetDungeonSort()
 		debugSize = debugSize+1
 	end
 
+	local pvpSize = 0
+	for _, _ in pairs(GBB.PvpNames) do
+		pvpSize = pvpSize+1
+	end
+
+	local miscSize = 0
+	for _, _ in pairs(GBB.Misc) do
+		miscSize = miscSize+1
+	end
 
 	local tmp_dsort, concatenatedSize = ConcatenateLists(dungeonOrder)
 	local dungeonSort = {}
 
-	GBB.TBCDUNGEONSTART = vanillaDungeonSize + 1
-	GBB.MAXDUNGEON = vanillaDungeonSize
-	GBB.TBCMAXDUNGEON = vanillaDungeonSize  + tbcDungeonSize
+	GBB.MAXDUNGEON = vanillaDungeonSize + pvpSize + miscSize
+	GBB.TBCDUNGEONSTART = GBB.MAXDUNGEON + 1
+	GBB.TBCMAXDUNGEON = GBB.MAXDUNGEON  + tbcDungeonSize
 	GBB.WOTLKDUNGEONSTART = GBB.TBCMAXDUNGEON + 1
 	GBB.WOTLKMAXDUNGEON = concatenatedSize - debugSize - 1
 

@@ -190,6 +190,32 @@
 				</ScrollChild>
 			</ScrollFrame>
 
+			<!--Whispersframe -->
+			<ScrollFrame name="GroupBulletinBoardFrame_WhispersFrame" inherits="UIPanelScrollFrameTemplate">
+				<Backdrop name="$parentBackdrop" bgFile="Interface\TutorialFrame\TutorialFrameBackground" tile="true">
+					<BackgroundInsets>
+						<AbsInset left="-3" right="-23" top="-3" bottom="-3"/>
+					</BackgroundInsets>
+				</Backdrop>	
+				<Anchors>
+					<Anchor point="TOPLEFT">
+						<Offset>
+							<AbsDimension x="10" y="-30"/>
+						</Offset>						
+					</Anchor>				
+				</Anchors>
+				<Size>
+					<AbsDimension x="100" y="100"/>
+				</Size>
+				<ScrollChild>
+					<Frame name="GroupBulletinBoardFrame_WhispersChildFrame">
+						<Size>
+							<AbsDimension x="100" y="100"/>
+						</Size>
+					</Frame>
+				</ScrollChild>
+			</ScrollFrame>
+
 
 			<!-- lfgframe -->
 			
@@ -262,6 +288,52 @@
 			</OnMouseDown>
 		</Scripts>
 	</Frame>
+	<Frame hidden="false" name="GroupBulletinBoard_WhispersTmpHeader" virtual="true">
+		<Layers>
+			<Layer level="ARTWORK">
+				<FontString name="$parent_name" text="samplename" inherits="GameFontNormal" maxLines="1" justifyH="LEFT" justifyV="TOP"/>					
+			</Layer>
+		</Layers>
+		<Scripts>
+			<OnMouseDown>
+				GroupBulletinBoard_Addon.ClickDungeonWhispers(self,button)
+			</OnMouseDown>
+		</Scripts>
+	</Frame>
+	<Frame hidden="false" name="GroupBulletinBoard_WhispersTmpRequest" virtual="true">
+	
+		<Layers>
+			<Layer level="ARTWORK">				
+				<FontString name="$parent_name" text="sam34" inherits="GameFontNormal" maxLines="1" justifyH="LEFT" justifyV="TOP">
+					<Size>
+						<AbsDimension x="100" y=""/>
+					</Size>
+					<color b="1" g="1" r="1" a="1"/>
+				</FontString>
+				<FontString name="$parent_message" text="s2" inherits="GameFontNormal" maxLines="1" justifyH="LEFT" justifyV="TOP">
+					<color b="1" g="1" r="1" a="1"/>
+				</FontString>
+				<FontString name="$parent_time" text="s6" inherits="GameFontNormal" maxLines="1" justifyH="RIGHT" justifyV="TOP">
+					<Size>
+						<AbsDimension x="75" y=""/>
+					</Size>
+					<color b="1" g="1" r="1" a="1"/>
+				</FontString>
+			</Layer>
+		</Layers>
+		<Scripts>
+			<OnMouseDown>
+				GroupBulletinBoard_Addon.ClickRequestWhispers(self,button)
+			</OnMouseDown>
+			<OnEnter>
+				GroupBulletinBoard_Addon.RequestShowTooltipWhispers(self)
+			</OnEnter>
+			<OnLeave>
+				GroupBulletinBoard_Addon.RequestHideTooltipWhispers(self)
+			</OnLeave>					
+		</Scripts>
+		
+	</Frame>	
 	
 	<Frame hidden="false" name="GroupBulletinBoard_TmpHeader" virtual="true">
 		<Layers>
@@ -279,16 +351,16 @@
 	
 		<Layers>
 			<Layer level="ARTWORK">				
-				<FontString name="$parent_name" text="samplename" inherits="GameFontNormal" maxLines="1" justifyH="LEFT" justifyV="TOP">
+				<FontString name="$parent_name" text="sa2" inherits="GameFontNormal" maxLines="1" justifyH="LEFT" justifyV="TOP">
 					<Size>
 						<AbsDimension x="100" y=""/>
 					</Size>
 					<color b="1" g="1" r="1" a="1"/>
 				</FontString>
-				<FontString name="$parent_message" text="samplemsg" inherits="GameFontNormal" maxLines="1" justifyH="LEFT" justifyV="TOP">
+				<FontString name="$parent_message" text="sa3" inherits="GameFontNormal" maxLines="1" justifyH="LEFT" justifyV="TOP">
 					<color b="1" g="1" r="1" a="1"/>
 				</FontString>
-				<FontString name="$parent_time" text="samplename" inherits="GameFontNormal" maxLines="1" justifyH="RIGHT" justifyV="TOP">
+				<FontString name="$parent_time" text="sam4" inherits="GameFontNormal" maxLines="1" justifyH="RIGHT" justifyV="TOP">
 					<Size>
 						<AbsDimension x="75" y=""/>
 					</Size>
