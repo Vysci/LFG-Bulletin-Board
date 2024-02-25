@@ -577,7 +577,6 @@ function GBB.Init()
 	GBB.Initalized=true
 	
 	GBB.PopupDynamic=GBB.Tool.CreatePopup(GBB.OptionsUpdate)
-	
 	-- Get build version to check against classic
 	local version, build, date, tocversion = GetBuildInfo()
 

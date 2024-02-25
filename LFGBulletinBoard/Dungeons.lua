@@ -751,6 +751,14 @@ local function ConcatenateLists(Names)
 	return result, index
 end
 
+local function GetSize(list)
+	local size = 0
+	for _, _ in pairs(list) do
+		size = size + 1
+	end
+	return size
+end
+
 function GBB.GetDungeonSort()
 	for eventName, eventData in pairs(GBB.Seasonal) do
         if GBB.Tool.InDateRange(eventData.startDate, eventData.endDate) then
@@ -763,20 +771,11 @@ function GBB.GetDungeonSort()
 	local dungeonOrder = { GBB.VanillDungeonNames, GBB.TbcDungeonNames, GBB.WotlkDungeonNames, GBB.PvpNames, GBB.Misc, GBB.DebugNames}
 
 	-- Why does Lua not having a fucking size function
-	 local vanillaDungeonSize = 0
-	 for _, _ in pairs(GBB.VanillDungeonNames) do
-		vanillaDungeonSize = vanillaDungeonSize + 1
-	 end
+	local vanillaDungeonSize = GetSize(GBB.VanillDungeonNames)
 
-	 local tbcDungeonSize = 0
-	 for _, _ in pairs(GBB.TbcDungeonNames) do
-		tbcDungeonSize = tbcDungeonSize + 1
-	 end
+	local tbcDungeonSize = GetSize(GBB.TbcDungeonNames)
 
-	local debugSize = 0
-	for _, _ in pairs(GBB.DebugNames) do
-		debugSize = debugSize+1
-	end
+	local debugSize = GetSize(GBB.DebugNames)
 
 
 	local tmp_dsort, concatenatedSize = ConcatenateLists(dungeonOrder)
@@ -786,7 +785,9 @@ function GBB.GetDungeonSort()
 	GBB.MAXDUNGEON = vanillaDungeonSize
 	GBB.TBCMAXDUNGEON = vanillaDungeonSize  + tbcDungeonSize
 	GBB.WOTLKDUNGEONSTART = GBB.TBCMAXDUNGEON + 1
-	GBB.WOTLKMAXDUNGEON = concatenatedSize - debugSize - 1
+	GBB.WOTLKMAXDUNGEON = GetSize(GBB.WotlkDungeonNames) + GBB.TBCMAXDUNGEON
+	GBB.ENDINGDUNGEONSTART = GBB.WOTLKMAXDUNGEON + 1
+	GBB.ENDINGDUNGEONEND = concatenatedSize - debugSize - 1
 
 	for dungeon,nb in pairs(tmp_dsort) do
 		dungeonSort[nb]=dungeon

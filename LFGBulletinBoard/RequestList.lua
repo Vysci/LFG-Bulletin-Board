@@ -486,7 +486,7 @@ function GBB.GetDungeons(msg,name)
 	local runrequired=false
 	local hasrun=false
 	local runDungeon=""
-
+	local hasTag=false
 	local wordcount=0
 
 	if GBB.DB.TagsZhcn then
@@ -547,6 +547,7 @@ function GBB.GetDungeons(msg,name)
 				isBad=true
 				break
 			elseif x==GBB.TAGSEARCH then
+				hasTag=true
 				isGood=true
 			else
 				dungeons[x]=true
@@ -639,7 +640,7 @@ function GBB.GetDungeons(msg,name)
 	if GBB.DB.IsolateTravelServices then
 		if dungeons["TRAVEL"] then
 			for ip,p in pairs(dungeons) do
-				if ip~="TRAVEL" then
+				if ip~="TRAVEL" and hasTag==false then
 					dungeons[ip]=false
 				end
 			end
@@ -774,7 +775,7 @@ function GBB.ParseMessage(msg,name,guid,channel)
 	if doUpdate then
 		for i,req in pairs(GBB.RequestList) do
 			if type(req) == "table" then
-				if req.name == name and req.last ~= requestTime and req.dungeon~="TRADE" then
+				if req.name == name and req.last ~= requestTime then
 					GBB.RequestList[i]=nil
 					GBB.ClearNeeded=true
 				end
@@ -899,7 +900,9 @@ function GBB.RequestShowTooltip(self)
 	for id in string.gmatch(self:GetName(), "GBB.Item_(.+)") do
 		local n=_G[self:GetName().."_message"]
 		local req=GBB.RequestList[tonumber(id)]
-
+		if not req then
+			return
+		end
 		GameTooltip_SetDefaultAnchor(GameTooltip,UIParent)
 		if not GBB.DB.EnableGroup then
 			GameTooltip:SetOwner(GroupBulletinBoardFrame, "ANCHOR_BOTTOM", 0,0	)

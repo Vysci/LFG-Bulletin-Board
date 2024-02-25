@@ -2,6 +2,11 @@
 
 Group Bulletin Board 	
 
+3.16
+- New travel category thanks to surgioclemente. Enables all summoning related things to be moved there
+- Some cleanup of wotlk, classic code
+- hopefully fixes SM bugs
+
 3.11
 - Added realm to character names in request list
 - Removed the display of the additional tabs that aren't supported by Classic Era based on version. Will still display in WotLK+

@@ -45,7 +45,6 @@ local function CreateEditBoxDungeon(Dungeon,Init,width,width2)
 	end
 end
 
-
 local function FixFilters()
 	for ip,p in pairs(GBB.dungeonSecondTags) do
 		if ip~="DEATHMINES" then
@@ -61,6 +60,15 @@ local function FixFilters()
 			GBB.DBChar["FilterDungeon"..eventName]=false
         end
     end
+
+	if not GBB.DBChar["ResetVersion"] then
+		GBB.DBChar["ResetVersion"] = GBB.Version
+		for k, _ in pairs(GBB.dungeonSort) do
+			if GBB.DBChar["FilterDungeon"..k] ~= nil then
+				GBB.DBChar["FilterDungeon"..k] = false
+			end
+		end
+	end
 end
 
 local isChat=false
@@ -168,7 +176,7 @@ function GBB.OptionsInit ()
 	GBB.Options.AddDrop(GBB.DB,"FontSize", "GameFontNormal", {"GameFontNormalSmall", "GameFontNormal", "GameFontNormalLarge"}) 
 
 	CheckBox("CombineSubDungeons",false)
-	CheckBox("IsolateTravelServices",false)
+	CheckBox("IsolateTravelServices",true)
 	GBB.Options.AddSpace()
 	CheckBox("NotifySound",false)
 	CheckBox("NotifyChat",false)
@@ -220,8 +228,9 @@ function GBB.OptionsInit ()
 	GBB.Options.Indent(-30)
 	GBB.Options.AddSpace()
 	CheckBox("OnDebug",false)
-	
+	----
 	-- Second Panel for Wotlk Dungeons
+
 	GBB.Options.AddPanel(GBB.L["WotlkPanelFilter"])
 	GBB.Options.AddCategory(GBB.L["HeaderDungeon"])
 	GBB.Options.Indent(10)
@@ -248,16 +257,23 @@ function GBB.OptionsInit ()
 
 	GBB.Options.InLine()
 	GBB.Options.AddButton(GBB.L["BtnSelectAll"],function()
-		DoSelectFilter(true, WotlkChkBox_FilterDungeon, GBB.WOTLKDUNGEONSTART, GBB.WOTLKMAXDUNGEON-2) -- Doing -2 to not select trade and misc
+		DoSelectFilter(true, WotlkChkBox_FilterDungeon, GBB.WOTLKDUNGEONSTART, GBB.WOTLKMAXDUNGEON) -- Doing -2 to not select trade and misc
 	end)
 	GBB.Options.AddButton(GBB.L["BtnUnselectAll"],function()
 		DoSelectFilter(false, WotlkChkBox_FilterDungeon, GBB.WOTLKDUNGEONSTART, GBB.WOTLKMAXDUNGEON)
 	end)
+
 	GBB.Options.AddDrop(GBB.DB,"InviteRole", "DPS", {"DPS", "Tank", "Healer"})
 	GBB.Options.EndInLine()
 	GBB.Options.Indent(-10)
-	SetChatOption()
 
+	local version, build, date, tocversion = GetBuildInfo()
+	if string.sub(version, 1, 2) ~= "1." then
+		for index=GBB.ENDINGDUNGEONSTART,GBB.ENDINGDUNGEONEND do
+			WotlkChkBox_FilterDungeon[index]=CheckBoxFilter(GBB.dungeonSort[index],true)
+			SetChatOption()
+		end
+	end
 	-- Third Panel for TBC Dungeons
 	GBB.Options.AddPanel(GBB.L["TBCPanelFilter"])
 	GBB.Options.AddCategory(GBB.L["HeaderDungeon"])
@@ -284,7 +300,7 @@ function GBB.OptionsInit ()
 		DoSelectFilter(false, TbcChkBox_FilterDungeon, GBB.TBCDUNGEONSTART, GBB.TBCMAXDUNGEON)
 	end)
 	GBB.Options.EndInLine()
-		
+
 	-- Third panel - Filter
 	GBB.Options.AddPanel(GBB.L["PanelFilter"])
 	GBB.Options.AddCategory(GBB.L["HeaderDungeon"])
@@ -303,7 +319,12 @@ function GBB.OptionsInit ()
 	for index=GBB.DUNGEONBREAK+1,GBB.MAXDUNGEON do
 		ChkBox_FilterDungeon[index]=CheckBoxFilter(GBB.dungeonSort[index],defaultChecked)
 	end
-		
+
+	if string.sub(version, 1, 2) == "1." then
+		for index=GBB.ENDINGDUNGEONSTART,GBB.ENDINGDUNGEONEND do
+			ChkBox_FilterDungeon[index]=CheckBoxFilter(GBB.dungeonSort[index],true)
+		end
+	end
 	--GBB.Options.AddSpace()
 
 	
@@ -318,9 +339,9 @@ function GBB.OptionsInit ()
 	end)
 	GBB.Options.EndInLine()
 	GBB.Options.Indent(-10)
-	
-	--GBB.Options.AddSpace()	
-
+	if string.sub(version, 1, 2) == "1." then
+		SetChatOption()
+	end
 	-- Tags
 	GBB.Options.AddPanel(GBB.L["PanelTags"],false,true)
 	
