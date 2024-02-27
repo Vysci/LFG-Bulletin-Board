@@ -39,6 +39,7 @@ GBB.WOTLKDUNGEONBREAK = 81
 GBB.DUNGEONBREAK = 25
 GBB.COMBINEMSGTIMER=10
 GBB.MAXCOMPACTWIDTH=350
+GBB.ShouldReset = true
 
 -- Tools
 -------------------------------------------------------------------------------------

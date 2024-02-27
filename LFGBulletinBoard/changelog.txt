@@ -2,6 +2,9 @@
 
 Group Bulletin Board 	
 
+3.17
+- Logic to reset turn on all filters after reseting them
+
 3.16
 - New travel category thanks to surgioclemente. Enables all summoning related things to be moved there
 - Some cleanup of wotlk, classic code

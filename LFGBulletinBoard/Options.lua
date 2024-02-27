@@ -60,12 +60,14 @@ local function FixFilters()
 			GBB.DBChar["FilterDungeon"..eventName]=false
         end
     end
+end
 
-	if not GBB.DBChar["ResetVersion"] then
+local function ResetFilters()
+	if GBB.ShouldReset and (not GBB.DBChar["ResetVersion"] or GBB.DBChar["ResetVersion"] ~= GBB.Version) then
 		GBB.DBChar["ResetVersion"] = GBB.Version
 		for k, _ in pairs(GBB.dungeonSort) do
 			if GBB.DBChar["FilterDungeon"..k] ~= nil then
-				GBB.DBChar["FilterDungeon"..k] = false
+				GBB.DBChar["FilterDungeon"..k] = nil
 			end
 		end
 	end
@@ -231,6 +233,8 @@ function GBB.OptionsInit ()
 	----
 	-- Second Panel for Wotlk Dungeons
 
+	ResetFilters()
+
 	GBB.Options.AddPanel(GBB.L["WotlkPanelFilter"])
 	GBB.Options.AddCategory(GBB.L["HeaderDungeon"])
 	GBB.Options.Indent(10)
@@ -238,14 +242,14 @@ function GBB.OptionsInit ()
 	WotlkChkBox_FilterDungeon={}
 		
 	for index=GBB.WOTLKDUNGEONSTART,GBB.WOTLKDUNGEONBREAK do
-		WotlkChkBox_FilterDungeon[index]=CheckBoxFilter(GBB.dungeonSort[index],true)
+		WotlkChkBox_FilterDungeon[index]=CheckBoxFilter(GBB.dungeonSort[index],false)
 	end
 
 	GBB.Options.SetRightSide()
 	--GBB.Options.AddCategory("")
 	GBB.Options.Indent(10)	
 	for index=GBB.WOTLKDUNGEONBREAK+1,GBB.WOTLKMAXDUNGEON do
-		WotlkChkBox_FilterDungeon[index]=CheckBoxFilter(GBB.dungeonSort[index],true)
+		WotlkChkBox_FilterDungeon[index]=CheckBoxFilter(GBB.dungeonSort[index],false)
 	end
 	--GBB.Options.AddSpace()
 	CheckBoxChar("FilterLevel",false)
@@ -282,14 +286,14 @@ function GBB.OptionsInit ()
 	TbcChkBox_FilterDungeon={}
 		
 	for index=GBB.TBCDUNGEONSTART,GBB.TBCDUNGEONBREAK do
-		TbcChkBox_FilterDungeon[index]=CheckBoxFilter(GBB.dungeonSort[index],true)
+		TbcChkBox_FilterDungeon[index]=CheckBoxFilter(GBB.dungeonSort[index],false)
 	end
 
 	GBB.Options.SetRightSide()
 	--GBB.Options.AddCategory("")
 	GBB.Options.Indent(10)	
 	for index=GBB.TBCDUNGEONBREAK+1,GBB.TBCMAXDUNGEON do
-		TbcChkBox_FilterDungeon[index]=CheckBoxFilter(GBB.dungeonSort[index],true)
+		TbcChkBox_FilterDungeon[index]=CheckBoxFilter(GBB.dungeonSort[index],false)
 	end
 
 	GBB.Options.InLine()
@@ -310,14 +314,14 @@ function GBB.OptionsInit ()
 
 	ChkBox_FilterDungeon={}
 	for index=1,GBB.DUNGEONBREAK do
-		ChkBox_FilterDungeon[index]=CheckBoxFilter(GBB.dungeonSort[index],defaultChecked)
+		ChkBox_FilterDungeon[index]=CheckBoxFilter(GBB.dungeonSort[index],true)
 	end	
 
 	GBB.Options.SetRightSide()
 	--GBB.Options.AddCategory("")
 	GBB.Options.Indent(10)	
 	for index=GBB.DUNGEONBREAK+1,GBB.MAXDUNGEON do
-		ChkBox_FilterDungeon[index]=CheckBoxFilter(GBB.dungeonSort[index],defaultChecked)
+		ChkBox_FilterDungeon[index]=CheckBoxFilter(GBB.dungeonSort[index],true)
 	end
 
 	if string.sub(version, 1, 2) == "1." then
