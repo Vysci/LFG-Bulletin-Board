@@ -1,7 +1,7 @@
-## Interface: 30403
+## Interface: 11502
 ## Title: LFG Bulletin Board
 ## Notes: Sort LFG/LFM Messages
-## Version: 3.17
+## Version: 3.18
 ## Author: Vyscî-Whitemane
 ## DefaultState: enabled
 ## SavedVariables: GroupBulletinBoardDB
