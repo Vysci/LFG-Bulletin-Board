@@ -2,6 +2,9 @@
 
 Group Bulletin Board 	
 
+3.19
+- Hiding wotlk and tbc panels for SoD
+
 3.18
 - SoD P3
 
