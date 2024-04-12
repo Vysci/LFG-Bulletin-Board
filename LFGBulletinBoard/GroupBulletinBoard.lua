@@ -394,7 +394,7 @@ function GBB.Popup_Minimap(frame,notminimap)
 end
 
 function GBB.Init()
-	GroupBulletinBoardFrame:SetResizeBounds(380,170)	
+	GroupBulletinBoardFrame:SetResizeBounds(400,170)	
 	
 	GBB.UserLevel=UnitLevel("player")
 	GBB.UserName=(UnitFullName("player"))
@@ -549,7 +549,6 @@ function GBB.Init()
 	---@type EditBox # making this local isnt required, just here for the luals linter
 	local GroupBulletinBoardFrameResultsFilter = _G["GroupBulletinBoardFrameResultsFilter"];
 	GroupBulletinBoardFrameResultsFilter:SetFontObject(GBB.DB.FontSize);
-	GroupBulletinBoardFrameResultsFilter:SetHeight(GroupBulletinBoardFrameTitle:GetHeight());
 	GroupBulletinBoardFrameResultsFilter:SetTextColor(1, 1, 1, 1);
 	GroupBulletinBoardFrameResultsFilter:HookScript("OnTextChanged", GBB.UpdateList);
 
