@@ -394,7 +394,7 @@ function GBB.Popup_Minimap(frame,notminimap)
 end
 
 function GBB.Init()
-	GroupBulletinBoardFrame:SetResizeBounds(300,170)	
+	GroupBulletinBoardFrame:SetResizeBounds(380,170)	
 	
 	GBB.UserLevel=UnitLevel("player")
 	GBB.UserName=(UnitFullName("player"))
@@ -546,6 +546,25 @@ function GBB.Init()
 		end
 	end
 
+	(GroupBulletinBoardFrameResultsFilter --[[@as EditBox]]):SetFontObject(GBB.DB.FontSize);
+	(GroupBulletinBoardFrameResultsFilter --[[@as EditBox]]):SetHeight(GroupBulletinBoardFrameTitle:GetHeight());
+	(GroupBulletinBoardFrameResultsFilter --[[@as EditBox]]):SetTextColor(1, 1, 1, 1);
+	(GroupBulletinBoardFrameResultsFilter --[[@as EditBox]]):HookScript("OnTextChanged", function(self, userInput)
+		GBB.UpdateList()
+	end);
+	hooksecurefunc(GBB, "UpdateList", function ()
+		local query = GroupBulletinBoardFrameResultsFilter:GetText()
+		if query == "" or not query then return end
+		query = string.lower(query)
+		for i, frame in pairs(GBB.FramesEntries) do
+			if frame:IsVisible()
+			and not _G[frame:GetName().."_message"]:GetText():lower():find(query)
+			and not _G[frame:GetName().."_name"]:GetText():lower():find(query) then
+				frame:Hide()
+			end
+		end
+		
+	end)
 	GroupBulletinBoardFrameSelectChannel:SetText(GBB.DB.AnnounceChannel)
 
 	GBB.ResizeFrameList()
