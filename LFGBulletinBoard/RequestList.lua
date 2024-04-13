@@ -353,12 +353,17 @@ end
 ---@return boolean
 local function doesRequestMatchResultsFilter(message)
 	assert(
-		GroupBulletinBoardFrameResultsFilter, 
-		"`GroupBulletinBoardFrameResultsFilter` frame should be defined before calling `doesRequestMatchResultsFilter`."
+		GroupBulletinBoardFrameResultsFilter and GroupBulletinBoardFrameResultsFilter.GetFilters, 
+		"`GroupBulletinBoardFrameResultsFilter` frame should be defined and initialized with a call to `GBB.Init` before calling `doesRequestMatchResultsFilter`."
 	)
-	local filter = GroupBulletinBoardFrameResultsFilter:GetText()
-	if filter == "" or not filter then return true end -- filter is off
-	return string.find(message:lower(), filter:lower(), nil, true) and true or false
+
+	local filters = GroupBulletinBoardFrameResultsFilter:GetFilters()
+	for _, filter in ipairs(filters) do
+		if not string.find(message:lower(), filter:lower(), nil, true) then
+			return false
+		end
+	end
+	return true
 end
 
 local ownRequestDungeons={}
