@@ -250,7 +250,7 @@ GBB.locales = {
 		["world_channel"] = "Mundo",
 	},
 	frFR = {
-	["lfg_channel"]="RechercheDeGroupe",
+	["lfg_channel"]="RechercheGroupe",
 	["world_channel"] = "Général",
 	["GuildChannel"]="Guilde",
 	["msgNbRequest"]="%d Requête(s) - cliquez pour envoyer un message - shift+click pour regarder les informations - ctrl+click pour inviter - alt+clic pour envoyer un message de role",
