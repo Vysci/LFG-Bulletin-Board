@@ -335,8 +335,15 @@ function GBB.OptionsInit ()
 
 	
 	--GBB.Options.AddSpace()
+	if string.sub(version, 1, 2) == "1." then
+		CheckBoxChar("FilterLevel",false)
+		CheckBoxChar("DontFilterOwn",false)
+		CheckBoxChar("HeroicOnly", false)
+		CheckBoxChar("NormalOnly", false)
+	end
 
 	GBB.Options.InLine()
+
 	GBB.Options.AddButton(GBB.L["BtnSelectAll"],function()
 		DoSelectFilter(true, ChkBox_FilterDungeon, 1, GBB.MAXDUNGEON)
 	end)
@@ -347,6 +354,7 @@ function GBB.OptionsInit ()
 	GBB.Options.Indent(-10)
 	if string.sub(version, 1, 2) == "1." then
 		SetChatOption()
+		
 	end
 	-- Tags
 	GBB.Options.AddPanel(GBB.L["PanelTags"],false,true)
@@ -374,6 +382,7 @@ function GBB.OptionsInit ()
 	CreateEditBoxDungeon("Bad","",450,200)
 	CreateEditBoxDungeon("Suffix","",450,200)
 	CreateEditBoxDungeon("Heroic","",450,200)
+	
 	
 	GBB.Options.AddSpace()	
 	for index=1,GBB.ENDINGDUNGEONEND do
