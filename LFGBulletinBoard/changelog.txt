@@ -2,6 +2,9 @@
 
 Group Bulletin Board 	
 
+3.20
+- Fixed the addon breaking for some people
+
 3.19
 - Hiding wotlk and tbc panels for SoD
 
