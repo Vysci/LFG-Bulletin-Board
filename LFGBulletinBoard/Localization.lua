@@ -97,7 +97,6 @@ GBB.locales = {
 
 		["BtnUnselectAll"]="Unselect all",
 		["BtnSelectAll"]="Select all",
-
 		["BtnWhisper"]="Whisper %s",
 		["BtnInvite"]="Invite %s",
 		["BtnWho"]="Who %s",
@@ -126,16 +125,11 @@ GBB.locales = {
 		["TabLfg"]="Tool Requests",
 
 		["AboutUsage"]="GBB searches the chat messages for dungeon requests in the background. To whisper a person, simply click on the entry with the left mouse button. For a '/who' a shift + left click is enough. The dungeon list can be filtered in the settings. You can also fold this by left-clicking on the dungeon name.|nOld entries are filtered out after 150 seconds.",
-
 		["AboutSlashCommand"]="<value> can be true, 1, enable, false, 0, disable. If <value> is omitted, the current status switches.",
-
-
 		["AboutInfo"]="GBB provides an overview of the endless requests in the chat channels. It detects all requests to the classic dungeons, sorts them and presents them clearly way. Numerous filtering options reduce the gigantic number to exactly the dungeons that interest you. And if that's not enough, GBB will let you know about any new request via a sound or chat notification. And finally, GBB can post your request repeatedly.",
 		["AboutCredits"]="Original by GPI / Erytheia-Razorfen",
-
 	},
-
-	deDE =   {
+	deDE = {
 	["AboutInfo"] = "GBB verschafft euch den Überblick über die endlosen Anfragen in den Chat-Channels. Es erkennt alle Anfragen zu den klassischen Instanzen, sortiert sie und stellt sie übersichtlich da. Filtermöglichkeiten reduziert die gigantische Anzahl auf genau die Instanzen, die dich interessieren. Und falls das nicht reicht, informiert GBB dich über jede neue Anfrage mittels eines Sounds oder Chat-Benachrichtigung. Und abschließend kann GBB deine persönliche Anfrage wiederholt veröffentlichen.",
 	["AboutSlashCommand"] = "<value> kann true,1,enable,false,0,disable sein. Wird <value> weggelassen, schaltet der aktuelle Status um.",
 	["AboutUsage"] = "GBB durchsucht im Hintergrund die Chat-Nachrichten nach Instanz-Anfragen. Um eine Person anzuflüstern, einfach den Eintrag mit links anklicken. Für ein '/who' genügt ein Shift + links klick. Die Instanz-Liste lässt sich in den Einstellungen filtern. Zudem kann man mit einen Linksklick auf den Instanz-Namen diesen falten.|nAlte Einträge werden nach 150 Sekunden rausgefiltert.",
@@ -244,13 +238,13 @@ GBB.locales = {
 	["SlashReset"] = "Hauptfenster zurücksetzen",
 	["TabGroup"] = "Mitglieder",
 	["TabRequest"] = "Anfragen"
-},
+	},
 	esMX = {
 		["lfg_channel"]="BuscarGrupo",
 		["world_channel"] = "Mundo",
 	},
 	frFR = {
-	["lfg_channel"]="RechercheDeGroupe",
+	["lfg_channel"]="RechercheGroupe",
 	["world_channel"] = "Général",
 	["GuildChannel"]="Guilde",
 	["msgNbRequest"]="%d Requête(s) - cliquez pour envoyer un message - shift+click pour regarder les informations - ctrl+click pour inviter - alt+clic pour envoyer un message de role",
