@@ -394,7 +394,7 @@ function GBB.Popup_Minimap(frame,notminimap)
 end
 
 function GBB.Init()
-	GroupBulletinBoardFrame:SetResizeBounds(300,170)	
+	GroupBulletinBoardFrame:SetResizeBounds(400,170)	
 	
 	GBB.UserLevel=UnitLevel("player")
 	GBB.UserName=(UnitFullName("player"))
@@ -544,6 +544,29 @@ function GBB.Init()
 		else
 			_, GBB.DB.AnnounceChannel = GetChannelList()
 		end
+	end
+	
+	---@type EditBox # making this local isnt required, just here for the luals linter
+	local GroupBulletinBoardFrameResultsFilter = _G["GroupBulletinBoardFrameResultsFilter"];
+	GroupBulletinBoardFrameResultsFilter.filterPatterns = { };
+	GroupBulletinBoardFrameResultsFilter:SetFontObject(GBB.DB.FontSize);
+	GroupBulletinBoardFrameResultsFilter:SetTextColor(1, 1, 1, 1);
+	GroupBulletinBoardFrameResultsFilter:HookScript("OnTextChanged", function(self) 
+		GBB.UpdateList()
+		-- cache filters early
+		self.filterPatterns = { };
+		local filterText = self:GetText()
+		if filterText == "" or not filterText then return end -- filter is off
+		
+		for pattern in string.gmatch(filterText, "([^, ]+)") do
+			table.insert(self.filterPatterns, pattern);
+		end
+		-- i think its possible to increase performance a bit more by caching the lists associated with the last N searches to reduce calls to string.gmatch (specially when deleting text).
+	end);
+	
+	---@return string[] # returns empty table if no text is set in editbox
+	function GroupBulletinBoardFrameResultsFilter:GetFilters() 
+		return self.filterPatterns
 	end
 
 	GroupBulletinBoardFrameSelectChannel:SetText(GBB.DB.AnnounceChannel)

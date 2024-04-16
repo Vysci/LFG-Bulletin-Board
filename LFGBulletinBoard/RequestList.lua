@@ -347,6 +347,25 @@ function GBB.Clear()
 	end
 end
 
+--- Used alongside the `GroupBulletinBoardFrameResultsFilter` editbox to filter requests by their message content.
+--- An empty editbox assumes no filter is set and all requests should be shown.
+---@param message string
+---@return boolean
+local function doesRequestMatchResultsFilter(message)
+	assert(
+		GroupBulletinBoardFrameResultsFilter and GroupBulletinBoardFrameResultsFilter.GetFilters, 
+		"`GroupBulletinBoardFrameResultsFilter` frame should be defined and initialized with a call to `GBB.Init` before calling `doesRequestMatchResultsFilter`."
+	)
+
+	local filters = GroupBulletinBoardFrameResultsFilter:GetFilters()
+	for _, filter in ipairs(filters) do
+		if not string.find(message:lower(), filter:lower(), nil, true) then
+			return false
+		end
+	end
+	return true
+end
+
 local ownRequestDungeons={}
 function GBB.UpdateList()
 
@@ -444,7 +463,10 @@ function GBB.UpdateList()
 				end
 
 				--entry
-				if GBB.FoldedDungeons[req.dungeon]~=true and (not GBB.DB.EnableShowOnly or cEntrys<GBB.DB.ShowOnlyNb) then
+				if GBB.FoldedDungeons[req.dungeon] ~= true 
+					and (not GBB.DB.EnableShowOnly or cEntrys<GBB.DB.ShowOnlyNb) 
+					and doesRequestMatchResultsFilter(req.message)
+				then
 					yy=yy+ CreateItem(yy,i,doCompact,req,itemHight)+3
 					cEntrys=cEntrys+1
 				end

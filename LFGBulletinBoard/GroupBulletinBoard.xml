@@ -39,11 +39,6 @@
 								<AbsDimension x="10" y="-10"/>
 							</Offset>
 						</Anchor>
-						<Anchor point="BOTTOMRIGHT" relativePoint="TOPRIGHT">
-							<Offset>
-								<AbsDimension x="-10" y="-30"/>
-							</Offset>
-						</Anchor>
 					</Anchors>
 				</FontString>
 
@@ -162,6 +157,18 @@
 						GroupBulletinBoard_Addon.EditAnnounceMessage_Changed()
 					</OnTextChanged>
 				</Scripts>
+			</EditBox>
+
+			<!-- filter results editbox -->
+			<EditBox name="$parentResultsFilter" inherits="SearchBoxTemplate" letters="40">
+				<Size x="165" y="10"/> 
+				<Anchors>
+					<Anchor point="TOPLEFT" relativeTo="$parentTitle" relativePoint="TOPRIGHT">
+						<Offset>
+							<AbsDimension x="20" y="0"/>
+						</Offset>
+					</Anchor>
+				</Anchors>
 			</EditBox>
 
 			<!--Scrollframe -->
