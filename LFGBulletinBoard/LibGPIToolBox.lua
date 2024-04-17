@@ -51,6 +51,16 @@ Tool.RoleIcon = {
 Tool.Classes=CLASS_SORT_ORDER
 Tool.ClassName=LOCALIZED_CLASS_NAMES_MALE
 Tool.ClassColor=RAID_CLASS_COLORS
+-- support for CUSTOM_CLASS_COLORS
+if CUSTOM_CLASS_COLORS then
+	for k, v in pairs(CUSTOM_CLASS_COLORS) do
+		---@cast v ColorMixin
+		if not v.colorStr then
+			v.colorStr = v:GenerateHexColor();
+		end
+		Tool.ClassColor[k] = v;
+	end
+end
 
 Tool.NameToClass={}
 for eng,name in pairs(LOCALIZED_CLASS_NAMES_MALE) do
