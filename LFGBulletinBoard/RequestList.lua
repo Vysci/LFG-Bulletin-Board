@@ -94,10 +94,6 @@ local function CreateHeader(yy,dungeon)
 		colTXT="|r"
 	end
 
-	if LastDungeon~="" and not (lastIsFolded and GBB.FoldedDungeons[dungeon]) then
-		yy=yy+10
-	end
-
 	-- Initialize this value now so we can (un)fold only existing entries later
 	-- while still allowing new headers to follow the HeadersStartFolded setting
 	if GBB.FoldedDungeons[dungeon]==nil then
@@ -106,6 +102,10 @@ local function CreateHeader(yy,dungeon)
 		else
 			GBB.FoldedDungeons[dungeon]=false
 		end
+	end
+
+	if LastDungeon~="" and not (lastIsFolded and GBB.FoldedDungeons[dungeon]) then
+		yy=yy+10
 	end
 
 	if GBB.FoldedDungeons[dungeon]==true then
