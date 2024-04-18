@@ -2,6 +2,10 @@
 
 Group Bulletin Board 	
 
+3.22
+- Added option for headers to start collapsed
+- Middle clicking on a header will toggle collapse on all headers
+
 3.21
 - Addition of a search bar that lets you search/filter. Should make finding specific things in a broad category much easier. Huge shoutout to juemrami for adding this feature and in a clean non janky manner
 - French lfg channel localization fixed (juemrami)
