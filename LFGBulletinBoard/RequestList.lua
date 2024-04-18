@@ -901,6 +901,12 @@ function GBB.ClickDungeon(self,button)
 			GBB.FoldedDungeons[id]=true
 		end
 		GBB.UpdateList()
+	elseif button=="MiddleButton" then
+		if GBB.FoldedDungeons[id] then
+			GBB.UnfoldAllDungeon()
+		else
+			GBB.FoldAllDungeon()
+		end
 	else
 		createMenu(id)
 	end
