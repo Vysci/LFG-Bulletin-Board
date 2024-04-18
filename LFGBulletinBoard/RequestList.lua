@@ -98,6 +98,16 @@ local function CreateHeader(yy,dungeon)
 		yy=yy+10
 	end
 
+	-- Initialize this value now so we can (un)fold only existing entries later
+	-- while still allowing new headers to follow the HeadersStartFolded setting
+	if GBB.FoldedDungeons[dungeon]==nil then
+		if GBB.DB.HeadersStartFolded then
+			GBB.FoldedDungeons[dungeon]=true
+		else
+			GBB.FoldedDungeons[dungeon]=false
+		end
+	end
+
 	if GBB.FoldedDungeons[dungeon]==true then
 		colTXT=colTXT.."[+] "
 		lastIsFolded=true
@@ -824,12 +834,14 @@ function GBB.ParseMessage(msg,name,guid,channel)
 
 end
 function GBB.UnfoldAllDungeon()
-	wipe(GBB.FoldedDungeons)
+	for k,v in pairs(GBB.FoldedDungeons) do
+		GBB.FoldedDungeons[k]=false
+	end
 	GBB.UpdateList()
 end
 function GBB.FoldAllDungeon()
-	for i=1,GBB.WOTLKMAXDUNGEON do
-		GBB.FoldedDungeons[GBB.dungeonSort[i]]=true
+	for k,v in pairs(GBB.FoldedDungeons) do
+		GBB.FoldedDungeons[k]=true
 	end
 	GBB.UpdateList()
 end
