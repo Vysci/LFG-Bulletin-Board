@@ -97,11 +97,7 @@ local function CreateHeader(yy,dungeon)
 	-- Initialize this value now so we can (un)fold only existing entries later
 	-- while still allowing new headers to follow the HeadersStartFolded setting
 	if GBB.FoldedDungeons[dungeon]==nil then
-		if GBB.DB.HeadersStartFolded then
-			GBB.FoldedDungeons[dungeon]=true
-		else
-			GBB.FoldedDungeons[dungeon]=false
-		end
+		GBB.FoldedDungeons[dungeon]=GBB.DB.HeadersStartFolded
 	end
 
 	if LastDungeon~="" and not (lastIsFolded and GBB.FoldedDungeons[dungeon]) then
