@@ -894,19 +894,22 @@ function GBB.ClickDungeon(self,button)
 	local id=string.match(self:GetName(), "GBB.Dungeon_(.+)")
 	if id==nil or id==0 then return end
 
-	if button=="LeftButton" then
+	-- Shift + Left-Click
+	if button=="LeftButton" and IsShiftKeyDown() then
+		if GBB.FoldedDungeons[id] then
+			GBB.UnfoldAllDungeon()
+		else
+			GBB.FoldAllDungeon()
+		end
+	-- Left-Click
+	elseif button=="LeftButton" then
 		if GBB.FoldedDungeons[id] then
 			GBB.FoldedDungeons[id]=false
 		else
 			GBB.FoldedDungeons[id]=true
 		end
 		GBB.UpdateList()
-	elseif button=="MiddleButton" then
-		if GBB.FoldedDungeons[id] then
-			GBB.UnfoldAllDungeon()
-		else
-			GBB.FoldAllDungeon()
-		end
+	-- Any other mouse click
 	else
 		createMenu(id)
 	end
