@@ -94,6 +94,12 @@ local function CreateHeader(yy,dungeon)
 		colTXT="|r"
 	end
 
+	-- Initialize this value now so we can (un)fold only existing entries later
+	-- while still allowing new headers to follow the HeadersStartFolded setting
+	if GBB.FoldedDungeons[dungeon]==nil then
+		GBB.FoldedDungeons[dungeon]=GBB.DB.HeadersStartFolded
+	end
+
 	if LastDungeon~="" and not (lastIsFolded and GBB.FoldedDungeons[dungeon]) then
 		yy=yy+10
 	end
@@ -824,12 +830,14 @@ function GBB.ParseMessage(msg,name,guid,channel)
 
 end
 function GBB.UnfoldAllDungeon()
-	wipe(GBB.FoldedDungeons)
+	for k,v in pairs(GBB.FoldedDungeons) do
+		GBB.FoldedDungeons[k]=false
+	end
 	GBB.UpdateList()
 end
 function GBB.FoldAllDungeon()
-	for i=1,GBB.WOTLKMAXDUNGEON do
-		GBB.FoldedDungeons[GBB.dungeonSort[i]]=true
+	for k,v in pairs(GBB.FoldedDungeons) do
+		GBB.FoldedDungeons[k]=true
 	end
 	GBB.UpdateList()
 end
@@ -882,13 +890,22 @@ function GBB.ClickDungeon(self,button)
 	local id=string.match(self:GetName(), "GBB.Dungeon_(.+)")
 	if id==nil or id==0 then return end
 
-	if button=="LeftButton" then
+	-- Shift + Left-Click
+	if button=="LeftButton" and IsShiftKeyDown() then
+		if GBB.FoldedDungeons[id] then
+			GBB.UnfoldAllDungeon()
+		else
+			GBB.FoldAllDungeon()
+		end
+	-- Left-Click
+	elseif button=="LeftButton" then
 		if GBB.FoldedDungeons[id] then
 			GBB.FoldedDungeons[id]=false
 		else
 			GBB.FoldedDungeons[id]=true
 		end
 		GBB.UpdateList()
+	-- Any other mouse click
 	else
 		createMenu(id)
 	end
