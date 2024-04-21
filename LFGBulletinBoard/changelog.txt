@@ -6,6 +6,8 @@ Group Bulletin Board
 - Renamed "fold" & "unfold" to "collapse" & "expand" respectively in English labels
 - Added option for categories to start collapsed
 - Shift+Left-clicking on a category header will toggle collapse on all categories
+- Added bloodmoon and incursions as categories
+- Added travel filter to minimap for quick access
 
 3.21
 - Addition of a search bar that lets you search/filter. Should make finding specific things in a broad category much easier. Huge shoutout to juemrami for adding this feature and in a clean non janky manner
