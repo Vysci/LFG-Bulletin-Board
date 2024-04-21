@@ -152,7 +152,7 @@ GBB.dungeonTagsLoc={
 		["HOLLOW"] = "headless horseman hollow",
 		["TRADE"] = "buy buying sell selling wts wtb hitem henchant htrade enchanter", --hlink
 		["TRAVEL"] = "sum summ summon summons summoning port portal travel",
-		["BLOOD"] = "blood bloodmoon",
+		["BLOOD"] = "blood bloodmoon bm",
 		["INCUR"] = "inc incur incursion incursions incurusions",
 	}),
 	deDE =langSplit({
