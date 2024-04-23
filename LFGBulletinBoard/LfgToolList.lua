@@ -2,10 +2,18 @@ local 	TOCNAME,GBB=...
 
 local MAXGROUP=500
 local LastUpdateTime = time()
+local requestNil={dungeon="NIL",start=0,last=0,name=""}
 
 local function requestSort_TOP_TOTAL (a,b)
 	--a=a or requestNil
 	--b=b or requestNil
+	if GBB.dungeonSort[a.dungeon] == nil then
+		a = requestNil
+	end
+	if GBB.dungeonSort[b.dungeon] == nil then
+		b = requestNil
+	end
+
 	if GBB.dungeonSort[a.dungeon] < GBB.dungeonSort[b.dungeon] then
 		return true
 	elseif GBB.dungeonSort[a.dungeon] == GBB.dungeonSort[b.dungeon]then
@@ -20,6 +28,13 @@ end
 local function requestSort_TOP_nTOTAL (a,b)
 	--a=a or requestNil
 	--b=b or requestNil
+	if GBB.dungeonSort[a.dungeon] == nil then
+		a = requestNil
+	end
+	if GBB.dungeonSort[b.dungeon] == nil then
+		b = requestNil
+	end
+
 	if GBB.dungeonSort[a.dungeon] < GBB.dungeonSort[b.dungeon] then
 		return true
 	elseif GBB.dungeonSort[a.dungeon] == GBB.dungeonSort[b.dungeon] and (a.start ~= nil and b.start ~= nil and a.name ~= nil and b.name ~= nil) then
@@ -34,6 +49,13 @@ end
 local function requestSort_nTOP_TOTAL (a,b)
 	--a=a or requestNil
 	--b=b or requestNil
+	if GBB.dungeonSort[a.dungeon] == nil then
+		a = requestNil
+	end
+	if GBB.dungeonSort[b.dungeon] == nil then
+		b = requestNil
+	end
+
 	if GBB.dungeonSort[a.dungeon] < GBB.dungeonSort[b.dungeon] then
 		return true
 	elseif GBB.dungeonSort[a.dungeon] == GBB.dungeonSort[b.dungeon] then
@@ -48,6 +70,13 @@ end
 local function requestSort_nTOP_nTOTAL (a,b)
 	--a=a or requestNil
 	--b=b or requestNil
+	if GBB.dungeonSort[a.dungeon] == nil then
+		a = requestNil
+	end
+	if GBB.dungeonSort[b.dungeon] == nil then
+		b = requestNil
+	end
+
 	if GBB.dungeonSort[a.dungeon] < GBB.dungeonSort[b.dungeon] then
 		return true
 	elseif GBB.dungeonSort[a.dungeon] == GBB.dungeonSort[b.dungeon] then
