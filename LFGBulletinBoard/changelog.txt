@@ -1,6 +1,8 @@
 --[[
 
 Group Bulletin Board 	
+3.23
+ - Should fix the lua errors that are happening due to removal of pvp dungeons for classic. 
 
 3.22
 - Renamed "fold" & "unfold" to "collapse" & "expand" respectively in English labels
