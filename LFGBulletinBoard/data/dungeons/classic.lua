@@ -281,6 +281,7 @@ local dungeonCodeByID = {
 
 ---@type {[DungeonID]: DungeonInfo}
 local dungeonInfoCache = {}
+local numDungeons = 0
 do
     -- only cache dungeons, raids, and battlegrounds
     local trackedDungeonTypes = {
@@ -325,6 +326,7 @@ do
         end
         if info.typeID and trackedDungeonTypes[info.typeID] then
             dungeonInfoCache[dungeonID] = info
+            numDungeons = numDungeons + 1
         else
             print(_ .. ": Skipping dunegeon " .. info.name .. " dungeonID: " .. dungeonID .. " typeID: " .. info.typeID)
         end
@@ -370,4 +372,7 @@ function addon.GetClassicDungeonCodes()
     return dunegeonIDByCode
 end
 
+function addon.GetNumClassicDungeons()
+    return numDungeons
+end
 addon.localizedDungeonInfo = dungeonInfoCache

@@ -1,5 +1,8 @@
 local TOCNAME,GBB=...
 
+local isClassicEra = WOW_PROJECT_ID == WOW_PROJECT_CLASSIC
+local isSoD = isClassicEra and C_Seasons.GetActiveSeason() == Enum.SeasonID.SeasonOfDiscovery
+
 local function getSeasonalDungeons()
     local events = {}
 
@@ -13,11 +16,7 @@ local function getSeasonalDungeons()
 end
 
 local function getPvpByVersion()
-	local version, build, date, tocversion = GetBuildInfo()
-	if string.sub(version, 1, 2) ~= "1." then
-		return GBB.PvpNames
-	end
-	return GBB.PvpSodNames
+	return isSoD and GBB.PvpSodNames or GBB.PvpNames
 end
 
 function GBB.GetDungeonNames()
@@ -776,6 +775,47 @@ local function GetSize(list)
 end
 
 function GBB.GetDungeonSort()
+	if isClassicEra then
+		-- No seasonal event dungeons in Era
+		-- for eventName, eventData in pairs(GBB.Seasonal) do
+		-- 	if GBB.Tool.InDateRange(eventData.startDate, eventData.endDate) then
+		-- 		table.insert(GBB.WotlkDungeonNames, 1, eventName)
+		-- 	else
+		-- 		table.insert(GBB.DebugNames, 1, eventName)
+		-- 	end
+		-- end
+	
+		local orderedNameLists = { GBB.VanillDungeonNames, GBB.PvpNames, GBB.Misc, GBB.DebugNames}
+	
+		local vanillaDungeonSize = GBB.GetNumClassicDungeons()
+		local debugSize = GetSize(GBB.DebugNames)
+		
+		local orderedNames, numEntries = ConcatenateLists(orderedNameLists)
+		local dungeonSort = {}
+	
+		GBB.MAXDUNGEON = vanillaDungeonSize
+		GBB.ENDINGDUNGEONSTART = GBB.MAXDUNGEON + 1
+		GBB.ENDINGDUNGEONEND = numEntries - debugSize - 1
+		
+		-- needed to not error out code atm
+		GBB.TBCDUNGEONSTART = 1
+		GBB.TBCMAXDUNGEON = 0
+		GBB.WOTLKDUNGEONSTART = 1
+		GBB.WOTLKMAXDUNGEON = 0
+	
+		for dungeonKey, sortIdx in pairs(orderedNames) do
+			dungeonSort[sortIdx] = dungeonKey
+			dungeonSort[dungeonKey] = sortIdx
+		end
+	
+		-- Need to do this because I don't know I am too lazy to debug the use of SM2, DM2, and DEADMINES
+		dungeonSort["SM2"] = 10.5
+		dungeonSort["DM2"] = 19.5
+		dungeonSort["DEADMINES"] = 99
+	
+		return dungeonSort
+
+	end
 	for eventName, eventData in pairs(GBB.Seasonal) do
         if GBB.Tool.InDateRange(eventData.startDate, eventData.endDate) then
 			table.insert(GBB.WotlkDungeonNames, 1, eventName)
