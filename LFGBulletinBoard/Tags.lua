@@ -2,7 +2,12 @@ local TOCNAME,GBB=...
 
 -- IMPORTANT, everything must be in low-case and with now space!
 local isClassicEra = WOW_PROJECT_ID == WOW_PROJECT_CLASSIC
-
+local debug = true
+local print = function(...)
+	if debug then
+		print('['..TOCNAME..'] ', ...)
+	end
+end
 local function langSplit(source)
 	local ret={}
 	for lang,pat in pairs(source) do
@@ -575,27 +580,43 @@ GBB.dungeonTagsLoc={
 	}),
 }
 
-if isClassicEra then 
-	-- purge any un-used tags
-	local validDungeons = GBB.GetClassicDungeonCodes()
-	for locale, tagList in pairs(GBB.dungeonTagsLoc) do
-		for dungeonKey, _ in pairs(tagList) do
-			if not validDungeons[dungeonKey] then
-				GBB.dungeonTagsLoc[locale][dungeonKey] = nil
-				print("GBB: Removed unused dungeon tag for "..dungeonKey)
-			end
-		end
-	end
-end
-
-GBB.dungeonTagsLoc.enGB["DEADMINES"]={"dm"}
-
 GBB.dungeonSecondTags = {
 	["DEADMINES"] = {"DM","-DMW","-DME","-DMN"},
 	["SM2"] = {"SMG","SML","SMA","SMC"},
 	["DM2"] = {"DMW","DME","DMN","-DM"},
 }
 
+if isClassicEra then 
+	-- purge any un-used tags
+	local validDungeons = GBB.GetClassicDungeonKeys()
+	local exceptions = {
+		-- misc categories that should be tracked
+		["TRADE"] = true,
+		["TRAVEL"] = true,
+		["BLOOD"] = true,
+		["INCUR"] = true,
+		-- addon has 2 different keys for nax, should be fixed at some point.
+		["NAXX"] = true, 
+
+	}
+	for locale, tagList in pairs(GBB.dungeonTagsLoc) do
+		local alerted = {}
+		for dungeonKey, _ in pairs(tagList) do
+			if not (validDungeons[dungeonKey] 
+				or exceptions[dungeonKey]
+				or GBB.dungeonSecondTags[dungeonKey])
+			then
+				GBB.dungeonTagsLoc[locale][dungeonKey] = nil
+				if not alerted[dungeonKey] then
+					alerted[dungeonKey] = true
+					print("Removed unused dungeon tag for "..dungeonKey)
+				end
+			end
+		end
+	end
+end
+
+GBB.dungeonTagsLoc.enGB["DEADMINES"]={"dm"}
 -- Remove any unused dungeon tags based on game version
 if WOW_PROJECT_ID == WOW_PROJECT_CLASSIC then
 	local isSoD = C_Seasons.GetActiveSeason() == Enum.SeasonID.SeasonOfDiscovery
