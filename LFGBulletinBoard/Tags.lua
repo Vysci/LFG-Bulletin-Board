@@ -1,6 +1,7 @@
 local TOCNAME,GBB=...
 
 -- IMPORTANT, everything must be in low-case and with now space!
+local isClassicEra = WOW_PROJECT_ID == WOW_PROJECT_CLASSIC
 
 local function langSplit(source)
 	local ret={}
@@ -573,6 +574,19 @@ GBB.dungeonTagsLoc={
 		["TRADE"] = "买 卖 收 代工 出售 附魔",
 	}),
 }
+
+if isClassicEra then 
+	-- purge any un-used tags
+	local validDungeons = GBB.GetClassicDungeonCodes()
+	for locale, tagList in pairs(GBB.dungeonTagsLoc) do
+		for dungeonKey, _ in pairs(tagList) do
+			if not validDungeons[dungeonKey] then
+				GBB.dungeonTagsLoc[locale][dungeonKey] = nil
+				print("GBB: Removed unused dungeon tag for "..dungeonKey)
+			end
+		end
+	end
+end
 
 GBB.dungeonTagsLoc.enGB["DEADMINES"]={"dm"}
 

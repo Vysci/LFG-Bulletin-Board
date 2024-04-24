@@ -242,7 +242,7 @@ local infoOverrides = {
 local dungeonCodeByID = {
     [3] = "RFC",
     [1] = "WC",
-    [5] = "DEADMINES",
+    [5] = "DM", -- Deadmines
     [7] = "SFK",
     [11] = "STK", -- Stocks,
     [9] = "BFD",
@@ -334,8 +334,6 @@ do
     end
 end
 
-
-
 local localizedNames -- cache to save some iteration cycles.
 ---@return {[DungeonID]: string} # Table mapping `dungeonID` to it's localized name.
 --- Because of holes in the `dungeonID` range, use `pairs` to iterate table.
@@ -351,7 +349,7 @@ function addon.GetClassicLocalizedDungeonNames()
 end
 
 local raidCache
----@return {[DungeonID]: DungeonInfo} # Table mapping `dungeonID` to it's info.
+---@return {[DungeonID]: DungeonInfo} # Table mapping `dungeonID` to it's info
 --- Because of holes in the `dungeonID` range, use `pairs` to iterate table.
 function addon.GetClassicRaids()
     if not raidCache then
@@ -366,4 +364,10 @@ function addon.GetClassicRaids()
     return raidCache
 end
 
-addon.localizedDungeonIfno = dungeonInfoCache
+---@return {[string]: DungeonID} # Table mapping `dungeonCode` to it's `dungeonID` if it's a valid dungeon
+local dunegeonIDByCode = tInvert(dungeonCodeByID)
+function addon.GetClassicDungeonCodes()
+    return dunegeonIDByCode
+end
+
+addon.localizedDungeonInfo = dungeonInfoCache
