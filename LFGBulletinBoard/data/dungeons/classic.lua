@@ -239,7 +239,7 @@ local infoOverrides = {
 
 -- manually associate keys in Tags.lua
 -- this is definately not sustainable outside of classic
-local dungeonCodeByID = {
+local dungeonKeyByID = {
     [3] = "RFC",
     [1] = "WC",
     [5] = "DM", -- Deadmines
@@ -259,10 +259,10 @@ local dungeonCodeByID = {
     [25] = "MAR",
     [27] = "ST",
     [29] = "BRD",
-    [33] = "DM2",  -- Base "Dire Maul" DNE
-    [34] = "DME",
-    [36] = "DMN",
-    [38] = "DMW",
+    [32] = "DM2",  -- Base "Dire Maul" DNE
+    [33] = "DME",
+    [35] = "DMW",
+    [37] = "DMN",
     [39] = "STR", -- Strat
     [2] = "SCH",  -- Scholo
     [31] = "LBRS",
@@ -299,7 +299,7 @@ do
                 maxLevel = maxLevel,
                 typeID = typeID,
                 subtypeID = subtypeID,
-                tagKey = dungeonCodeByID[dungeonID],
+                tagKey = dungeonKeyByID[dungeonID],
             }
         end
         if not info.name then
@@ -367,12 +367,27 @@ function addon.GetClassicRaids()
 end
 
 ---@return {[string]: DungeonID} # Table mapping `dungeonCode` to it's `dungeonID` if it's a valid dungeon
-local dunegeonIDByCode = tInvert(dungeonCodeByID)
-function addon.GetClassicDungeonCodes()
-    return dunegeonIDByCode
+local dunegeonIDByKey = tInvert(dungeonKeyByID)
+function addon.GetClassicDungeonKeys()
+    return dunegeonIDByKey
 end
 
 function addon.GetNumClassicDungeons()
     return numDungeons
+end
+
+---Returns **all** dungeon info if `dungeonID` is nil; Otherwise, returns info for the specificed `dungeonID` or `nil` if it doesn't exist.
+---@param dungeonID DungeonID?
+---@return (DungeonInfo|table<DungeonID, DungeonInfo>)? 
+function addon.GetClassicDungeonInfo(dungeonID)
+    -- CopyTable isnt neccessary, but its probably best to prevent someone from breaking the addon by messing with out internal table if we return a reference here.
+    if dungeonID then
+        local info = dungeonInfoCache[dungeonID]
+        if info then
+            return CopyTable(dungeonInfoCache[dungeonID])
+        end
+    else
+        return CopyTable(dungeonInfoCache)
+    end
 end
 addon.localizedDungeonInfo = dungeonInfoCache

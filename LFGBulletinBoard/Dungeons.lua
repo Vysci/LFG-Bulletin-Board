@@ -3,6 +3,9 @@ local TOCNAME,GBB=...
 local isClassicEra = WOW_PROJECT_ID == WOW_PROJECT_CLASSIC
 local isSoD = isClassicEra and C_Seasons.GetActiveSeason() == Enum.SeasonID.SeasonOfDiscovery
 
+local debug = false
+local print = function(...) if debug then print('['..TOCNAME.."] ",...) end end
+
 local function getSeasonalDungeons()
     local events = {}
 
@@ -645,16 +648,16 @@ local function Union ( a, b )
     return result
 end
 
-GBB.VanillaDungeonLevels ={
-	["RFC"] = 	{13,18}, ["DM"] = 	{18,23}, ["WC"] = 	{15,25}, ["SFK"] = 	{22,30}, ["STK"] = 	{22,30}, ["BFD"] = 	{24,32},
-	["GNO"] = 	{29,38}, ["RFK"] = 	{30,40}, ["SMG"] = 	{28,38}, ["SML"] = 	{29,39}, ["SMA"] = 	{32,42}, ["SMC"] = 	{35,45},
-	["RFD"] = 	{40,50}, ["ULD"] = 	{42,52}, ["ZF"] = 	{44,54}, ["MAR"] = 	{46,55}, ["ST"] = 	{50,60}, ["BRD"] = 	{52,60},
-	["LBRS"] = 	{55,60}, ["DME"] = 	{58,60}, ["DMN"] = 	{58,60}, ["DMW"] = 	{58,60}, ["STR"] = 	{58,60}, ["SCH"] = 	{58,60},
-	["UBRS"] = 	{58,60}, ["MC"] = 	{60,60}, ["ZG"] = 	{60,60}, ["AQ20"]= 	{60,60}, ["BWL"] = {60,60},
-	["AQ40"] = 	{60,60}, ["NAX"] = 	{60,60},
-	["MISC"]=   {0,100}, ["TRAVEL"]={0,100}, ["INCUR"]={0,100},
-	["DEBUG"] = {0,100}, ["BAD"] =	{0,100}, ["TRADE"]=	{0,100}, ["SM2"] =  {28,42}, ["DM2"] =	{58,60}, ["DEADMINES"]={18,23},
-}
+-- GBB.VanillaDungeonLevels ={
+-- 	["RFC"] = 	{13,18}, ["DM"] = 	{18,23}, ["WC"] = 	{15,25}, ["SFK"] = 	{22,30}, ["STK"] = 	{22,30}, ["BFD"] = 	{24,32},
+-- 	["GNO"] = 	{29,38}, ["RFK"] = 	{30,40}, ["SMG"] = 	{28,38}, ["SML"] = 	{29,39}, ["SMA"] = 	{32,42}, ["SMC"] = 	{35,45},
+-- 	["RFD"] = 	{40,50}, ["ULD"] = 	{42,52}, ["ZF"] = 	{44,54}, ["MAR"] = 	{46,55}, ["ST"] = 	{50,60}, ["BRD"] = 	{52,60},
+-- 	["LBRS"] = 	{55,60}, ["DME"] = 	{58,60}, ["DMN"] = 	{58,60}, ["DMW"] = 	{58,60}, ["STR"] = 	{58,60}, ["SCH"] = 	{58,60},
+-- 	["UBRS"] = 	{58,60}, ["MC"] = 	{60,60}, ["ZG"] = 	{60,60}, ["AQ20"]= 	{60,60}, ["BWL"] = {60,60},
+-- 	["AQ40"] = 	{60,60}, ["NAX"] = 	{60,60},
+-- 	["MISC"]=   {0,100}, ["TRAVEL"]={0,100}, ["INCUR"]={0,100},
+-- 	["DEBUG"] = {0,100}, ["BAD"] =	{0,100}, ["TRADE"]=	{0,100}, ["SM2"] =  {28,42}, ["DM2"] =	{58,60}, ["DEADMINES"]={18,23},
+-- }
 
 GBB.PostTbcDungeonLevels = {
 	["RFC"] = 	{13,20}, ["DM"] = 	{16,24}, ["WC"] = 	{16,24}, ["SFK"] = 	{17,25}, ["STK"] = 	{21,29}, ["BFD"] = 	{20,28},
@@ -666,7 +669,6 @@ GBB.PostTbcDungeonLevels = {
 	["MISC"] =  {0,100}, ["TRAVEL"]={0,100}, ["INCUR"]={0,100},
 	["DEBUG"] = {0,100}, ["BAD"] =	{0,100}, ["TRADE"]=	{0,100}, ["SM2"] =  {28,42}, ["DM2"] =	{58,60}, ["DEADMINES"]={16,24},
 }
-
 
 GBB.TbcDungeonLevels = {
 	["RAMPS"] =  {60,62}, 	["BF"] = 	 {61,63},     ["SP"] = 	 {62,64},    ["UB"] = 	 {63,65},     ["MT"] = 	 {64,66},     ["CRYPTS"] = {65,67},
@@ -808,13 +810,12 @@ function GBB.GetDungeonSort()
 			dungeonSort[dungeonKey] = sortIdx
 		end
 	
-		-- Need to do this because I don't know I am too lazy to debug the use of SM2, DM2, and DEADMINES
+		--need to figure out what removing this does exactly.
 		dungeonSort["SM2"] = 10.5
 		dungeonSort["DM2"] = 19.5
 		dungeonSort["DEADMINES"] = 99
 	
 		return dungeonSort
-
 	end
 	for eventName, eventData in pairs(GBB.Seasonal) do
         if GBB.Tool.InDateRange(eventData.startDate, eventData.endDate) then
@@ -864,10 +865,58 @@ function GBB.GetDungeonSort()
 	return dungeonSort
 end
 
-local function DetermineVanillDungeonRange()
+-- Becasue theyre not actually dungeons and are not parsed by 
+-- `/data/dungeons/classic.lua` we need to add them manually
+local miscCatergoriesLevels = {
+	["MISC"] =  {0,100}, ["TRAVEL"]={0,100}, ["INCUR"]={0,100},
+	["DEBUG"] = {0,100}, ["BAD"] =	{0,100}, ["TRADE"]=	{0,100},
+	["BLOOD"] = {0,100}, ["NIL"] = {0,100}
+}
 
-	return GBB.PostTbcDungeonLevels
+-- These are used for parsing chat messages but dont have any options
+-- ie they have no sortIdx in the dungeonSort table
+local hiddenKeys = {"SM2", "DM2", "DEADMINES"} 
 
+---Returns a table with the min and max level for each dungeon/raid/battleground
+---@return table<string, table<number, number>>
+local function DetermineVanillaDungeonRange()
+	---@type table<DungeonID, DungeonInfo>
+	local classicDungeonInfo = GBB.GetClassicDungeonInfo()
+	local keyToDungeonID = GBB.GetClassicDungeonKeys()
+	local dungeonLevels = {}
+	local categoryKeys = ConcatenateLists({
+		GBB.VanillDungeonNames, GBB.PvpNames,
+		GBB.Misc, GBB.DebugNames, hiddenKeys
+	});
+
+	local keyRemap = {
+		["DEADMINES"] = "DM",
+		-- ["NAX"] = "NAXX"
+	}
+	for key, _ in pairs(categoryKeys) do
+		-- this is only needed because of the DEADMINES/DM thing
+		local baseKey = key
+		if keyRemap[key] then key = keyRemap[key] end
+		
+		local dungeonID = keyToDungeonID[key]
+		local dungeonInfo = dungeonID and classicDungeonInfo[dungeonID]
+
+		if dungeonInfo then
+			dungeonLevels[baseKey] = { dungeonInfo.minLevel, dungeonInfo.maxLevel}
+		else -- not a dungeon, check for misc category (bloodmoon, trade, etc.)
+			dungeonLevels[baseKey] = miscCatergoriesLevels[key]
+		end
+
+		if not dungeonLevels[baseKey] then
+			print("Missing levels for dungeon Key: "..key.." ID:"..(dungeonID or "nil"))
+			dungeonLevels[baseKey] = miscCatergoriesLevels.BAD
+		end
+	end
+	return dungeonLevels
 end
 
-GBB.dungeonLevel = Union(Union(Union(DetermineVanillDungeonRange(), GBB.TbcDungeonLevels), GBB.WotlkDungeonLevels), GBB.PvpLevels)
+if isClassicEra then
+	GBB.dungeonLevel = DetermineVanillaDungeonRange()
+else
+	GBB.dungeonLevel = Union(Union(Union(DetermineVanillaDungeonRange(), GBB.TbcDungeonLevels), GBB.WotlkDungeonLevels), GBB.PvpLevels)
+end
