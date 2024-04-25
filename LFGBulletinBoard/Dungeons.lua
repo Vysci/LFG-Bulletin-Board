@@ -813,12 +813,14 @@ function GBB.GetDungeonSort()
 	-- Need to do this because I don't know I am too lazy to debug the use of SM2, DM2, and DEADMINES
 	dungeonSort["SM2"] = 10.5
 	dungeonSort["DM2"] = 19.5
-	dungeonSort["DEADMINES"] = 99
-
 	-- add reverse link for the SM2 and DM2 for the Combine option 
 	dungeonSort[dungeonSort["SM2"]] = "SM2"
 	dungeonSort[dungeonSort["DM2"]] = "DM2"
 
+	-- This is set to a high index with no reverse link because we dont ever want to show this in the list during `UpdateList()`
+	-- Ideally the "DEADMINES" key should never make it to the `req.dungeon` field as it should be converted to either "DM" or "DM2"/"DMW"/"DME"/"DMN" in GBB.GetDungeon() 
+	dungeonSort["DEADMINES"] = 99
+	
 	return dungeonSort
 end
 
