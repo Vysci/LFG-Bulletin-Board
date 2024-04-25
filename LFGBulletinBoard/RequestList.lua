@@ -683,23 +683,23 @@ function GBB.GetDungeons(msg,name)
 		isGood=true
 	end
 
-	-- remove all secondTag's primary dungeons
-	for parentTag, _ in pairs(GBB.dungeonSecondTags) do
-		if dungeons[parentTag] == true then
+	-- remove all primary dungeon keys
+	for dungeonKey, _ in pairs(GBB.dungeonSecondTags) do
+		if dungeons[dungeonKey] == true then
 			-- this removes "DEADMINES" and keeps either DM or DM2
-			dungeons[parentTag] = nil
+			dungeons[dungeonKey] = nil
 		end
 	end
 
 	if GBB.DB.CombineSubDungeons then
-		for parentTag, altTags in pairs(GBB.dungeonSecondTags) do
+		for parentKey, secondaryKeys in pairs(GBB.dungeonSecondTags) do
 			-- ignore DEADMINES
 			-- its doesnt actually have sub dungeons
-			if parentTag ~= "DEADMINES" then
-				for _, altTag in pairs(altTags) do
-					if dungeons[altTag] then
-						dungeons[parentTag] = true
-						dungeons[altTag] = nil
+			if parentKey ~= "DEADMINES" then
+				for _, altKey in pairs(secondaryKeys) do
+					if dungeons[altKey] then
+						dungeons[parentKey] = true
+						dungeons[altKey] = nil
 					end
 				end
 			end
