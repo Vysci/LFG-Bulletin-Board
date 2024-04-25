@@ -815,6 +815,10 @@ function GBB.GetDungeonSort()
 	dungeonSort["DM2"] = 19.5
 	dungeonSort["DEADMINES"] = 99
 
+	-- add reverse link for the SM2 and DM2 for the Combine option 
+	dungeonSort[dungeonSort["SM2"]] = "SM2"
+	dungeonSort[dungeonSort["DM2"]] = "DM2"
+
 	return dungeonSort
 end
 
