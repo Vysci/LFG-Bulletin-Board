@@ -5,9 +5,6 @@ local LastUpdateTime = time()
 local requestNil={dungeon="NIL",start=0,last=0,name=""}
 
 local function requestSort_TOP_TOTAL (a,b)
-	assert(GBB.dungeonSort[a.dungeon], "a.dungeon does not have a sort index", a.dungeon, GBB.dungeonSort)
-	assert(GBB.dungeonSort[b.dungeon], "b.dungeon does not have a sort index", b.dungeon, GBB.dungeonSort)
-
 	if GBB.dungeonSort[a.dungeon] < GBB.dungeonSort[b.dungeon] then
 		return true
 	elseif GBB.dungeonSort[a.dungeon] == GBB.dungeonSort[b.dungeon]then
@@ -20,9 +17,6 @@ local function requestSort_TOP_TOTAL (a,b)
 	return false
 end
 local function requestSort_TOP_nTOTAL (a,b)
-	assert(GBB.dungeonSort[a.dungeon], "a.dungeon does not have a sort index", a.dungeon, GBB.dungeonSort)
-	assert(GBB.dungeonSort[b.dungeon], "b.dungeon does not have a sort index", b.dungeon, GBB.dungeonSort)
-
 	if GBB.dungeonSort[a.dungeon] < GBB.dungeonSort[b.dungeon] then
 		return true
 	elseif GBB.dungeonSort[a.dungeon] == GBB.dungeonSort[b.dungeon] and (a.start ~= nil and b.start ~= nil and a.name ~= nil and b.name ~= nil) then
@@ -35,9 +29,6 @@ local function requestSort_TOP_nTOTAL (a,b)
 	return false
 end
 local function requestSort_nTOP_TOTAL (a,b)
-	assert(GBB.dungeonSort[a.dungeon], "a.dungeon does not have a sort index", a.dungeon, GBB.dungeonSort)
-	assert(GBB.dungeonSort[b.dungeon], "b.dungeon does not have a sort index", b.dungeon, GBB.dungeonSort)
-
 	if GBB.dungeonSort[a.dungeon] < GBB.dungeonSort[b.dungeon] then
 		return true
 	elseif GBB.dungeonSort[a.dungeon] == GBB.dungeonSort[b.dungeon] then
@@ -50,9 +41,6 @@ local function requestSort_nTOP_TOTAL (a,b)
 	return false
 end
 local function requestSort_nTOP_nTOTAL (a,b)
-	assert(GBB.dungeonSort[a.dungeon], "a.dungeon does not have a sort index", a.dungeon, GBB.dungeonSort)
-	assert(GBB.dungeonSort[b.dungeon], "b.dungeon does not have a sort index", b.dungeon, GBB.dungeonSort)
-
 	if GBB.dungeonSort[a.dungeon] < GBB.dungeonSort[b.dungeon] then
 		return true
 	elseif GBB.dungeonSort[a.dungeon] == GBB.dungeonSort[b.dungeon] then
