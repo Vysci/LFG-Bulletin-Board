@@ -146,11 +146,11 @@ function GBB.FilterDungeon(dungeon, isHeroic, isRaid)
 	-- return `false` if not checked in preferences
 	if not GBB.DBChar["FilterDungeon"..dungeon] then return false end;
 	
-	-- return `false` if not prefferd difficulty (this doesnt matter in classic (atm))
-	-- local showHeroicOnly = GBB.DBChar["HeroicOnly"] == true
-	-- local showNormalOnly = GBB.DBChar["NormalOnly"] == true
-	-- if showHeroicOnly and isHeroic == false then return false end;
-	-- if showNormalOnly and isHeroic then return false end;
+	-- return `false` if not prefferd difficulty
+	local showHeroicOnly = GBB.DBChar["HeroicOnly"] == true
+	local showNormalOnly = GBB.DBChar["NormalOnly"] == true
+	if showHeroicOnly and isHeroic == false then return false end;
+	if showNormalOnly and isHeroic then return false end;
 
 	-- return `false` if not in level range specified
 	if GBB.DBChar.FilterLevel and not inLevelRange then return false end;
