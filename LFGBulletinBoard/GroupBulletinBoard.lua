@@ -398,7 +398,7 @@ end
 
 function GBB.Init()
 	GroupBulletinBoardFrame:SetResizeBounds(400,170)	
-	
+	GroupBulletinBoardFrame:SetClampedToScreen(true)
 	GBB.UserLevel=UnitLevel("player")
 	GBB.UserName=(UnitFullName("player"))
 	GBB.ServerName=GetRealmName()
