@@ -123,15 +123,21 @@ function GBB.GetMessageWordList(msg)
 	return results	
 end
 
+---@param dungeon string dunegon key
+---@param short boolean if true, returns a short version of the level range
+---@return string # formatted level range string ie "10-20" or "Level 10-20"
 function GBB.LevelRange(dungeon,short)
-	if short then 
-		if GBB.dungeonLevel[dungeon][1]>0 then
-			return string.format(GBB.L["msgLevelRangeShort"],GBB.dungeonLevel[dungeon][1],GBB.dungeonLevel[dungeon][2])
-		end
-	elseif GBB.dungeonLevel[dungeon][1]>0 then
-		return string.format(GBB.L["msgLevelRange"],GBB.dungeonLevel[dungeon][1],GBB.dungeonLevel[dungeon][2])
+	local hasLevel = GBB.dungeonLevel[dungeon][1] > 0
+	if hasLevel then
+		local templateText = short and GBB.L["msgLevelRangeShort"] or GBB.L["msgLevelRange"]
+		return string.format(
+			templateText,
+			GBB.dungeonLevel[dungeon][1],
+			GBB.dungeonLevel[dungeon][2]
+		);
+	else
+		return ""
 	end
-	return ""
 end
 
 ---@return boolean `true` if the dungeon should be tracked on bulletin board, `false` otherwise.
