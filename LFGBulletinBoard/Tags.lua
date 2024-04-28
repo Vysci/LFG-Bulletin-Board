@@ -581,3 +581,47 @@ GBB.dungeonSecondTags = {
 	["SM2"] = {"SMG","SML","SMA","SMC"},
 	["DM2"] = {"DMW","DME","DMN","-DM"},
 }
+
+-- Remove any unused dungeon tags based on game version
+if WOW_PROJECT_ID == WOW_PROJECT_CLASSIC then
+	local isSoD = C_Seasons.GetActiveSeason() == Enum.SeasonID.SeasonOfDiscovery
+	local exceptions = {
+		-- addon uses 2 different keys for nax in different locales 
+		-- should be normalized to one key at some point
+		["NAXX"] = true, 
+	}
+
+	-- Collect tags valid for vanilla
+	local validDungeons = {}
+	for _, key in ipairs(GBB.VanillDungeonNames) do
+		validDungeons[key] = true
+	end
+	-- using PvPSodNames just coz it already only has the classic bgs
+	for _, key in ipairs(GBB.PvpSodNames) do
+		if key == "BLOOD" then
+			-- only available in SoD
+			validDungeons[key] = isSoD
+		else
+			validDungeons[key] = true
+		end
+	end
+	for _, key in ipairs(GBB.Misc) do
+		if key == "INCUR" then
+			-- only available in SoD
+			validDungeons[key] = isSoD
+		else
+			validDungeons[key] = true
+		end
+	end
+	-- iterate over all locales and `nil` out any entries for dungeons not valid for vanilla
+	for locale, dungeonTags in pairs(GBB.dungeonTagsLoc) do
+		for dungeonKey, _ in pairs(dungeonTags) do
+			if not (validDungeons[dungeonKey] 
+				or exceptions[dungeonKey]
+				or GBB.dungeonSecondTags[dungeonKey])
+			then
+				GBB.dungeonTagsLoc[locale][dungeonKey] = nil
+			end
+		end
+	end
+end
