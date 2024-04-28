@@ -50,7 +50,7 @@ Tool.RoleIcon = {
   
 Tool.Classes=CLASS_SORT_ORDER
 Tool.ClassName=LOCALIZED_CLASS_NAMES_MALE
-Tool.ClassColor=RAID_CLASS_COLORS
+Tool.ClassColor = CopyTable(RAID_CLASS_COLORS)
 -- support for CUSTOM_CLASS_COLORS
 if CUSTOM_CLASS_COLORS then
 	for k, v in pairs(CUSTOM_CLASS_COLORS) do
