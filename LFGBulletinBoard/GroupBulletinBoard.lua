@@ -57,53 +57,62 @@ end
 function GBB.Split(msg)
 	return GBB.Tool.Split( string.gsub(string.lower(msg), "[%p%s%c]", "+") , "+")
 end
-function GBB.SplitNoNb(msg)
-	local msgOrg=string.lower(msg)
-	msg=string.gsub(string.lower(msg), "[´`]","'")
-	msg=string.gsub(msg,"''","'")
-	local msg2=GBB.Tool.stripChars(msg)
+
+---Splits a message into multiple parts, removing punctuation and whitespace.
+---@param msg string The message to split.
+---@return string[] A table of strings, each representing a word from the message.
+function GBB.GetMessageWordList(msg)
+	local message = string.lower(msg)
+	local validatedMessage = string.gsub(message, "[´`]","'")
+	validatedMessage =  string.gsub(validatedMessage,"''","'")
+	local strippedMessage = GBB.Tool.stripChars(validatedMessage)
 	
-	local result= GBB.Tool.iMerge( 	
-								GBB.Tool.Split( string.gsub(msgOrg, "[%p%s%c]", "+") , "+"),
-								GBB.Tool.Split( string.gsub(msgOrg, "[%p%c]", "") , " "),
-								-- GBB.Tool.Split( string.gsub(msgOrg, "[%c%s]", "+") , "+"), 
-								GBB.Tool.Split( string.gsub(msgOrg, "[%p%s%c%d]", "+") , "+"),
-								
-								GBB.Tool.Split( string.gsub(msg, "[%p%s%c]", "+") , "+"),
-								GBB.Tool.Split( string.gsub(msg, "[%p%c]", "") , " "),
-								-- GBB.Tool.Split( string.gsub(msg, "[%c%s]", "+") , "+"), 
-								GBB.Tool.Split( string.gsub(msg, "[%p%s%c%d]", "+") , "+"),
-								
-								GBB.Tool.Split( string.gsub(msg2, "[%p%s%c]", "+") , "+"),
-								GBB.Tool.Split( string.gsub(msg2, "[%p%c]", "") , " "),
-								-- GBB.Tool.Split( string.gsub(msg2, "[%c%s]", "+") , "+"), 
-								GBB.Tool.Split( string.gsub(msg2, "[%p%s%c%d]", "+") , "+")
-								
-								)
-	local add={}
+	local results = GBB.Tool.iMerge( 	
+		GBB.Tool.Split( string.gsub(message, "[%p%s%c]", "+") , "+"),
+		GBB.Tool.Split( string.gsub(message, "[%p%c]", "") , " "),
+		-- GBB.Tool.Split( string.gsub(message, "[%c%s]", "+") , "+"), 
+		GBB.Tool.Split( string.gsub(message, "[%p%s%c%d]", "+") , "+"),
+		
+		GBB.Tool.Split( string.gsub(validatedMessage, "[%p%s%c]", "+") , "+"),
+		GBB.Tool.Split( string.gsub(validatedMessage, "[%p%c]", "") , " "),
+		-- GBB.Tool.Split( string.gsub(validatedMessage, "[%c%s]", "+") , "+"), 
+		GBB.Tool.Split( string.gsub(validatedMessage, "[%p%s%c%d]", "+") , "+"),
+		
+		GBB.Tool.Split( string.gsub(strippedMessage, "[%p%s%c]", "+") , "+"),
+		GBB.Tool.Split( string.gsub(strippedMessage, "[%p%c]", "") , " "),
+		-- GBB.Tool.Split( string.gsub(stippedMessage, "[%c%s]", "+") , "+"), 
+		GBB.Tool.Split( string.gsub(strippedMessage, "[%p%s%c%d]", "+") , "+")
+	);
+	local additionalResults = {}
 	
 	--[[
 	local lastTag
 	for it,tag in ipairs(GBB.Tool.Split( string.gsub(msg, "[%p%c%s]", "+") , "+")) do
 		
 		if lastTag~=nil then
-			tinsert(add,lastTag.."X"..tag)
+			tinsert(additionalResults, lastTag.."X"..tag)
 		end
 		lastTag=tag
 	end
 	]]--
 	
-	for it,tag in ipairs(result) do		
-		-- lastTag=tag
-		for is,suffix in ipairs(GBB.suffixTags) do
-			if tag~=suffix and string.sub(tag,-string.len(suffix))==suffix then				
-				tinsert(add,string.sub(tag,1,-string.len(suffix)-1))
-				tinsert(add,suffix)
+	-- split words with suffixes and add them to the results
+	for _, word in ipairs(results) do
+		for _, suffix in ipairs(GBB.suffixTags) do
+			local suffixLength = string.len(suffix)
+			--trim end of word with the length of current suffix
+			local wordEnding = word:sub(-suffixLength)
+			if word ~= suffix 
+			and wordEnding == suffix 
+			then				
+				local baseWord = word:sub(1, -suffixLength - 1)
+				tinsert(additionalResults, baseWord);
+				tinsert(additionalResults, suffix)
 			end
 		end
 	end
 	
-	result=GBB.Tool.iMerge(result,add)
+	results=GBB.Tool.iMerge(results,additionalResults)
 	--[[for it,tag in ipairs(result) do
 		if string.len(tag)==1 then
 			result[it]=nil
@@ -111,7 +120,7 @@ function GBB.SplitNoNb(msg)
 	end
 	]]--
 	
-	return result	
+	return results	
 end
 
 function GBB.LevelRange(dungeon,short)
@@ -125,6 +134,7 @@ function GBB.LevelRange(dungeon,short)
 	return ""
 end
 
+---@return boolean `true` if the dungeon should be tracked on bulletin board, `false` otherwise.
 function GBB.FilterDungeon(dungeon, isHeroic, isRaid)
 	if dungeon == nil then return false end
 	if isHeroic == nil then isHeroic = false end
@@ -132,10 +142,21 @@ function GBB.FilterDungeon(dungeon, isHeroic, isRaid)
 
 	-- If the user is within the level range, or if they're max level and it's heroic.
 	local inLevelRange = (not isHeroic and GBB.dungeonLevel[dungeon][1] <= GBB.UserLevel and GBB.UserLevel <= GBB.dungeonLevel[dungeon][2]) or (isHeroic and GBB.UserLevel == 80)
+
+	-- return `false` if not checked in preferences
+	if not GBB.DBChar["FilterDungeon"..dungeon] then return false end;
 	
-	return GBB.DBChar["FilterDungeon"..dungeon] and 
-		(isRaid or ((GBB.DBChar["HeroicOnly"] == false or isHeroic) and (GBB.DBChar["NormalOnly"] == false or isHeroic == false))) and
-		(GBB.DBChar.FilterLevel == false or inLevelRange)
+	-- return `false` if not prefferd difficulty
+	local showHeroicOnly = GBB.DBChar["HeroicOnly"] == true
+	local showNormalOnly = GBB.DBChar["NormalOnly"] == true
+	if showHeroicOnly and isHeroic == false then return false end;
+	if showNormalOnly and isHeroic then return false end;
+
+	-- return `false` if not in level range specified
+	if GBB.DBChar.FilterLevel and not inLevelRange then return false end;
+
+	-- return `true` otherwise
+	return true;
 end
 
 function GBB.formatTime(sec) 
@@ -254,35 +275,43 @@ end
 
 
 --Tag Lists
--------------------------------------------------------------------------------------
+---------------------------------------------------
+
+---Sets the `GBB.tagList` table, specified by locale. 
+---@param loc string The locale to create the tag list for.
 function GBB.CreateTagListLOC(loc)
-	for id,tag in pairs(GBB.badTagsLoc[loc]) do
+	for _,tag in pairs(GBB.badTagsLoc[loc]) do
 		if GBB.DB.OnDebug and GBB.tagList[tag]~=nil then
 			print(GBB.MSGPREFIX.."DoubleTag:"..tag.." - "..GBB.tagList[tag].." / "..GBB.TAGBAD)
-		end		
+		end	
 		GBB.tagList[tag]=GBB.TAGBAD		
 	end
 	
-	for id,tag in pairs(GBB.searchTagsLoc[loc]) do
+	for _, tag in pairs(GBB.searchTagsLoc[loc]) do
 		if GBB.DB.OnDebug and GBB.tagList[tag]~=nil then
 			print(GBB.MSGPREFIX.."DoubleTag:"..tag.." - "..GBB.tagList[tag].." / "..GBB.TAGSEARCH)
 		end
 		GBB.tagList[tag]=GBB.TAGSEARCH		
 	end
 	
-	for id,tag in pairs(GBB.suffixTagsLoc[loc]) do
+	for _, tag in pairs(GBB.suffixTagsLoc[loc]) do
 		if GBB.DB.OnDebug and tContains(GBB.suffixTags,tag) then
 			print(GBB.MSGPREFIX.."DoubleSuffix:"..tag)
 		end	
-		if tContains(GBB.suffixTags,tag)==false then tinsert(GBB.suffixTags,tag) end
+		
+		if not tContains(GBB.suffixTags,tag) then 
+			tinsert(GBB.suffixTags,tag) 
+		end
 	end
 	
-	for dungeon,tags in pairs(GBB.dungeonTagsLoc[loc]) do
-		for id,tag in pairs(tags) do
+	for dungeonKey, tagList in pairs(GBB.dungeonTagsLoc[loc]) do
+		---@cast tagList string[]
+		---@cast dungeonKey string
+		for _, tag in pairs(tagList) do
 			if GBB.DB.OnDebug and GBB.tagList[tag]~=nil then
-				print(GBB.MSGPREFIX.."DoubleTag:"..tag.." - "..GBB.tagList[tag].." / "..dungeon)
+				print(GBB.MSGPREFIX.."DoubleTag:"..tag.." - "..GBB.tagList[tag].." / "..dungeonKey)
 			end
-			GBB.tagList[tag]=dungeon
+			GBB.tagList[tag] = dungeonKey
 		end
 	end
 

@@ -46,11 +46,17 @@ local function CreateEditBoxDungeon(Dungeon,Init,width,width2)
 end
 
 local function FixFilters()
-	for ip,p in pairs(GBB.dungeonSecondTags) do
-		if ip~="DEATHMINES" then
-			GBB.DBChar["FilterDungeon"..ip]=false
-			for is,subDungeon in pairs(p) do
-				GBB.DBChar["FilterDungeon"..ip]=GBB.DBChar["FilterDungeon"..ip] or GBB.DBChar["FilterDungeon"..subDungeon]
+	for parentKey, secondaryKey in pairs(GBB.dungeonSecondTags) do
+		if parentKey ~= "DEADMINES" then
+			-- assume main key is false
+			GBB.DBChar["FilterDungeon"..parentKey] = false
+			for _, altKey in pairs(secondaryKey) do
+				-- if any alt dungeon key is true, set main key to true.
+				local altTagSetting = GBB.DBChar["FilterDungeon"..altKey]
+				if altTagSetting == true then
+					GBB.DBChar["FilterDungeon"..parentKey] = true
+					break
+				end
 			end
 		end
 	end	
