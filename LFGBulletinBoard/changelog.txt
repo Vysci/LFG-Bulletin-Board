@@ -1,6 +1,12 @@
 --[[
 
 Group Bulletin Board 	
+
+3.24  
+ - All credit goes to juemrami for all the fixes.
+ - Taint fix 
+ - fixing combine sub-dungeon option that was broken before
+ - fixing lua errors if pvp dungeons that were removed were toggled before the removal
 3.23
  - Should fix the lua errors that are happening due to removal of pvp dungeons for classic. 
 
