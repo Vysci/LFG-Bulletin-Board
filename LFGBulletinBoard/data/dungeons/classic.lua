@@ -3,6 +3,10 @@ local _, addon = ...
 -- exists in classic even though no Dungeon Finder.
 assert(GetLFGDungeonInfo, _ .. " requires the API `GetLFGDungeonInfo` for parsing dungeon info")
 
+-- intialize here for now, this should be moved to a file thats always grunteed to load first.
+---@class AddonEnum
+addon.Enum = {} 
+
 ---@enum DungeonTypeID
 local DungeonType = {
     Dungeon = 1,
@@ -390,4 +394,6 @@ function addon.GetClassicDungeonInfo(dungeonID)
         return CopyTable(dungeonInfoCache)
     end
 end
+
 addon.localizedDungeonInfo = dungeonInfoCache
+addon.Enum.DungeonType = DungeonType
