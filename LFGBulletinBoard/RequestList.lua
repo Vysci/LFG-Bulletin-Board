@@ -201,15 +201,18 @@ local function CreateItem(yy,i,doCompact,req,forceHight)
 			end
 		end
 
-		local typePrefix
-		if req.IsHeroic == true then
-			local colorHex = GBB.Tool.RGBPercToHex(GBB.DB.HeroicDungeonColor.r,GBB.DB.HeroicDungeonColor.g,GBB.DB.HeroicDungeonColor.b)
-			typePrefix = "|c00".. colorHex .. "[" .. GBB.L["heroicAbr"] .. "]     "
-		elseif req.IsRaid == true then
-			typePrefix = "|c00ffff00" .. "[" .. GBB.L["raidAbr"] .. "]     "
-		else
-			local colorHex = GBB.Tool.RGBPercToHex(GBB.DB.NormalDungeonColor.r,GBB.DB.NormalDungeonColor.g,GBB.DB.NormalDungeonColor.b)
-			typePrefix = "|c00".. colorHex .. "[" .. GBB.L["normalAbr"] .. "]    "
+		local typePrefix = ""
+		if WOW_PROJECT_ID ~= WOW_PROJECT_CLASSIC then
+			-- "heroic" is not a concept in classic era/sod
+			if req.IsHeroic == true then
+				local colorHex = GBB.Tool.RGBPercToHex(GBB.DB.HeroicDungeonColor.r,GBB.DB.HeroicDungeonColor.g,GBB.DB.HeroicDungeonColor.b)
+				typePrefix = "|c00".. colorHex .. "[" .. GBB.L["heroicAbr"] .. "]     "
+			elseif req.IsRaid == true then
+				typePrefix = "|c00ffff00" .. "[" .. GBB.L["raidAbr"] .. "]     "
+			else
+				local colorHex = GBB.Tool.RGBPercToHex(GBB.DB.NormalDungeonColor.r,GBB.DB.NormalDungeonColor.g,GBB.DB.NormalDungeonColor.b)
+				typePrefix = "|c00".. colorHex .. "[" .. GBB.L["normalAbr"] .. "]    "
+			end
 		end
 
 		if GBB.DB.ChatStyle then
