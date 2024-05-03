@@ -426,6 +426,8 @@ function GBB.Popup_Minimap(frame,notminimap)
 		GBB.PopupDynamic:AddItem(GBB.L["CboxLockMinimapButtonDistance"],false,GBB.DB.MinimapButton,"lockDistance")
 	end
 	GBB.PopupDynamic:AddItem("",true)
+	GBB.PopupDynamic:AddItem(GBB.L["BtnResetWindow"],false,GBB.ResetWindow)
+	GBB.PopupDynamic:AddItem("",true)
 	GBB.PopupDynamic:AddItem(GBB.L["BtnCancel"],false)
 		
 	GBB.PopupDynamic:Show(frame,0,0)
