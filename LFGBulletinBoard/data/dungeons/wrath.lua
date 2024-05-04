@@ -1,8 +1,7 @@
--- this file is here to keep old methods from breaking interim
--- it will be updated in the future
-
+-- this file is here to keep record of the old method. It is not used anymore.
 local TOCNAME,GBB=...
 
+if WOW_PROJECT_ID ~= WOW_PROJECT_WRATH_CLASSIC then return end
 local function getSeasonalDungeons()
     local events = {}
 

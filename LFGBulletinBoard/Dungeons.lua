@@ -880,6 +880,9 @@ local hiddenKeys = {"SM2", "DM2", "DEADMINES"}
 ---Returns a table with the min and max level for each dungeon/raid/battleground
 ---@return table<string, table<number, number>>
 local function DetermineVanillaDungeonRange()
+	if not isClassicEra then 
+		return GBB.PostTbcDungeonLevels
+	end
 	---@type table<DungeonID, DungeonInfo>
 	local classicDungeonInfo = GBB.GetClassicDungeonInfo()
 	local keyToDungeonID = GBB.GetClassicDungeonKeys()

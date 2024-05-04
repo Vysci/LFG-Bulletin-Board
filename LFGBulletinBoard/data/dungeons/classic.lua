@@ -1,5 +1,6 @@
 local _, addon = ...
 
+if WOW_PROJECT_ID ~= WOW_PROJECT_CLASSIC then return end
 -- exists in classic even though no Dungeon Finder.
 assert(GetLFGDungeonInfo, _ .. " requires the API `GetLFGDungeonInfo` for parsing dungeon info")
 

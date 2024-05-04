@@ -88,6 +88,7 @@ GBB.dungeonTagsLoc={
 		["SCH"] = 	"scholomance scholo sholo sholomance",
 		["LBRS"] = 	"lower lbrs lrbs",
 		["UBRS"] =	"upper ubrs urbs rend",
+
 		["RAMPS"] = "ramparts rampart ramp ramps",
 		["BF"] = "furnace furn bf",
 		["SP"] = 	"slavepens pens sp",
@@ -139,6 +140,7 @@ GBB.dungeonTagsLoc={
 		["HYJAL"] = "hyjal hs hyj",
 		["BT"] = 	"bt",
 		["SWP"] = 	"swp sunwell plateau plataeu sunwel",
+
 		["ONY"] = 	"onyxia ony",
 		["MC"]  = 	"molten core mc",
 		["ZG"]  = 	"zg gurub zul'gurub zulgurub zul´gurub zul`gurub zulg",
@@ -147,6 +149,7 @@ GBB.dungeonTagsLoc={
 		["AQ40"] = 	"aq40" ,
 		["NAX"] = 	"placeholdernax",
 		["NAXX"] = 	"naxxramas nax naxx nax10 naxx10 nax25 naxx25",
+		
 		["WSG"] = 	"wsg warsong ws",
 		["AB"]  = 	"basin ab",
 		["AV"]  = 	"av valley",
@@ -609,7 +612,7 @@ if isClassicEra then
 				GBB.dungeonTagsLoc[locale][dungeonKey] = nil
 				if not alerted[dungeonKey] then
 					alerted[dungeonKey] = true
-					print("Removed unused dungeon tag for "..dungeonKey)
+					-- print("Removed unused dungeon tag for "..dungeonKey)
 				end
 			end
 		end
