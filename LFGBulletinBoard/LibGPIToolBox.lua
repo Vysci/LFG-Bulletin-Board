@@ -353,8 +353,10 @@ local SizingEnter=function(self)
 	if not (GetCursorInfo()) then
 		ResizeCursor:Show()
 		ResizeCursor.Texture:SetTexture(self.GPI_Cursor)
-		--Commenting this out to avoid an LUA error. Has to do with rotation of the resize cursor, can't figure it out at the moment
-		--ResizeCursor.Texture:SetRotation(math.rad(self.GPI_Rotation),CreateVector2D(0.5,0.5))
+		ResizeCursor.Texture:SetRotation(
+			math.rad(self.GPI_Rotation), 
+			{x = 0.5, y = 0.5} -- center point
+		);
 	end
 end
 
