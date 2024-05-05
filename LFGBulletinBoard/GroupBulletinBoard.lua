@@ -632,8 +632,10 @@ function GBB.Init()
 	local version, build, date, tocversion = GetBuildInfo()
 
 	GBB.InitGroupList()
-	if string.sub(version, 1, 2) == "1." then
+	if WOW_PROJECT_ID == WOW_PROJECT_CLASSIC then
 		GBB.Tool.AddTab(GroupBulletinBoardFrame,GBB.L.TabRequest,GroupBulletinBoardFrame_ScrollFrame)
+		GroupBulletinBoardFrame_LfgFrame:Hide()
+		GroupBulletinBoardFrame_GroupFrame:Hide()
 	else
 		GBB.Tool.AddTab(GroupBulletinBoardFrame,GBB.L.TabRequest,GroupBulletinBoardFrame_ScrollFrame)
 		GBB.Tool.AddTab(GroupBulletinBoardFrame,GBB.L.TabLfg,GroupBulletinBoardFrame_LfgFrame)
