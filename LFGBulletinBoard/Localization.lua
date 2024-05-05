@@ -115,6 +115,7 @@ GBB.locales = {
 		["BtnPlayerNoteColor"]="Color of the player note",
 		["BtnColorGuild"]="Colour of the guild text",
 		["BtnPostMsg"] = "Post",
+		["BtnResetWindow"]="Reset Window Position",
 
 		["SlashReset"]="Reset main window position",
 		["SlashConfig"]="Open configuration",
@@ -352,6 +353,8 @@ GBB.locales = {
 	["BtnPlayerNoteColor"]="Couleur de la note du joueur",
 	["BtnColorGuild"]="Couleur du texte de la guilde",
 	["BtnPostMsg"] = "Poster",
+	["BtnResetWindow"]="Reset Window Position",
+
 	["SlashReset"]="Réinitialiser la position de la fenêtre principale",
 	["SlashConfig"]="Ouvrir la configuration",
 	["SlashDefault"]="Ouvrir la fenêtre principale",
@@ -382,6 +385,8 @@ GBB.locales = {
 		["BtnNotifyColor"]="Цвет уведомительного сообщения",
 		["BtnSelectAll"]="Выбрать все",
 		["BtnPostMsg"]="Объявить",
+		["BtnResetWindow"]="Reset Window Position",
+
 		["BtnStopAnnounceMsg"]="Остановить автоматическое объявление",
 		["BtnTimeColor"]="Цвет времени",
 		["BtnPlayerNoteColor"]="Цвет заметки об игроке",
@@ -585,6 +590,7 @@ GBB.locales = {
 		["BtnPlayerNoteColor"]="玩家註記顏色",
 		["BtnColorGuild"]="公會文字顏色",
 		["BtnPostMsg"] = "發佈",
+		["BtnResetWindow"]="Reset Window Position",
 
 		["SlashReset"]="重設主視窗位置",
 		["SlashConfig"]="開啟設定",
@@ -714,6 +720,7 @@ GBB.locales = {
 		["BtnPlayerNoteColor"]="玩家姓名颜色",
 		["BtnColorGuild"]="公会文字颜色",
 		["BtnPostMsg"] = "发布",
+		["BtnResetWindow"]="Reset Window Position",
 
 		["SlashReset"]="重设主窗口位置",
 		["SlashConfig"]="开启设置",

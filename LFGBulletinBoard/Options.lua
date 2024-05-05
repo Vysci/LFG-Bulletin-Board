@@ -231,6 +231,10 @@ function GBB.OptionsInit ()
 	GBB.Options.Indent(-30)
 	GBB.Options.AddSpace()
 	CheckBox("OnDebug",false)
+
+	GBB.Options.AddSpace()
+	GBB.Options.AddButton(GBB.L["BtnResetWindow"],GBB.ResetWindow)
+	GBB.Options.AddSpace()
 	----
 	-- Second Panel for Wotlk Dungeons
 
