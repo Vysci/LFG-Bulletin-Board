@@ -57,8 +57,6 @@ GBB.heroicTagsLoc=langSplit({
 	zhCN = "h H 英雄",
 })
 
-
-
 GBB.dungeonTagsLoc={
 	enGB = langSplit({
 		["RFC"] = 	"rfc ragefire chasm" ,
@@ -589,36 +587,6 @@ GBB.dungeonSecondTags = {
 	["DM2"] = {"DMW","DME","DMN","-DM"},
 }
 
-if isClassicEra then 
-	-- purge any un-used tags
-	local validDungeons = GBB.GetClassicDungeonKeys()
-	local exceptions = {
-		-- misc categories that should be tracked
-		["TRADE"] = true,
-		["TRAVEL"] = true,
-		["BLOOD"] = true,
-		["INCUR"] = true,
-		-- addon has 2 different keys for nax, should be fixed at some point.
-		["NAXX"] = true, 
-
-	}
-	for locale, tagList in pairs(GBB.dungeonTagsLoc) do
-		local alerted = {}
-		for dungeonKey, _ in pairs(tagList) do
-			if not (validDungeons[dungeonKey] 
-				or exceptions[dungeonKey]
-				or GBB.dungeonSecondTags[dungeonKey])
-			then
-				GBB.dungeonTagsLoc[locale][dungeonKey] = nil
-				if not alerted[dungeonKey] then
-					alerted[dungeonKey] = true
-					-- print("Removed unused dungeon tag for "..dungeonKey)
-				end
-			end
-		end
-	end
-end
-
 GBB.dungeonTagsLoc.enGB["DEADMINES"]={"dm"}
 -- Remove any unused dungeon tags based on game version
 if WOW_PROJECT_ID == WOW_PROJECT_CLASSIC then
@@ -661,5 +629,11 @@ if WOW_PROJECT_ID == WOW_PROJECT_CLASSIC then
 				GBB.dungeonTagsLoc[locale][dungeonKey] = nil
 			end
 		end
+	end
+else
+	-- remove bloodmoon and incursion tags from all locales
+	for locale, dungeonTags in pairs(GBB.dungeonTagsLoc) do
+		dungeonTags["BLOOD"] = nil
+		dungeonTags["INCUR"] = nil
 	end
 end

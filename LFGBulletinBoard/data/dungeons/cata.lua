@@ -6,27 +6,17 @@ assert(GetLFGDungeonInfo, _ .. " requires the API `GetLFGDungeonInfo` for parsin
 assert(GetRealZoneText, _ .. " requires the API `GetRealZoneText` for parsing dungeon info")
 assert(C_LFGList.GetActivityInfoTable, _ .. " requires the API `C_LFGList.GetActivityInfoTable` for parsing dungeon info")
 
+local print = addon.print
 
 -- intialize here for now, this should be moved to a file thats always grunteed to load first.
 ---@class AddonEnum
-addon.Enum = addon.Enum or {} 
-
----@type DungeonTypeID
-local DungeonType = {
-    Dungeon = 1,
-    Raid = 2,
-    None = 4,
-    Battleground = 5,
-    Random = 6,
-}
-
----@enum InstanceTypeID
-local InstanceType = {
-    NoInstance = 0,
-    Party = 1,
-    Raid = 2,
-    Battleground = 3,
-    Arena = 4,
+addon.Enum = addon.Enum or { } 
+---@enum ExpansionID
+addon.Enum.Expansions = {
+	Classic = 0,
+	BurningCrusade = 1,
+	Wrath = 2,
+	Cataclysm = 3,
 }
 
 -- The keys to this table need to be manually matched to the appropriate dungeonID
@@ -228,10 +218,11 @@ do
     end
     local function cacheLFGDungeonInfo(dungeonID)
         local info = {}
+		-- https://warcraft.wiki.gg/wiki/API_GetLFGDungeonInfo
         local dungeonInfo = {GetLFGDungeonInfo(dungeonID)}
         local name, typeID, subtypeID, minLevel, maxLevel = 
             dungeonInfo[1], dungeonInfo[2], dungeonInfo[3], dungeonInfo[4], dungeonInfo[5];
-        local expansionID = dungeonInfo[9]
+        local expansionID, isHoliday = dungeonInfo[9], dungeonInfo[15]
         -- local mapID = dungeonInfo[22]
         assert(name, "Failed to get dungeon info for ID: " .. dungeonID..". Valid dungeonIDs require for addon to function.")
         assert(typeID and minLevel and maxLevel and expansionID, "Failed to get level range or type for dungeonID: " .. dungeonID, name, typeID, minLevel, maxLevel, expansionID)
@@ -242,7 +233,8 @@ do
             typeID = typeID,
             subtypeID = subtypeID,
             tagKey = dungeonIDToKey[dungeonID],
-            expansionID = 0,
+			isHoliday = isHoliday,
+            expansionID = expansionID,
         } --[[@as DungeonInfo]]
         assert(not dungeonInfoCache[dungeonID], "Duplicate ID found for dungeon ID: " .. dungeonID, "Use a different dungeonID for this dungeon or different dungeonID", dungeonInfo)
         dungeonInfoCache[dungeonID] = info
