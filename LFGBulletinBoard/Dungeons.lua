@@ -1,24 +1,10 @@
 local TOCNAME,GBB=...
+
 local isClassicEra = WOW_PROJECT_ID == WOW_PROJECT_CLASSIC
-local function getSeasonalDungeons()
-    local events = {}
+local isSoD = isClassicEra and C_Seasons.GetActiveSeason() == Enum.SeasonID.SeasonOfDiscovery
 
-    for eventName, eventData in pairs(GBB.Seasonal) do
-		table.insert(events, eventName)
-        if GBB.Tool.InDateRange(eventData.startDate, eventData.endDate) then
-			GBB.SeasonalActiveEvents[eventName] = true
-        end
-    end
-	return events
-end
-
-local function getPvpByVersion()
-	local version, build, date, tocversion = GetBuildInfo()
-	if string.sub(version, 1, 2) ~= "1." then
-		return GBB.PvpNames
-	end
-	return GBB.PvpSodNames
-end
+local debug = false
+local print = function(...) if debug then print('['..TOCNAME.."] ",...) end end
 
 function GBB.GetDungeonNames()
 	local DefaultEnGB={
@@ -634,19 +620,24 @@ function GBB.GetDungeonNames()
 
 	return dungeonNames
 end
+----------------------------------------------
+-- local/private heplers and data
+----------------------------------------------
 
-local function Union ( a, b )
-    local result = {}
-    for k,v in pairs ( a ) do
-        result[k] = v
-    end
-    for k,v in pairs ( b ) do
-		result[k] = v
-    end
-    return result
+--- the `Union` function is included in sharexml's TableUtils.lua already as `MergeTable`
+-- note: blizz's `MergeTable` **doesnt** return reference to the resulting table
+local function mergeTables(...)
+	local resulting = {}
+	for i = 1, select("#", ...) do
+		local nextTbl = select(i, ...)
+		assert(type(nextTbl) == "table", "All arguments to `mergeTables` must be tables.")
+		MergeTable(resulting, nextTbl) 
+	end
+	return resulting
 end
 
-GBB.VanillaDungeonLevels ={
+-- Generated in /data/dungeons/
+local vanillaDungeonLevels = {
 	["RFC"] = 	{13,18}, ["DM"] = 	{18,23}, ["WC"] = 	{15,25}, ["SFK"] = 	{22,30}, ["STK"] = 	{22,30}, ["BFD"] = 	{24,32},
 	["GNO"] = 	{29,38}, ["RFK"] = 	{30,40}, ["SMG"] = 	{28,38}, ["SML"] = 	{29,39}, ["SMA"] = 	{32,42}, ["SMC"] = 	{35,45},
 	["RFD"] = 	{40,50}, ["ULD"] = 	{42,52}, ["ZF"] = 	{44,54}, ["MAR"] = 	{46,55}, ["ST"] = 	{50,60}, ["BRD"] = 	{52,60},
@@ -657,7 +648,7 @@ GBB.VanillaDungeonLevels ={
 	["DEBUG"] = {0,100}, ["BAD"] =	{0,100}, ["TRADE"]=	{0,100}, ["SM2"] =  {28,42}, ["DM2"] =	{58,60}, ["DEADMINES"]={18,23},
 }
 
-GBB.PostTbcDungeonLevels = {
+local postTbcDungeonLevels = {
 	["RFC"] = 	{13,20}, ["DM"] = 	{16,24}, ["WC"] = 	{16,24}, ["SFK"] = 	{17,25}, ["STK"] = 	{21,29}, ["BFD"] = 	{20,28},
 	["GNO"] = 	{24,40}, ["RFK"] = 	{23,31}, ["SMG"] = 	{28,34}, ["SML"] = 	{30,38}, ["SMA"] = 	{32,42}, ["SMC"] = 	{35,44},
 	["RFD"] = 	{33,41}, ["ULD"] = 	{36,44}, ["ZF"] = 	{42,50}, ["MAR"] = 	{40,52}, ["ST"] = 	{45,54}, ["BRD"] = 	{48,60},
@@ -668,8 +659,7 @@ GBB.PostTbcDungeonLevels = {
 	["DEBUG"] = {0,100}, ["BAD"] =	{0,100}, ["TRADE"]=	{0,100}, ["SM2"] =  {28,42}, ["DM2"] =	{58,60}, ["DEADMINES"]={16,24},
 }
 
-
-GBB.TbcDungeonLevels = {
+local tbcDungeonLevels = {
 	["RAMPS"] =  {60,62}, 	["BF"] = 	 {61,63},     ["SP"] = 	 {62,64},    ["UB"] = 	 {63,65},     ["MT"] = 	 {64,66},     ["CRYPTS"] = {65,67},
 	["SETH"] =   {67,69},  	["OHB"] = 	 {66,68},     ["MECH"] =   {69,70},    ["BM"] =      {69,70},    ["MGT"] =	 {70,70},    ["SH"] =	 {70,70},
 	["BOT"] =    {70,70},    ["SL"] = 	 {70,70},    ["SV"] =     {70,70},   ["ARC"] = 	 {70,70},    ["KARA"] = 	 {70,70},    ["GL"] = 	 {70,70},
@@ -677,12 +667,12 @@ GBB.TbcDungeonLevels = {
 	["SWP"] =    {70,70},
 }
 
-GBB.PvpLevels = {
+local pvpLevels = {
 	["WSG"] = 	{10,70}, ["AB"] = 	{20,70}, ["AV"] = 	{51,70},   ["WG"] = {80,80}, ["SOTA"] = {80,80},  ["EOTS"] =   {15,70},   ["ARENA"] = {70,80},
 	["BLOOD"] = {0,100},
 }
 
-GBB.WotlkDungeonLevels = {
+local wotlkDungeonLevels = {
 	["UK"] =    {68,80},    ["NEX"] =    {69,80},    ["AZN"] =    {70,80},    ["ANK"] =    {71,80},    ["DTK"] =    {72,80},    ["VH"] =    {73,80},
 	["GD"] =    {74,80},    ["HOS"] =    {75,80},    ["HOL"] =    {76,80},    ["COS"] =    {78,80},    ["OCC"] =    {77,80},    ["UP"] =    {77,80},
 	["FOS"] =    {80,80},   ["POS"] =    {80,80},    ["HOR"] =    {80,80},    ["CHAMP"] =  {78,80},    ["OS"] =    {80,80},    ["VOA"] =    {80,80},
@@ -690,42 +680,27 @@ GBB.WotlkDungeonLevels = {
 	["NAXX"] =   {80,80},   ["BREW"] = {65,70},      ["HOLLOW"] = {65,70},
 }
 
-GBB.WotlkDungeonNames = {
+local wotlkDungeonNames = {
 	"UK", "NEX", "AZN", "ANK", "DTK", "VH", "GD", "HOS", "HOL", "COS",
 	"OCC", "UP", "FOS", "POS", "HOR", "CHAMP", "OS", "VOA", "EOE", "ULDAR",
 	"TOTC", "RS", "ICC", "ONY", "NAXX"
 }
 
-GBB.TbcDungeonNames = {
+local tbcDungeonNames = {
 	"RAMPS", "BF", "SH", "MAG", "SP", "UB", "SV", "SSC", "MT", "CRYPTS",
 	"SETH", "SL", "OHB", "BM", "MECH", "BOT", "ARC", "EYE", "MGT", "KARA",
 	"GL", "ZA", "HYJAL", "BT", "SWP",
 }
 
-GBB.VanillDungeonNames  = {
-	"RFC", "WC" , "DM" , "SFK", "STK", "BFD", "GNO",
-    "RFK", "SMG", "SML", "SMA", "SMC", "RFD", "ULD",
-    "ZF", "MAR", "ST" , "BRD", "LBRS", "DME", "DMN",
-    "DMW", "STR", "SCH", "UBRS", "MC", "ZG",
-    "AQ20", "BWL", "AQ40", "NAX",
-}
+local pvpNames = isClassicEra 
+	and { "WSG", "AB", "AV", "BLOOD" }
+	or { "WSG", "AB", "AV", "EOTS", "WG", "SOTA", "ARENA" };
 
-
-GBB.PvpNames = {
-	"WSG", "AB", "AV", "EOTS", "WG", "SOTA", "ARENA",
-}
-
-GBB.PvpSodNames = {
-	"WSG", "AB", "AV", "BLOOD",
-}
-
-GBB.Misc = {"MISC", "TRADE", "TRAVEL", "INCUR"}
-
-GBB.DebugNames = {
+local debugNames = {
 	"DEBUG", "BAD", "NIL",
 }
 
-GBB.Raids = {
+local raidNames = {
 	"ONY", "MC", "ZG", "AQ20", "BWL", "AQ40", "NAX",
 	"KARA", "GL", "MAG", "SSC", "EYE", "ZA", "HYJAL",
 	"BT", "SWP", "ARENA", "WSG", "AV", "AB", "EOTS",
@@ -733,22 +708,14 @@ GBB.Raids = {
 	"ULDAR", "TOTC", "RS", "ICC", "NAXX",
 }
 
-GBB.Seasonal = {
-    ["BREW"] = { startDate = "09/20", endDate = "10/06"},
-	["HOLLOW"] = { startDate = "10/18", endDate = "11/01"}
+-- Becasue theyre not actually dungeons and are not parsed by 
+-- `/data/dungeons/{version}.lua` we need to add them manually
+local miscCatergoriesLevels = {
+	["MISC"] =  {0,100}, ["TRAVEL"]={0,100}, ["INCUR"]={0,100},
+	["DEBUG"] = {0,100}, ["BAD"] =	{0,100}, ["TRADE"]=	{0,100},
+	["BLOOD"] = {0,100}, ["NIL"] = {0,100}
 }
 
-GBB.SeasonalActiveEvents = {}
-GBB.Events = getSeasonalDungeons()
-GBB.PvpNames = getPvpByVersion()
-
-function GBB.GetRaids()
-	local arr = {}
-	for _, v in pairs (GBB.Raids) do
-		arr[v] = 1
-	end
-	return arr
-end
 
 -- Needed because Lua sucks, Blizzard switch to Python please
 -- Takes in a list of dungeon lists, it will then concatenate the lists into a single list
@@ -775,6 +742,42 @@ local function GetSize(list)
 	return size
 end
 
+----------------------------------------------
+-- Global functions/data
+----------------------------------------------
+
+---Used in GBB.RaidList to determine if an incomming request is for a raid or regular dungeon.
+---@return {[string]: 1} # a table, with the keys being the `tagKey`s for all available raids
+function GBB.GetRaids()
+	local arr = {}
+	for _, v in pairs (raidNames) do
+		arr[v] = 1
+	end
+	return arr
+end
+
+-- used in Tags.lua atm for determining which tags are safe for game version
+GBB.PvpSodNames = pvpNames
+
+-- used in Tags.lua for determining which tags are safe for game version
+GBB.VanillDungeonNames  = {
+	"RFC", "WC" , "DM" , "SFK", "STK", "BFD", "GNO",
+    "RFK", "SMG", "SML", "SMA", "SMC", "RFD", "ULD",
+    "ZF", "MAR", "ST" , "BRD", "LBRS", "DME", "DMN",
+    "DMW", "STR", "SCH", "UBRS", "MC", "ZG",
+    "AQ20", "BWL", "AQ40", "NAX",
+}
+
+-- used in Tags.lua for determining which tags are safe for game version
+GBB.Misc = {"MISC", "TRADE", "TRAVEL", "INCUR"}
+
+-- used to disable holiday specific filters when not in the correct date range
+-- in FixFilters of Options.lua
+GBB.Seasonal = {
+    ["BREW"] = { startDate = "09/20", endDate = "10/06"},
+	["HOLLOW"] = { startDate = "10/18", endDate = "11/01"}
+}
+
 -- hack, include ONY in classic era; add before BWL
 if isClassicEra then
 	for sortIdx = (#GBB.VanillDungeonNames), 1, -1 do
@@ -783,28 +786,21 @@ if isClassicEra then
 			break
 		end
 	end
-	-- remove from WotlkDungeonNames table to not overwrite durring sorting in GetDungeonSort()
-	for sortIdx = (#GBB.WotlkDungeonNames), 1, -1 do
-		if GBB.WotlkDungeonNames[sortIdx] == "ONY" then
-			table.remove(GBB.WotlkDungeonNames, sortIdx)
-			break
-		end
-	end
 end
 
 function GBB.GetDungeonSort()
 	for eventName, eventData in pairs(GBB.Seasonal) do
         if GBB.Tool.InDateRange(eventData.startDate, eventData.endDate) then
-			table.insert(GBB.WotlkDungeonNames, 1, eventName)
+			table.insert(wotlkDungeonNames, 1, eventName)
 		else
-			table.insert(GBB.DebugNames, 1, eventName)
+			table.insert(debugNames, 1, eventName)
 		end
     end
 
 	if isClassicEra then 
 		-- hack to remove dungeons from classic ui
-		GBB.WotlkDungeonNames = {}
-		GBB.TbcDungeonNames = {}
+		wotlkDungeonNames = {}
+		tbcDungeonNames = {}
 		-- replace "NAX" with "NAXX" for the classic era
 		-- (this is to use the appropriate tags)
 		for i, key in ipairs(GBB.VanillDungeonNames) do
@@ -813,14 +809,14 @@ function GBB.GetDungeonSort()
 			end
 		end
 	end
-	local dungeonOrder = { GBB.VanillDungeonNames, GBB.TbcDungeonNames, GBB.WotlkDungeonNames, GBB.PvpNames, GBB.Misc, GBB.DebugNames}
+	local dungeonOrder = { GBB.VanillDungeonNames, tbcDungeonNames, wotlkDungeonNames, pvpNames, GBB.Misc, debugNames}
 
 	-- Why does Lua not having a fucking size function
 	local vanillaDungeonSize = GetSize(GBB.VanillDungeonNames)
 
-	local tbcDungeonSize = GetSize(GBB.TbcDungeonNames)
+	local tbcDungeonSize = GetSize(tbcDungeonNames)
 
-	local debugSize = GetSize(GBB.DebugNames)
+	local debugSize = GetSize(debugNames)
 
 
 	local tmp_dsort, concatenatedSize = ConcatenateLists(dungeonOrder)
@@ -830,7 +826,7 @@ function GBB.GetDungeonSort()
 	GBB.MAXDUNGEON = vanillaDungeonSize
 	GBB.TBCMAXDUNGEON = vanillaDungeonSize  + tbcDungeonSize
 	GBB.WOTLKDUNGEONSTART = GBB.TBCMAXDUNGEON + 1
-	GBB.WOTLKMAXDUNGEON = GetSize(GBB.WotlkDungeonNames) + GBB.TBCMAXDUNGEON
+	GBB.WOTLKMAXDUNGEON = GetSize(wotlkDungeonNames) + GBB.TBCMAXDUNGEON
 	GBB.ENDINGDUNGEONSTART = GBB.WOTLKMAXDUNGEON + 1
 	GBB.ENDINGDUNGEONEND = concatenatedSize - debugSize - 1
 
@@ -854,9 +850,7 @@ function GBB.GetDungeonSort()
 end
 
 local function DetermineVanillDungeonRange()
-
-	return GBB.PostTbcDungeonLevels
-
+	return postTbcDungeonLevels
 end
 
-GBB.dungeonLevel = Union(Union(Union(DetermineVanillDungeonRange(), GBB.TbcDungeonLevels), GBB.WotlkDungeonLevels), GBB.PvpLevels)
+GBB.dungeonLevel = mergeTables(DetermineVanillDungeonRange(), tbcDungeonLevels, wotlkDungeonLevels, pvpLevels)
