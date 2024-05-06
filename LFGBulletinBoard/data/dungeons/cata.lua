@@ -1,7 +1,6 @@
 local _, addon = ...
 
 if WOW_PROJECT_ID ~= WOW_PROJECT_CATACLYSM_CLASSIC then return end
----@alias ExpansionID 0|1|2|3|4|5
 assert(GetLFGDungeonInfo, _ .. " requires the API `GetLFGDungeonInfo` for parsing dungeon info")
 assert(GetRealZoneText, _ .. " requires the API `GetRealZoneText` for parsing dungeon info")
 assert(C_LFGList.GetActivityInfoTable, _ .. " requires the API `C_LFGList.GetActivityInfoTable` for parsing dungeon info")
@@ -18,7 +17,14 @@ addon.Enum.Expansions = {
 	Wrath = 2,
 	Cataclysm = 3,
 }
-
+addon.Enum.DungeonType = {
+	Dungeon = 1,
+	Raid = 2,
+	Zone = 4,
+    -- Possible to use 5 for BG's but i want to preserve the ID just incase
+	Random = 6,
+	Battleground = 7
+}
 -- The keys to this table need to be manually matched to the appropriate dungeonID
 -- These same keys are used for identifying the preset tags/keywords for each dungeon. If a tags Key is missing from this table, the tags will not be registered.
 -- modifications here should be reflected in the `Tags.lua` file and vice versa.
@@ -33,13 +39,14 @@ local LFGDungeonIDs = {
 	BT = 196,	-- Black Temple
 	BFD = 10,   -- Blackfathom Deeps
 	NULL = 303,	-- Blackrock Caverns
+	
+	-- These get put into "BRD"
 	NULL = 30,  -- Blackrock Depths - Detention Block
 	NULL = 276,	-- Blackrock Depths - Upper City
+	
 	NULL = 313,	-- Blackwing Descent
 	BWL = 50,   -- Blackwing Lair
 	BF = 137,	-- Blood Furnace
-	BREW = 287,	-- Coren Direbrew
-	NULL = 297,	-- Crown Princess Theradras
 	DM = 6,     -- Deadmines
 	NULL = 36, 	-- Dire Maul - Capital Gardens
 	NULL = 38,  -- Dire Maul - Gordok Commons
@@ -50,7 +57,6 @@ local LFGDungeonIDs = {
 	NULL = 417,	-- Fall of Deathwing
 	NULL = 361,	-- Firelands
 	GNO = 14,   -- Gnomeregan
-	NULL = 296,	-- Grand Ambassador Flamelash
 	NULL = 304,	-- Grim Batol
 	GL = 177,	-- Gruul's Lair
 	GD = 216,	-- Gundrak
@@ -62,25 +68,24 @@ local LFGDungeonIDs = {
 	NULL = 439,	-- Hour of Twilight
 	HYJAL = 195,-- Hyjal Past
 	ICC = 279,	-- Icecrown Citadel
-	NULL = 298,	-- Kai'ju Gahz'rilla
 	KARA = 175,	-- Karazhan
 	NULL = 312,	-- Lost City of the Tol'vir
 	LBRS = 32,  -- Lower Blackrock Spire
 	MGT = 198,	-- Magisters' Terrace
-	NULL = 176,	-- Magtheridon's Lair
+	MAG = 176,	-- Magtheridon's Lair
 	MT = 148,	-- Mana-Tombs
-
-    -- all these can get put into "MARA"
-	NULL = 273,	-- Maraudon - Earth Song Falls
-	NULL = 26,  -- Maraudon - Foulspore Cavern
-	NULL = 272,	-- Maraudon - The Wicked Grotto
-
+	
+    -- all these can get put into "MAR" or split into MAR1, MAR2, MAR3
+	-- NULL = 273,	-- Maraudon - Earth Song Falls
+	-- NULL = 26,  -- Maraudon - Foulspore Cavern
+	-- NULL = 272,	-- Maraudon - The Wicked Grotto
+	MAR = { 273, 26, 272 },
+	
 	MC = 48,    -- Molten Core
 	NAXX = 159,	-- Naxxramas
 	ONY = 46,   -- Onyxia's Lair
-	-- BM = 171,	-- Opening of the Dark Portal (See Black Morass in ActivityIDs)
+	BM = 171,	-- Opening of the Dark Portal (See Black Morass in ActivityIDs)
 	POS = 253,	-- Pit of Saron
-	NULL = 299,	-- Prince Sarsarun
     RFC = 4,    -- Ragefire Chasm
 	RFD = 20,   -- Razorfen Downs
 	RFK = 16,   -- Razorfen Kraul
@@ -97,20 +102,20 @@ local LFGDungeonIDs = {
 	SH = 138,	-- Shattered Halls
 	SP = 140,	-- Slave Pens
 	STK = 12,   -- Stormwind Stockade
+
+	-- These can get group in "STR"
 	NULL = 40,  -- Stratholme - Main Gate
 	NULL = 274,	-- Stratholme - Service Entrance
+
 	ST = 28,    -- Sunken Temple
 	EYE = 193,	-- Tempest Keep (The Eye)
 	ARC = 174,	-- The Arcatraz
 	NULL = 315,	-- The Bastion of Twilight
 	BOT = 173,	-- The Botanica
-	NULL = 288,	-- The Crown Chemical Co.
 	COS = 209,	-- The Culling of Stratholme
 	OHB = 170,	-- The Escape From Durnholde (Old Hillsbrad Foothills)
 	EOE = 223,	-- The Eye of Eternity
 	FOS = 251,	-- The Forge of Souls
-	NULL = 286,	-- The Frost Lord Ahune
-	NULL = 285,	-- The Headless Horseman
 	MECH = 172,	-- The Mechanar
 	NEX = 225,	-- The Nexus
 	OS = 224,	-- The Obsidian Sanctum
@@ -123,8 +128,8 @@ local LFGDungeonIDs = {
 	NULL = 317,	-- Throne of the Four Winds
 	NULL = 302,	-- Throne of the Tides
 	CHAMP = 245,-- Trial of the Champion
-	TOGC = {
-        246,	-- Trial of the Crusader
+	TOTC = {
+		246,	-- Trial of the Crusader
 	    247,	-- Trial of the Grand Crusader
     },
 	ULD = 22,   -- Uldaman
@@ -140,6 +145,18 @@ local LFGDungeonIDs = {
 	ZA = 340,	-- Zul'Aman
 	ZF = 24,    -- Zul'Farrak
 	ZG = 334,	-- Zul'Gurub 
+
+	-- Seasonal
+	BREW = 287,	-- Coren Direbrew (Brewfest)
+	NULL = 288,	-- The Crown Chemical Co. (Love is in the Air)
+	NULL = 286,	-- The Frost Lord Ahune (Midsummer)
+	HOLLOW = 285,	-- The Headless Horseman (Hallow's End)
+
+	-- Cata prepatch bosses
+	EARTH_PORTAL = 297,	-- Crown Princess Theradras
+	FIRE_PORTAL = 296,	-- Grand Ambassador Flamelash
+	WATER_PORTAL = 298,	-- Kai'ju Gahz'rilla
+	AIR_PORTAL = 299,	-- Prince Sarsarun
 }
 local dungeonIDToKey = {}
 for key, dungeonID in pairs(LFGDungeonIDs) do
@@ -152,6 +169,7 @@ for key, dungeonID in pairs(LFGDungeonIDs) do
     end
 end
 -- Following have no DungeonID in cata client so use a related ActivityID
+-- https://wago.tools/db2/GroupFinderActivity?build=4.4.0.54525
 local ActivityIDs = {
     ARENA = {
         936,    -- 2v2 Arena
@@ -165,14 +183,17 @@ local ActivityIDs = {
 	NULL = 1144,	-- Isle of Conquest
 	SOTA = 1142,	-- Strand of the Ancients
 	STR = 816,	-- Stratholme
-	BM = 831,	-- The Black Morass
+	-- BM = 831,	-- The Black Morass (only used in overrides)
 	WSG = 919,	-- Warsong Gulch
+	WG = 1117, -- Wintergrasp
     -- MARA = 809,	-- Maraudon (now split into 3 wings)
 	-- STK = 802,	-- Stormwind Stockades (Use "Stormwind Stockade")
 	-- UB = 821,	-- Coilfang - Underbog (Just use Underbog)
 	-- DME = 813,	-- Dire Maul - East (Depracted in Cata)
 	-- DMN = 815,	-- Dire Maul - North (Depracted in Cata)
 	-- DMW = 814,	-- Dire Maul - West (Depracted in Cata)
+	-- Battle for Tol Barad missing
+	-- Twin Peaks missing
 }
 local activityIDToKey = {}
 for key, activityID in pairs(ActivityIDs) do
@@ -185,13 +206,90 @@ for key, activityID in pairs(ActivityIDs) do
     end
 end
 
-local CLIENT_LOCALE = GetLocale()
+-- C_LFGList.GetActivityInfoTable doesnt have expansionID so we need to set it based on activityGroupID
+-- https://wago.tools/db2/GroupFinderActivityGrp?build=4.4.0.54525
+local groupIDAdditionalInfo = {
+	[285] = { -- Classic Dungeons
+		expansionID = addon.Enum.Expansions.Classic, 
+		typeID = addon.Enum.DungeonType.Dungeon,
+	},
+	[290] = { -- Classic Raids
+		expansionID = addon.Enum.Expansions.Classic, 
+		typeID = addon.Enum.DungeonType.Raid,
+	},
+	[286] = { -- Burning Crusade Dungeons
+		expansionID = addon.Enum.Expansions.BurningCrusade,
+		typeID = addon.Enum.DungeonType.Dungeon,
+	},
+	[291] = { -- Burning Crusade Raids
+		expansionID = addon.Enum.Expansions.BurningCrusade, 
+		typeID = addon.Enum.DungeonType.Raid,
+	}, 
+	[287] = { -- Lich King Dungeons
+		expansionID = addon.Enum.Expansions.Wrath,
+		typeID = addon.Enum.DungeonType.Dungeon,
+	},
+	[292] = {-- Lich King Raids
+		expansionID = addon.Enum.Expansions.Wrath, 
+		typeID = addon.Enum.DungeonType.Raid,
+	},
 
+	-- note: no Cataclysm Dungeons entry in the db table
+	[364] = { -- Cataclysm Raids
+		expansionID = addon.Enum.Expansions.Cataclysm,
+		typeID = addon.Enum.DungeonType.Raid,
+	}, 
+	-- Arena & Battlegrounds (map to latest expansion)
+	[299] = {
+		expansionID = addon.Enum.Expansions.Cataclysm,
+		typeID = addon.Enum.DungeonType.Battleground,
+	}
+}
+do -- map IDs to ones that share expansion and type data
+	local groupIdMap = {
+		[288] = 286, -- Burning Crusade Heroic Dungeons
+		[289] = 287, -- Lich King Heroic Dungeons
+		[293] = 292, -- Lich King Normal Raids (25)
+		[320] = 292, -- Lich King Heroic Raids (10)
+		[321] = 292, -- Lich King Heroic Raids (25)
+		[300] = 299, -- Battlegrounds
+		[301] = 299, -- World PvP Events
+	}
+	for link, source in pairs(groupIdMap) do
+		groupIDAdditionalInfo[link] = groupIDAdditionalInfo[source]
+	end
+end
+
+-- For any data that isnt available in either api, we can manually override it here.
+-- Either manually hardcoded or by using a different api to get the data.
+-- key by dungeonKey, `nil`/missing info entries will be ignored.
+local effectiveMaxLevel = GetEffectivePlayerMaxLevel()
+addon.benchMarkStart("Info Table Overrides build")
+local infoOverrides = {
+	-- Most People know this dungeon as "black morass" but its officially called "Opening of the Dark Portal" in lfgdungeoninfo
+	BM = { name = DUNGEON_FLOOR_COTTHEBLACKMORASS1 },
+	-- Following dungeons have been splint into multiple wings in the cata client
+	-- take the min level from the first wing and max level from the second wing.
+	-- the ActivityInfo api also doesnt supply the dungeon type so we'll just hardcode it here.
+	BRD = { minLevel = 49, maxLevel = 61 },
+	STRAT = { minLevel = 42, maxLevel = 56},
+	MAR = { name = GetRealZoneText(349), minLevel = 32, maxLevel = 44, typeID = addon.Enum.DungeonType.Dungeon, },
+	-- The pvp dungeons arent in th LFGDungeons table in the cata client atm. (except for RBG)
+	-- and the GetActivityInfoTable API is returning `0` for min/max level so we'll just hardcode it here.
+	ARENA = { minLevel = 10, maxLevel = effectiveMaxLevel },
+	WSG = { minLevel = 10, maxLevel = effectiveMaxLevel },
+	AB = { minLevel = 10, maxLevel = effectiveMaxLevel },
+	EOTS = { minLevel = 35, maxLevel = effectiveMaxLevel },
+	AV = { minLevel = 45, maxLevel = effectiveMaxLevel },
+	SOTA = { minLevel = 65, maxLevel = effectiveMaxLevel },
+	WG = { minLevel = 71, maxLevel = effectiveMaxLevel },
+	RBG = { typeID = addon.Enum.DungeonType.Battleground }, -- GetLFGDungeonInfo considers it a raid for some reason.
+	-- TB = { minLevel = effectiveMaxLevel, maxLevel = effectiveMaxLevel },
+}
+addon.benchMarkStop("Info Table Overrides build")
+addon.benchMarkPrint("Info Table Overrides build")
 local debug = true
 local print = function(...) if debug then addon.print(...) end end
-
--- see https://wago.tools/db2/LFGDungeons?build=3.4.3.54261
-
 
 ---@type {[DungeonID]: DungeonInfo}
 local dungeonInfoCache = {}
@@ -201,10 +299,14 @@ do
     local function cacheActivityInfo(activityID)
         local cacheInfo = {}
         local activityInfo = C_LFGList.GetActivityInfoTable(activityID)
+		-- hack: this API seems to missing levels, so we'll just use the level range from the dungeon where applicable and hardcode the rest
+		local additionalInfo = groupIDAdditionalInfo[activityInfo.groupFinderActivityGroupID]
         cacheInfo = {
             name = activityInfo.shortName or activityInfo.fullName,
             minLevel = activityInfo.minLevel,
             maxLevel = activityInfo.maxLevel,
+			expansionID = additionalInfo.expansionID,
+			typeID = additionalInfo.typeID,
             tagKey = activityIDToKey[activityID],
             -- mapID = activityInfo.mapID,
         }
@@ -263,50 +365,35 @@ do
     end
 end
 
-local localizedNames -- cache to save some iteration cycles.
----@return {[DungeonID]: string} # Table mapping `dungeonID` to it's localized name.
---- Because of holes in the `dungeonID` range, use `pairs` to iterate table.
-function addon.GetCataLocalizedDungeonNames()
-    if not localizedNames then
-        localizedNames = {}
-        for dungeonID, info in pairs(dungeonInfoCache) do
-            assert(info.name, "Missing name for dungeonID: " .. dungeonID)
-            localizedNames[dungeonID] = info.name
-        end
-    end
-    return localizedNames
+
+addon.cataRawDungeonInfo = dungeonInfoCache
+local dungonInfoByTag = {}
+do -- build tag lookup table
+	for dungeonID, info in pairs(dungeonInfoCache) do
+		assert(info.tagKey, "Missing tagKey for dungeonID: " .. dungeonID, info)
+		local tagKey = info.tagKey --[[@as string]]
+		if not dungonInfoByTag[tagKey] then
+			dungonInfoByTag[tagKey] = CopyTable(info)
+		end
+		local tagInfo = dungonInfoByTag[tagKey]
+		for key, override in pairs(infoOverrides[tagKey] or {}) do
+			tagInfo[key] = override
+		end
+		assert(tagInfo.name, "Failed to get name for dungeonID: " .. dungeonID, tagInfo)
+		assert(tagInfo.minLevel and tagInfo.maxLevel, "Failed to get level range for dungeonID: " .. tagInfo.name, tagInfo)
+		assert(tagInfo.expansionID, "Failed to get expansionID for dungeonID: " .. tagInfo.name, tagInfo)
+		assert(tagInfo.typeID, "Failed to get typeID for dungeonID: " .. tagInfo.name, tagInfo)
+	end
 end
 
----@return {[string]: DungeonID} # Table mapping `dungeonCode` to it's `dungeonID` if it's a valid dungeon
-local allKeys = {}
-function addon.GetCataDungeonKeys()
-    for dungeonID, key in pairs(dungeonIDToKey) do
-        allKeys[key] = dungeonID
-    end
-    for activityID, key in pairs(activityIDToKey) do
-        allKeys[key] = activityID
-    end
-    allKeys.NULL = nil
-    return allKeys
+function addon.GetDungeonInfoByTag(tagKey)
+	return CopyTable(dungonInfoByTag[tagKey])
 end
 
-function addon.GetNumCataDungeons()
-    return numDungeons
+function addon.GetDungeonNames()
+	local tags = {}
+	for tagKey, info in pairs(dungonInfoByTag) do
+		tags[tagKey] = info.name
+	end
+	return tags
 end
-
----Returns **all** dungeon info if `dungeonID` is nil; Otherwise, returns info for the specificed `dungeonID` or `nil` if it doesn't exist.
----@param dungeonID DungeonID?
----@return (DungeonInfo|table<DungeonID, DungeonInfo>)? 
-function addon.GetCataDungeonInfo(dungeonID)
-    -- CopyTable isnt neccessary, but its probably best to prevent someone from breaking the addon by messing with out internal table if we return a reference here.
-    if dungeonID then
-        local info = dungeonInfoCache[dungeonID]
-        if info then
-            return CopyTable(dungeonInfoCache[dungeonID])
-        end
-    else
-        return CopyTable(dungeonInfoCache)
-    end
-end
-
-addon.cataDungeonInfo = dungeonInfoCache
