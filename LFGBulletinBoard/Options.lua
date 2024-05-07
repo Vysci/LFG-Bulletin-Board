@@ -237,6 +237,11 @@ function GBB.OptionsInit ()
 	GBB.Options.Indent(-30)
 	GBB.Options.AddSpace()
 	CheckBox("OnDebug",false)
+
+	GBB.Options.AddSpace()
+	-- a global framexml string that's pre translated by blizzard called RESET_POSITION
+	GBB.Options.AddButton(RESET_POSITION,GBB.ResetWindow)
+	GBB.Options.AddSpace()
 	----
 	-- Second Panel for Wotlk Dungeons
 
