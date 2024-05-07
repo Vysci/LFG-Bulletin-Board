@@ -8,11 +8,18 @@ assert(GetLFGDungeonInfo, _ .. " requires the API `GetLFGDungeonInfo` for parsin
 ---@class AddonEnum
 addon.Enum = {} 
 
----@enum DungeonTypeID
+---@enum DungeonTypeID # note that the actual value of the enum maybe be different depending on the client version.
 local DungeonType = {
     Dungeon = 1,
     Raid = 2,
-    Battleground = 5,
+    None = 4,
+    Battleground = 5, -- in classic, 5 is used for BGs
+}
+addon.Enum.Expansions = {
+	Classic = 0,
+	BurningCrusade = 1,
+	Wrath = 2,
+	Cataclysm = 3,
 }
 
 ---@alias DungeonID number
@@ -23,6 +30,7 @@ local DungeonType = {
 ---@field maxLevel number
 ---@field typeID DungeonTypeID -- 1 = dungeon, 2 = raid, 5 = bg
 ---@field subtypeID number? -- not really neeeded
+---@field expansionID ExpansionID
 
 --see https://wago.tools/db2/LFGDungeons?build=1.15.2.54332
 -- NOTE: classic db only has up to 131 in the db
@@ -39,6 +47,7 @@ local print = function(...) if debug then print(...) end end
 -- see https://wago.tools/db2/LFGDungeons?build=3.4.3.54261 (for Naxx and AQ20/40)
 -- Because classic era client db only has up to ID 131, `GetLFGDungeonInfo` will return nil for these. (and 18)
 -- (as of 1.15.2.54332, ymmv)
+-- Could use GroupFinderActivity entry id to get localized name here
 local manualEntries = {
     [159] = {
         name = {
@@ -240,6 +249,11 @@ local infoOverrides = {
         maxLevel = 60,
         size = 20,
     },
+    -- UBRS is recognized as a raid by LFGDungeonInfo
+    -- should be a dungeon
+    [43] = {
+        typeID = DungeonType.Dungeon,
+    }
 }
 
 -- manually associate keys in Tags.lua
@@ -278,7 +292,7 @@ local dungeonKeyByID = {
     [47] = "MC",    -- MC
     [49] = "BWL",   -- BWL
     [161] = "AQ40", -- AQ40
-    [159] = "NAX",  -- Naxx
+    [159] = "NAXX",  -- Naxx
     [53] = "WSG",   -- WSG
     [55] = "AB",    -- AB
     [51] = "AV",    -- AV
@@ -305,7 +319,8 @@ do
                 typeID = typeID,
                 subtypeID = subtypeID,
                 tagKey = dungeonKeyByID[dungeonID],
-            }
+                expansionID = 0,
+            } --[[@as DungeonInfo]]
         end
         if not info.name then
             local manualEntry = manualEntries[dungeonID]
@@ -330,6 +345,7 @@ do
             end
         end
         if info.typeID and trackedDungeonTypes[info.typeID] then
+            assert(info.minLevel and info.maxLevel, "Missing level range for dungeonID: " .. dungeonID)
             dungeonInfoCache[dungeonID] = info
             numDungeons = numDungeons + 1
         else
@@ -396,5 +412,42 @@ function addon.GetClassicDungeonInfo(dungeonID)
     end
 end
 
-addon.localizedDungeonInfo = dungeonInfoCache
+---Optionally filter by expansionID and/or typeID
+---Sorted by min level, ties broken on min max level, then by dungeonID
+---@param expansionID ExpansionID?
+---@param typeID DungeonTypeID|DungeonTypeID[]?
+function addon.GetSortedDungeonKeys(expansionID, typeID)
+	local keys = {}
+	for dungeonID, info in pairs(dungeonInfoCache) do
+        local tagKey = dungeonKeyByID[dungeonID]
+		if (not expansionID or info.expansionID == expansionID) 
+		and (not typeID 
+			or (type(typeID) == "number" and info.typeID == typeID)
+			or (type(typeID) == "table" and tContains(typeID, info.typeID))
+		) 
+		then
+			tinsert(keys, tagKey)
+		end
+	end
+	table.sort(keys, function(keyA, keyB)
+		local infoA = dungeonInfoCache[dunegeonIDByKey[keyA]];
+        local infoB = dungeonInfoCache[dunegeonIDByKey[keyB]];
+		if infoA.minLevel == infoB.minLevel then
+			if infoA.maxLevel == infoB.maxLevel then
+				local idA = dunegeonIDByKey[keyA]
+				local idB = dunegeonIDByKey[keyB]
+				if type(idA) == "table" then idA = idA[1] end
+				if type(idB) == "table" then idB = idB[1] end
+				return idA < idB
+			else
+				return infoA.maxLevel < infoB.maxLevel
+			end
+		else
+			return infoA.minLevel < infoB.minLevel
+		end
+	end)
+	return keys
+end
+
+addon.classicDungeonInfo = dungeonInfoCache
 addon.Enum.DungeonType = DungeonType

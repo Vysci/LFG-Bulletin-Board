@@ -17,6 +17,7 @@ addon.Enum.Expansions = {
 	Wrath = 2,
 	Cataclysm = 3,
 }
+
 addon.Enum.DungeonType = {
 	Dungeon = 1,
 	Raid = 2,
@@ -367,15 +368,15 @@ end
 
 
 addon.cataRawDungeonInfo = dungeonInfoCache
-local dungonInfoByTag = {}
+local infoByTagKey = {}
 do -- build tag lookup table
 	for dungeonID, info in pairs(dungeonInfoCache) do
 		assert(info.tagKey, "Missing tagKey for dungeonID: " .. dungeonID, info)
 		local tagKey = info.tagKey --[[@as string]]
-		if not dungonInfoByTag[tagKey] then
-			dungonInfoByTag[tagKey] = CopyTable(info)
+		if not infoByTagKey[tagKey] then
+			infoByTagKey[tagKey] = CopyTable(info)
 		end
-		local tagInfo = dungonInfoByTag[tagKey]
+		local tagInfo = infoByTagKey[tagKey]
 		for key, override in pairs(infoOverrides[tagKey] or {}) do
 			tagInfo[key] = override
 		end
@@ -387,13 +388,61 @@ do -- build tag lookup table
 end
 
 function addon.GetDungeonInfoByTag(tagKey)
-	return CopyTable(dungonInfoByTag[tagKey])
+	return CopyTable(infoByTagKey[tagKey])
 end
 
 function addon.GetDungeonNames()
 	local tags = {}
-	for tagKey, info in pairs(dungonInfoByTag) do
+	for tagKey, info in pairs(infoByTagKey) do
 		tags[tagKey] = info.name
 	end
 	return tags
+end
+
+---Optionally filter by expansionID and/or typeID
+---Sorted by min level, ties broken on min max level, then by dungeonID
+---@param expansionID ExpansionID?
+---@param typeID DungeonTypeID|DungeonTypeID[]?
+function addon.GetSortedDungeonKeys(expansionID, typeID)
+	local keys = {}
+	for tagKey, info in pairs(infoByTagKey) do
+		if (not expansionID or info.expansionID == expansionID) 
+		and (not typeID 
+			or (type(typeID) == "number" and info.typeID == typeID)
+			or (type(typeID) == "table" and tContains(typeID, info.typeID))
+		) 
+		then
+			tinsert(keys, tagKey)
+		end
+	end
+	table.sort(keys, function(keyA, keyB)
+		local infoA, infoB = infoByTagKey[keyA], infoByTagKey[keyB]
+		if infoA.minLevel == infoB.minLevel then
+			if infoA.maxLevel == infoB.maxLevel then
+				local idA = LFGDungeonIDs[keyA] or ActivityIDs[keyA]
+				local idB = LFGDungeonIDs[keyB] or ActivityIDs[keyB]
+				if type(idA) == "table" then idA = idA[1] end
+				if type(idB) == "table" then idB = idB[1] end
+				return idA < idB
+			else
+				return infoA.maxLevel < infoB.maxLevel
+			end
+		else
+			return infoA.minLevel < infoB.minLevel
+		end
+	end)
+	return keys
+end
+
+---Optionally filter by expansionID and/or typeID
+---@param expansionID ExpansionID?
+---@param typeID DungeonTypeID?
+function addon.GetDungeonLevelRanges(expansionID, typeID)
+	local ranges = {}
+	for tagKey, info in pairs(infoByTagKey) do
+		if (not expansionID or info.expansionID == expansionID) and (not typeID or info.typeID == typeID) then
+			ranges[tagKey] = {info.minLevel, info.maxLevel}
+		end
+	end
+	return ranges
 end
