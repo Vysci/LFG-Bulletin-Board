@@ -211,8 +211,7 @@ end
 function GBB.ResetWindow()
 	GroupBulletinBoardFrame:ClearAllPoints()
 	GroupBulletinBoardFrame:SetPoint("Center", UIParent, "Center", 0, 0)
-	GroupBulletinBoardFrame:SetWidth(300)
-	GroupBulletinBoardFrame:SetHeight(170)
+	GroupBulletinBoardFrame:SetSize(GroupBulletinBoardFrame:GetResizeBounds())
 	GBB.SaveAnchors()
 	GBB.ResizeFrameList()
 end
