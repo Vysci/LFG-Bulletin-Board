@@ -1,8 +1,8 @@
 local TOCNAME, GBB = ...
 
 --ScrollList / Request
--------------------------------------------------------------------------------------
-local LastDungeon
+------------------------------------------------------------------------------------- 
+local lastHeaderCategory = "" -- last category/dungeon header seen when building the scroll list
 local lastIsFolded
 local requestNil={dungeon="NIL",start=0,last=0,name=""}
 
@@ -94,7 +94,7 @@ local function CreateHeader(yy, dungeon)
 		GBB.FoldedDungeons[dungeon]=GBB.DB.HeadersStartFolded
 	end
 
-	if LastDungeon~="" and not (lastIsFolded and GBB.FoldedDungeons[dungeon]) then
+	if lastHeaderCategory~="" and not (lastIsFolded and GBB.FoldedDungeons[dungeon]) then
 		yy=yy+10
 	end
 
@@ -111,7 +111,7 @@ local function CreateHeader(yy, dungeon)
 	GBB.FramesEntries[dungeon]:Show()
 
 	yy=yy+_G[ItemFrameName]:GetHeight()
-	LastDungeon = dungeon
+	lastHeaderCategory = dungeon
 	return yy
 end
 
@@ -370,6 +370,7 @@ local function doesRequestMatchResultsFilter(message)
 end
 
 local ownRequestDungeons={}
+--- generates 100 elements(items) for display in the scroll list. These are stored in `GBB.FramesEntries` and are shown/hidden as needed depending on the data in `GBB.RequestList`.
 function GBB.UpdateList()
 
 	GBB.Clear()
@@ -394,28 +395,31 @@ function GBB.UpdateList()
 		end
 	end
 
-	for i, f in pairs(GBB.FramesEntries) do
+	-- Hide all exisiting scroll frame elements
+	for _, f in pairs(GBB.FramesEntries) do
 		f:Hide()
 	end
 
 	local AnchorTop="GroupBulletinBoardFrame_ScrollChildFrame"
 	local AnchorRight="GroupBulletinBoardFrame_ScrollChildFrame"
-    local yy=0
-	LastDungeon=""
-	local count=0
-	local doCompact=1
-	local cEntrys=0
+    local scrollHeight = 0
+	local count = 0
+	local itemScale = 1
+	local itemsInCategory = 0
+	local MAX_NUM_ITEMS = 100
+	local allItemsInitialized = not (#GBB.FramesEntries < MAX_NUM_ITEMS)
+	lastHeaderCategory= ""
 
-	local w=GroupBulletinBoardFrame:GetWidth() -20-10-10
+	local itemWidth = GroupBulletinBoardFrame:GetWidth() -20-10-10
 	if GBB.DB.CompactStyle and not GBB.DB.ChatStyle then
-		doCompact=0.85
+		itemScale=0.85
 	end
 
 	lastIsFolded=false
 
 	wipe(ownRequestDungeons)
-	if GBB.DBChar.DontFilterOwn then
 
+	if GBB.DBChar.DontFilterOwn then
 		local playername=(UnitFullName("player"))
 
 		for i,req in pairs(GBB.RequestList) do
@@ -425,78 +429,119 @@ function GBB.UpdateList()
 		end
 	end
 
-	local itemHight=CreateItem(yy,0,doCompact,nil)
+	local baseItemHeight = CreateItem(scrollHeight, 0, itemScale, nil)
+	
+	-- set scroll height slightly bigger than 1 element to account for category headers being taller
+	GroupBulletinBoardFrame_ScrollFrame.ScrollBar.scrollStep = baseItemHeight * 1.25 
 
-	GroupBulletinBoardFrame_ScrollFrame.ScrollBar.scrollStep=itemHight*2
-
-	if #GBB.FramesEntries<100 then
-		for i=1,100 do
-			CreateItem(yy,i,doCompact,nil)
+	if not allItemsInitialized then
+		for i = 1, MAX_NUM_ITEMS do
+			CreateItem(scrollHeight,i,itemScale,nil)
 		end
 	end
-
-	for i,req in pairs(GBB.RequestList) do
+	-- iterate request and generate headers and items for display
+	for requestIdx, req in pairs(GBB.RequestList) do
 		if type(req) == "table" then
 
-			if (ownRequestDungeons[req.dungeon]==true or GBB.FilterDungeon(req.dungeon, req.IsHeroic, req.IsRaid)) and req.last + GBB.DB.TimeOut > time() then
+			if (req.last + GBB.DB.TimeOut > time()) -- not timed out
+				and (ownRequestDungeons[req.dungeon] == true  -- own request
+					-- dungeons set to show in options 
+					or GBB.FilterDungeon(req.dungeon, req.IsHeroic, req.IsRaid))
+			then
+				count = count + 1
 
-				count= count + 1
-
-				--header
-				if LastDungeon ~= req.dungeon then
-					local hi
-					if GBB.DB.EnableShowOnly then
-						hi=GBB.dungeonSort[LastDungeon] or 0
+				-- create header (if needed)
+				if lastHeaderCategory ~= req.dungeon then
+					local headerSortIdx
+					if GBB.DB.EnableShowOnly then -- limit request shown per category
+						-- use sorted position of last seen category header (or 0 if not set)
+						headerSortIdx = GBB.dungeonSort[lastHeaderCategory] or 0
 				    else
-						hi=GBB.dungeonSort[req.dungeon]-1
+						-- use sorted position of current request dungeon (offest by 1 to allow for the next while loop to run once)
+						headerSortIdx = GBB.dungeonSort[req.dungeon] - 1
 					end
-					while hi<GBB.dungeonSort[req.dungeon] do
-						if LastDungeon~="" and GBB.FoldedDungeons[GBB.dungeonSort[hi]]~=true and GBB.DB.EnableShowOnly then
-							yy=yy+ itemHight*(GBB.DB.ShowOnlyNb-cEntrys)
-						end
-						hi=hi+1
 
-						if (ownRequestDungeons[GBB.dungeonSort[hi]]==true or GBB.FilterDungeon(GBB.dungeonSort[hi], req.IsHeroic, req.IsRaid)) then
-							yy=CreateHeader(yy,GBB.dungeonSort[hi])
-							cEntrys=0
+					-- note: if the lastSeenCategoryHeader == req.dungeon 
+					-- 		and EnableShowOnly is active,
+					-- then headerSortIdx == GBB.dungeonSort[req.dungeon] or 0 here, 
+					--- so the while loop will not run
+					while headerSortIdx < GBB.dungeonSort[req.dungeon] do
+						local lastDungeon = GBB.dungeonSort[headerSortIdx] -- == "" on first iteration
+						if lastHeaderCategory ~= ""  -- a category header has been seen
+						and GBB.DB.EnableShowOnly  -- limited requests per category
+						and not GBB.FoldedDungeons[lastDungeon] -- category not folded
+						then
+							-- creates a fixed amount of space for each last category based on "show only number"						
+							scrollHeight=scrollHeight+baseItemHeight*(GBB.DB.ShowOnlyNb-itemsInCategory)
+						end
+						
+						-- check the next entry in the sorted dungeon list
+						headerSortIdx=headerSortIdx+1
+						local categoryDungeon = GBB.dungeonSort[headerSortIdx]
+						
+						if ownRequestDungeons[categoryDungeon] -- is own request
+							-- category is tracked in filter options
+							or GBB.FilterDungeon(categoryDungeon, req.IsHeroic, req.IsRaid) 
+						then
+							scrollHeight = CreateHeader(scrollHeight, categoryDungeon)
+							-- new catgery, reset items count			
+							itemsInCategory = 0
 						else
-							cEntrys=GBB.DB.ShowOnlyNb
+							-- if no header was created and ShowOnlyNb is active, then
+							-- this hack prevent space from being added in the next iteration
+							-- via a mulitplication by 0
+							itemsInCategory=GBB.DB.ShowOnlyNb
 						end
 					end
 				end
 
-				--entry
-				if GBB.FoldedDungeons[req.dungeon] ~= true 
-					and (not GBB.DB.EnableShowOnly or cEntrys<GBB.DB.ShowOnlyNb) 
-					and doesRequestMatchResultsFilter(req.message)
+				-- add entry
+				if GBB.FoldedDungeons[req.dungeon] ~= true -- not folded
+					and (not GBB.DB.EnableShowOnly -- no limit
+						or itemsInCategory<GBB.DB.ShowOnlyNb) -- or limit not reached
+					and doesRequestMatchResultsFilter(req.message) -- matches global results filter
 				then
-					yy=yy+ CreateItem(yy,i,doCompact,req,itemHight)+3
-					cEntrys=cEntrys+1
+					scrollHeight= scrollHeight + CreateItem(scrollHeight,requestIdx,itemScale,req,baseItemHeight) + 3 -- why add 3? 
+					itemsInCategory = itemsInCategory + 1
 				end
 			end
 		end
 	end
 
-	if GBB.DB.EnableShowOnly then
-		local hi=GBB.dungeonSort[LastDungeon] or 0
-		while hi<GBB.WOTLKMAXDUNGEON do
-			if LastDungeon~="" and GBB.FoldedDungeons[LastDungeon]~=true and GBB.DB.EnableShowOnly then
-				yy=yy+ itemHight*(GBB.DB.ShowOnlyNb-cEntrys)
+	-- if limited requests per category enabled
+	-- force create headers for ALL dungeons in the dungeonSort list below the GBB.WOTLKMAXDUNGEON index.
+	-- IFF the last headerSortIdx seen after parsing the RequestList was less than GBB.WOTLKMAXDUNGEON
+
+	-- this is different from the while loop nested in the RequestList iteration above which creates a header up until the request's parent dungeon index.
+	if GBB.DB.EnableShowOnly then 
+		local lastCategorySortIdx = GBB.dungeonSort[lastHeaderCategory] or 0
+		while lastCategorySortIdx < GBB.WOTLKMAXDUNGEON do -- for all tracked *dungeons* (not misc and travel)
+			if lastHeaderCategory~="" -- last category header exists
+			and GBB.FoldedDungeons[lastHeaderCategory]~=true -- not folded
+			and GBB.DB.EnableShowOnly -- limited requests per category (already checked above)
+			then
+				scrollHeight = scrollHeight + baseItemHeight*(GBB.DB.ShowOnlyNb-itemsInCategory)
 			end
-			hi=hi+1
-			if (ownRequestDungeons[GBB.dungeonSort[hi]]==true or GBB.FilterDungeon(GBB.dungeonSort[hi], false, false)) then
-				yy=CreateHeader(yy,GBB.dungeonSort[hi])
-				cEntrys=0
+			lastCategorySortIdx = lastCategorySortIdx + 1
+			local categoryDungeon = GBB.dungeonSort[lastCategorySortIdx]
+			if ownRequestDungeons[categoryDungeon] -- own request
+				-- or category is tracked in filter options
+				or GBB.FilterDungeon(categoryDungeon, false, false)
+			then			
+				scrollHeight = CreateHeader(scrollHeight, categoryDungeon)
+				-- new catgery, reset items count			
+				itemsInCategory = 0
 			else
-				cEntrys=GBB.DB.ShowOnlyNb
+				itemsInCategory = GBB.DB.ShowOnlyNb
 			end
 		end
 
 	end
 
-	yy=yy+GroupBulletinBoardFrame_ScrollFrame:GetHeight()-20
+	-- adds a window's woth of padding to the bottom of the scroll frame
+	scrollHeight=scrollHeight+GroupBulletinBoardFrame_ScrollFrame:GetHeight()-20
 
-	GroupBulletinBoardFrame_ScrollChildFrame:SetHeight(yy)
+	GroupBulletinBoardFrame_ScrollChildFrame:SetHeight(scrollHeight)
 	GroupBulletinBoardFrameStatusText:SetText(string.format(GBB.L["msgNbRequest"], count))
 end
 
