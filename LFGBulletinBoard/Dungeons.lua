@@ -1,7 +1,5 @@
 local TOCNAME,GBB=...
-
 local isClassicEra = WOW_PROJECT_ID == WOW_PROJECT_CLASSIC
-
 local function getSeasonalDungeons()
     local events = {}
 
@@ -803,6 +801,18 @@ function GBB.GetDungeonSort()
 		end
     end
 
+	if isClassicEra then 
+		-- hack to remove dungeons from classic ui
+		GBB.WotlkDungeonNames = {}
+		GBB.TbcDungeonNames = {}
+		-- replace "NAX" with "NAXX" for the classic era
+		-- (this is to use the appropriate tags)
+		for i, key in ipairs(GBB.VanillDungeonNames) do
+			if key == "NAX" then
+				GBB.VanillDungeonNames[i] = "NAXX"
+			end
+		end
+	end
 	local dungeonOrder = { GBB.VanillDungeonNames, GBB.TbcDungeonNames, GBB.WotlkDungeonNames, GBB.PvpNames, GBB.Misc, GBB.DebugNames}
 
 	-- Why does Lua not having a fucking size function
