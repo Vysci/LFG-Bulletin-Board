@@ -112,7 +112,7 @@ local function CreateHeader(yy, dungeon)
 
 	-- Initialize this value now so we can (un)fold only existing entries later
 	-- while still allowing new headers to follow the HeadersStartFolded setting
-	if GBB.FoldedDungeons[dungeon]==nil then
+	if GBB.FoldedDungeons[dungeon] == nil then
 		GBB.FoldedDungeons[dungeon]=GBB.DB.HeadersStartFolded
 	end
 
@@ -480,21 +480,10 @@ function GBB.UpdateList()
 				-- and dungeons have already been filtered/combined at this point
 				-- create header (if needed)
 				if not existingHeaders[requestDungeon] then
-					
-					-- retaining old behvaiour of adding space for missing requests
-					-- once weve moved on to the next header's category/dungeon in `RequestList`
-					if GBB.DB.EnableShowOnly -- this behaviour only occured with this option enabled
-						and lastCategory and (requestDungeon ~= lastCategory) 
-						and not GBB.FoldedDungeons[lastCategory] -- dont add space to folded categories
-					then
-						local reserved = baseItemHeight*(GBB.DB.ShowOnlyNb - itemsInCategory)
-						scrollHeight = scrollHeight + reserved
-					end
-
 					scrollHeight = CreateHeader(scrollHeight, requestDungeon)
-					lastCategory = requestDungeon
 					itemsInCategory = 0; -- reset count on new category
 				end
+				
 				-- add entry
 				if GBB.FoldedDungeons[requestDungeon] ~= true -- not folded
 					and (not GBB.DB.EnableShowOnly -- no limit
@@ -505,14 +494,6 @@ function GBB.UpdateList()
 					itemsInCategory = itemsInCategory + 1
 				end
 			end
-		end
-	end
-
-	if GBB.DB.EnableShowOnly then
-		-- add space for missing requests in the last category
-		if lastCategory and not GBB.FoldedDungeons[lastCategory] then
-			local reserved = baseItemHeight*(GBB.DB.ShowOnlyNb - itemsInCategory)
-			scrollHeight = scrollHeight + reserved
 		end
 	end
 
