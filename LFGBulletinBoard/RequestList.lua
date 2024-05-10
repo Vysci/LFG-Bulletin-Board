@@ -476,48 +476,6 @@ function GBB.UpdateList()
 				count = count + 1
 				local requestDungeon = req.dungeon
 
-				-- previously having this option enabled would create a header.
-				-- for *all* filtered dungeons (even i not requests existed).
-				-- This is opposed to only creating headers for categories with existing requests.
-				-- Which is the default behaviour without this option enabled.
-				-- Bug or feature here it is reimplemented
-				-- The following conditional black could can removed safely if the behaviour is unwanted.
-				if GBB.DB.EnableShowOnly 
-					-- only run once, right before the first request is processed
-					and requestIdx == 1 
-				then
-					local firstRequestSortIdx = GBB.dungeonSort[requestDungeon]
-					if firstRequestSortIdx and firstRequestSortIdx > 1 then
-						-- note: a 0.5 step is used to work around DM2 and SM2 having fractional sort indexes in the dungeonSort table (See Dungeons.lua)
-						for dungeonSortIdx = 1, firstRequestSortIdx - 1, 0.5 do
-							local categoryDungeon = GBB.dungeonSort[dungeonSortIdx]
-							if categoryDungeon then
-								if GBB.DB.CombineSubDungeons 
-								-- ignore "DEADMINES" mapped entries
-								-- see GBB.dungeonSecondTags
-								and categoryDungeon ~= "DM"
-								then
-									local parent = subDungeonParentLookup[categoryDungeon]
-									if parent then
-										categoryDungeon = parent
-									end
-								end
-								if not existingHeaders[categoryDungeon] -- header not created
-								and (ownRequestDungeons[categoryDungeon] -- is own request
-									or GBB.FilterDungeon(categoryDungeon, req.IsHeroic, req.IsRaid))-- category is tracked in filter options
-
-								then
-									scrollHeight = CreateHeader(scrollHeight, categoryDungeon)
-									if not GBB.FoldedDungeons[categoryDungeon] then
-										-- add space for missing requests 
-										scrollHeight = scrollHeight + baseItemHeight*GBB.DB.ShowOnlyNb
-									end
-								end
-							end
-						end
-					end
-				end
-				
 				-- Since RequestList is already sorted in order of dungeons
 				-- and dungeons have already been filtered/combined at this point
 				-- create header (if needed)
@@ -556,9 +514,6 @@ function GBB.UpdateList()
 			local reserved = baseItemHeight*(GBB.DB.ShowOnlyNb - itemsInCategory)
 			scrollHeight = scrollHeight + reserved
 		end
-
-		-- Originally, this option also added all the other tracked dungeon headers
-		-- that functionality has been removed.
 	end
 
 	-- adds a window's woth of padding to the bottom of the scroll frame
