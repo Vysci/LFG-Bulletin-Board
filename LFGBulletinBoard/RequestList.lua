@@ -54,6 +54,28 @@ local function requestSort_nTOP_nTOTAL (a,b)
 	end
 	return false
 end
+local subDungeonParentLookup = (function() 
+	local lookup = {}
+	for parentDungeon, secondaryKeys in pairs(GBB.dungeonSecondTags) do
+		for _, secondaryKey in ipairs(secondaryKeys) do
+			lookup[secondaryKey] = parentDungeon
+		end
+	end
+	-- set any unseen keys to false to reduce cache misses on repeated lookups
+	-- (table will always & repeatedlybe  accessed by the same set of keys so may as well)
+	setmetatable(lookup, {
+		__index = function(_, dungeonKey)
+			rawset(lookup, dungeonKey, false)
+			return false
+		end
+	})
+	return lookup
+end)()
+
+-- track catergories/dungeon keys that have had a header created
+-- this table is wiped on every `GBB.UpdateList` when the board is re-drawn
+local existingHeaders= {}
+
 ---@param yy integer The current bottom pos from the top of the scroll frame
 ---@param dungeon string The dungeons "key" ie DM|MC|BWL|etc
 ---@return integer yy The updated bottom pos of the scroll frame after adding the header
@@ -112,6 +134,7 @@ local function CreateHeader(yy, dungeon)
 
 	yy=yy+_G[ItemFrameName]:GetHeight()
 	lastHeaderCategory = dungeon
+	existingHeaders[dungeon] = true
 	return yy
 end
 
@@ -408,7 +431,8 @@ function GBB.UpdateList()
 	local itemsInCategory = 0
 	local MAX_NUM_ITEMS = 100
 	local allItemsInitialized = not (#GBB.FramesEntries < MAX_NUM_ITEMS)
-	lastHeaderCategory= ""
+	lastHeaderCategory= "" -- still used for managing padding between folded categorties in `CreateHeader`
+	local lastCategory
 
 	local itemWidth = GroupBulletinBoardFrame:GetWidth() -20-10-10
 	if GBB.DB.CompactStyle and not GBB.DB.ChatStyle then
@@ -416,8 +440,9 @@ function GBB.UpdateList()
 	end
 
 	lastIsFolded=false
-
 	wipe(ownRequestDungeons)
+	-- reset the list of existing headers to draw new ones
+	existingHeaders = {} 
 
 	if GBB.DBChar.DontFilterOwn then
 		local playername=(UnitFullName("player"))
@@ -449,56 +474,73 @@ function GBB.UpdateList()
 					or GBB.FilterDungeon(req.dungeon, req.IsHeroic, req.IsRaid))
 			then
 				count = count + 1
+				local requestDungeon = req.dungeon
 
-				-- create header (if needed)
-				if lastHeaderCategory ~= req.dungeon then
-					local headerSortIdx
-					if GBB.DB.EnableShowOnly then -- limit request shown per category
-						-- use sorted position of last seen category header (or 0 if not set)
-						headerSortIdx = GBB.dungeonSort[lastHeaderCategory] or 0
-				    else
-						-- use sorted position of current request dungeon (offest by 1 to allow for the next while loop to run once)
-						headerSortIdx = GBB.dungeonSort[req.dungeon] - 1
-					end
+				-- previously having this option enabled would create a header.
+				-- for *all* filtered dungeons (even i not requests existed).
+				-- This is opposed to only creating headers for categories with existing requests.
+				-- Which is the default behaviour without this option enabled.
+				-- Bug or feature here it is reimplemented
+				-- The following conditional black could can removed safely if the behaviour is unwanted.
+				if GBB.DB.EnableShowOnly 
+					-- only run once, right before the first request is processed
+					and requestIdx == 1 
+				then
+					local firstRequestSortIdx = GBB.dungeonSort[requestDungeon]
+					if firstRequestSortIdx and firstRequestSortIdx > 1 then
+						-- note: a 0.5 step is used to work around DM2 and SM2 having fractional sort indexes in the dungeonSort table (See Dungeons.lua)
+						for dungeonSortIdx = 1, firstRequestSortIdx - 1, 0.5 do
+							local categoryDungeon = GBB.dungeonSort[dungeonSortIdx]
+							if categoryDungeon then
+								if GBB.DB.CombineSubDungeons 
+								-- ignore "DEADMINES" mapped entries
+								-- see GBB.dungeonSecondTags
+								and categoryDungeon ~= "DM"
+								then
+									local parent = subDungeonParentLookup[categoryDungeon]
+									if parent then
+										categoryDungeon = parent
+									end
+								end
+								if not existingHeaders[categoryDungeon] -- header not created
+								and (ownRequestDungeons[categoryDungeon] -- is own request
+									or GBB.FilterDungeon(categoryDungeon, req.IsHeroic, req.IsRaid))-- category is tracked in filter options
 
-					-- note: if the lastSeenCategoryHeader == req.dungeon 
-					-- 		and EnableShowOnly is active,
-					-- then headerSortIdx == GBB.dungeonSort[req.dungeon] or 0 here, 
-					--- so the while loop will not run
-					while headerSortIdx < GBB.dungeonSort[req.dungeon] do
-						local lastDungeon = GBB.dungeonSort[headerSortIdx] -- == "" on first iteration
-						if lastHeaderCategory ~= ""  -- a category header has been seen
-						and GBB.DB.EnableShowOnly  -- limited requests per category
-						and not GBB.FoldedDungeons[lastDungeon] -- category not folded
-						then
-							-- creates a fixed amount of space for each last category based on "show only number"						
-							scrollHeight=scrollHeight+baseItemHeight*(GBB.DB.ShowOnlyNb-itemsInCategory)
-						end
-						
-						-- check the next entry in the sorted dungeon list
-						headerSortIdx=headerSortIdx+1
-						local categoryDungeon = GBB.dungeonSort[headerSortIdx]
-						
-						if ownRequestDungeons[categoryDungeon] -- is own request
-							-- category is tracked in filter options
-							or GBB.FilterDungeon(categoryDungeon, req.IsHeroic, req.IsRaid) 
-						then
-							scrollHeight = CreateHeader(scrollHeight, categoryDungeon)
-							-- new catgery, reset items count			
-							itemsInCategory = 0
-						else
-							-- if no header was created and ShowOnlyNb is active, then
-							-- this hack prevent space from being added in the next iteration
-							-- via a mulitplication by 0
-							itemsInCategory=GBB.DB.ShowOnlyNb
+								then
+									scrollHeight = CreateHeader(scrollHeight, categoryDungeon)
+									if not GBB.FoldedDungeons[categoryDungeon] then
+										-- add space for missing requests 
+										scrollHeight = scrollHeight + baseItemHeight*GBB.DB.ShowOnlyNb
+									end
+								end
+							end
 						end
 					end
 				end
+				
+				-- Since RequestList is already sorted in order of dungeons
+				-- and dungeons have already been filtered/combined at this point
+				-- create header (if needed)
+				if not existingHeaders[requestDungeon] then
+					
+					-- retaining old behvaiour of adding space for missing requests
+					-- once weve moved on to the next header's category/dungeon in `RequestList`
+					if GBB.DB.EnableShowOnly -- this behaviour only occured with this option enabled
+						and lastCategory and (requestDungeon ~= lastCategory) 
+						and not GBB.FoldedDungeons[lastCategory] -- dont add space to folded categories
+					then
+						local reserved = baseItemHeight*(GBB.DB.ShowOnlyNb - itemsInCategory)
+						scrollHeight = scrollHeight + reserved
+					end
 
+					scrollHeight = CreateHeader(scrollHeight, requestDungeon)
+					lastCategory = requestDungeon
+					itemsInCategory = 0; -- reset count on new category
+				end
 				-- add entry
-				if GBB.FoldedDungeons[req.dungeon] ~= true -- not folded
+				if GBB.FoldedDungeons[requestDungeon] ~= true -- not folded
 					and (not GBB.DB.EnableShowOnly -- no limit
-						or itemsInCategory<GBB.DB.ShowOnlyNb) -- or limit not reached
+						or itemsInCategory < GBB.DB.ShowOnlyNb) -- or limit not reached
 					and doesRequestMatchResultsFilter(req.message) -- matches global results filter
 				then
 					scrollHeight= scrollHeight + CreateItem(scrollHeight,requestIdx,itemScale,req,baseItemHeight) + 3 -- why add 3? 
@@ -508,34 +550,15 @@ function GBB.UpdateList()
 		end
 	end
 
-	-- if limited requests per category enabled
-	-- force create headers for ALL dungeons in the dungeonSort list below the GBB.WOTLKMAXDUNGEON index.
-	-- IFF the last headerSortIdx seen after parsing the RequestList was less than GBB.WOTLKMAXDUNGEON
-
-	-- this is different from the while loop nested in the RequestList iteration above which creates a header up until the request's parent dungeon index.
-	if GBB.DB.EnableShowOnly then 
-		local lastCategorySortIdx = GBB.dungeonSort[lastHeaderCategory] or 0
-		while lastCategorySortIdx < GBB.WOTLKMAXDUNGEON do -- for all tracked *dungeons* (not misc and travel)
-			if lastHeaderCategory~="" -- last category header exists
-			and GBB.FoldedDungeons[lastHeaderCategory]~=true -- not folded
-			and GBB.DB.EnableShowOnly -- limited requests per category (already checked above)
-			then
-				scrollHeight = scrollHeight + baseItemHeight*(GBB.DB.ShowOnlyNb-itemsInCategory)
-			end
-			lastCategorySortIdx = lastCategorySortIdx + 1
-			local categoryDungeon = GBB.dungeonSort[lastCategorySortIdx]
-			if ownRequestDungeons[categoryDungeon] -- own request
-				-- or category is tracked in filter options
-				or GBB.FilterDungeon(categoryDungeon, false, false)
-			then			
-				scrollHeight = CreateHeader(scrollHeight, categoryDungeon)
-				-- new catgery, reset items count			
-				itemsInCategory = 0
-			else
-				itemsInCategory = GBB.DB.ShowOnlyNb
-			end
+	if GBB.DB.EnableShowOnly then
+		-- add space for missing requests in the last category
+		if lastCategory and not GBB.FoldedDungeons[lastCategory] then
+			local reserved = baseItemHeight*(GBB.DB.ShowOnlyNb - itemsInCategory)
+			scrollHeight = scrollHeight + reserved
 		end
 
+		-- Originally, this option also added all the other tracked dungeon headers
+		-- that functionality has been removed.
 	end
 
 	-- adds a window's woth of padding to the bottom of the scroll frame
