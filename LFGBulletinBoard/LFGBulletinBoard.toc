@@ -11,6 +11,7 @@ LibGPIMinimapButton.lua
 LibGPIToolBox.lua
 Chat.lua
 Localization.lua
+dungeons/classic.lua
 Dungeons.lua
 Tags.lua
 RequestList.lua
