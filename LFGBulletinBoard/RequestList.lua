@@ -549,6 +549,7 @@ function GBB.UpdateList()
 				and (ownRequestDungeons[req.dungeon] == true  -- own request
 					-- dungeons set to show in options 
 					or GBB.FilterDungeon(req.dungeon, req.IsHeroic, req.IsRaid))
+				and doesRequestMatchResultsFilter(req.message) -- matches global results filter
 			then
 				count = count + 1
 				local requestDungeon = req.dungeon
@@ -565,7 +566,6 @@ function GBB.UpdateList()
 				if GBB.FoldedDungeons[requestDungeon] ~= true -- not folded
 					and (not GBB.DB.EnableShowOnly -- no limit
 						or itemsInCategory < GBB.DB.ShowOnlyNb) -- or limit not reached
-					and doesRequestMatchResultsFilter(req.message) -- matches global results filter
 				then
 					scrollHeight= scrollHeight + CreateItem(scrollHeight,requestIdx,itemScale,req) + 3 -- why add 3? 
 					itemsInCategory = itemsInCategory + 1
