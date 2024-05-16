@@ -637,16 +637,16 @@ local function mergeTables(...)
 end
 
 -- Generated in /data/dungeons/
-local vanillaDungeonLevels = {
-	["RFC"] = 	{13,18}, ["DM"] = 	{18,23}, ["WC"] = 	{15,25}, ["SFK"] = 	{22,30}, ["STK"] = 	{22,30}, ["BFD"] = 	{24,32},
-	["GNO"] = 	{29,38}, ["RFK"] = 	{30,40}, ["SMG"] = 	{28,38}, ["SML"] = 	{29,39}, ["SMA"] = 	{32,42}, ["SMC"] = 	{35,45},
-	["RFD"] = 	{40,50}, ["ULD"] = 	{42,52}, ["ZF"] = 	{44,54}, ["MAR"] = 	{46,55}, ["ST"] = 	{50,60}, ["BRD"] = 	{52,60},
-	["LBRS"] = 	{55,60}, ["DME"] = 	{58,60}, ["DMN"] = 	{58,60}, ["DMW"] = 	{58,60}, ["STR"] = 	{58,60}, ["SCH"] = 	{58,60},
-	["UBRS"] = 	{58,60}, ["MC"] = 	{60,60}, ["ZG"] = 	{60,60}, ["AQ20"]= 	{60,60}, ["BWL"] = {60,60},
-	["AQ40"] = 	{60,60}, ["NAX"] = 	{60,60},
-	["MISC"]=   {0,100}, ["TRAVEL"]={0,100}, ["INCUR"]={0,100},
-	["DEBUG"] = {0,100}, ["BAD"] =	{0,100}, ["TRADE"]=	{0,100}, ["SM2"] =  {28,42}, ["DM2"] =	{58,60}, ["DEADMINES"]={18,23},
-}
+-- local vanillaDungeonLevels = {
+-- 	["RFC"] = 	{13,18}, ["DM"] = 	{18,23}, ["WC"] = 	{15,25}, ["SFK"] = 	{22,30}, ["STK"] = 	{22,30}, ["BFD"] = 	{24,32},
+-- 	["GNO"] = 	{29,38}, ["RFK"] = 	{30,40}, ["SMG"] = 	{28,38}, ["SML"] = 	{29,39}, ["SMA"] = 	{32,42}, ["SMC"] = 	{35,45},
+-- 	["RFD"] = 	{40,50}, ["ULD"] = 	{42,52}, ["ZF"] = 	{44,54}, ["MAR"] = 	{46,55}, ["ST"] = 	{50,60}, ["BRD"] = 	{52,60},
+-- 	["LBRS"] = 	{55,60}, ["DME"] = 	{58,60}, ["DMN"] = 	{58,60}, ["DMW"] = 	{58,60}, ["STR"] = 	{58,60}, ["SCH"] = 	{58,60},
+-- 	["UBRS"] = 	{58,60}, ["MC"] = 	{60,60}, ["ZG"] = 	{60,60}, ["AQ20"]= 	{60,60}, ["BWL"] = {60,60},
+-- 	["AQ40"] = 	{60,60}, ["NAX"] = 	{60,60},
+-- 	["MISC"]=   {0,100}, ["TRAVEL"]={0,100}, ["INCUR"]={0,100},
+-- 	["DEBUG"] = {0,100}, ["BAD"] =	{0,100}, ["TRADE"]=	{0,100}, ["SM2"] =  {28,42}, ["DM2"] =	{58,60}, ["DEADMINES"]={18,23},
+-- }
 
 local postTbcDungeonLevels = {
 	["RFC"] = 	{13,20}, ["DM"] = 	{16,24}, ["WC"] = 	{16,24}, ["SFK"] = 	{17,25}, ["STK"] = 	{21,29}, ["BFD"] = 	{20,28},
@@ -798,6 +798,7 @@ function GBB.GetDungeonSort()
     end
 
 	if isClassicEra then 
+		-- todo: add "Ony"
 		-- hack to remove dungeons from classic ui
 		wotlkDungeonNames = {}
 		tbcDungeonNames = {}
@@ -854,3 +855,13 @@ local function DetermineVanillDungeonRange()
 end
 
 GBB.dungeonLevel = mergeTables(DetermineVanillDungeonRange(), tbcDungeonLevels, wotlkDungeonLevels, pvpLevels)
+
+if isClassicEra then
+	-- includes valid dungeons/raids/bgs
+	local dungeonLevels = GBB.GetDungeonLevelRanges()
+	-- needed because Option.lua hardcodes a checkbox for "DEADMINES"
+	dungeonLevels["DEADMINES"] = dungeonLevels["DM"]
+	-- needed because dungeons/classic.lua uses "NAXX" instead of "NAX"
+	dungeonLevels["NAX"] = dungeonLevels["NAXX"]
+	GBB.dungeonLevel = mergeTables(dungeonLevels, miscCatergoriesLevels)
+end
