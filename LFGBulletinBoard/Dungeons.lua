@@ -778,14 +778,27 @@ GBB.Seasonal = {
 	["HOLLOW"] = { startDate = "10/18", endDate = "11/01"}
 }
 
--- hack, include ONY in classic era; add before BWL
+-- hack: need to add "ONY" and "NAXX"
 if isClassicEra then
+	-- remove this hack when updating dungeon name generation to the new data pipeline.
+	-- include ONY in classic era; add before BWL
 	for sortIdx = (#GBB.VanillDungeonNames), 1, -1 do
 		if GBB.VanillDungeonNames[sortIdx] == "BWL" then
 			table.insert(GBB.VanillDungeonNames, sortIdx, "ONY")
 			break
 		end
 	end
+	
+	-- Tags.lua expects to use the key "NAXX" not "NAX"
+	for sortIdx = (#GBB.VanillDungeonNames), 1, -1 do
+		if GBB.VanillDungeonNames[sortIdx] == "NAX" then
+			GBB.VanillDungeonNames[sortIdx] = "NAXX"
+		end
+	end
+	
+	-- clear unused dungeons in classic to not generate options/checkboxes
+	wotlkDungeonNames = {}
+	tbcDungeonNames = {}
 end
 
 function GBB.GetDungeonSort()
@@ -797,19 +810,6 @@ function GBB.GetDungeonSort()
 		end
     end
 
-	if isClassicEra then 
-		-- todo: add "Ony"
-		-- hack to remove dungeons from classic ui
-		wotlkDungeonNames = {}
-		tbcDungeonNames = {}
-		-- replace "NAX" with "NAXX" for the classic era
-		-- (this is to use the appropriate tags)
-		for i, key in ipairs(GBB.VanillDungeonNames) do
-			if key == "NAX" then
-				GBB.VanillDungeonNames[i] = "NAXX"
-			end
-		end
-	end
 	local dungeonOrder = { GBB.VanillDungeonNames, tbcDungeonNames, wotlkDungeonNames, pvpNames, GBB.Misc, debugNames}
 
 	-- Why does Lua not having a fucking size function
@@ -861,7 +861,5 @@ if isClassicEra then
 	local dungeonLevels = GBB.GetDungeonLevelRanges()
 	-- needed because Option.lua hardcodes a checkbox for "DEADMINES"
 	dungeonLevels["DEADMINES"] = dungeonLevels["DM"]
-	-- needed because dungeons/classic.lua uses "NAXX" instead of "NAX"
-	dungeonLevels["NAX"] = dungeonLevels["NAXX"]
 	GBB.dungeonLevel = mergeTables(dungeonLevels, miscCatergoriesLevels)
 end
