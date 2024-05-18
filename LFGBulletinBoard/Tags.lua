@@ -1,5 +1,7 @@
 local TOCNAME,GBB=...
 
+local isClassicEra = WOW_PROJECT_ID == WOW_PROJECT_CLASSIC
+local isSoD = isClassicEra and (C_Seasons.GetActiveSeason() == Enum.SeasonID.SeasonOfDiscovery)
 -- IMPORTANT, everything must be in low-case and with now space!
 
 local function langSplit(source)
@@ -583,43 +585,32 @@ GBB.dungeonSecondTags = {
 }
 
 -- Remove any unused dungeon tags based on game version
-if WOW_PROJECT_ID == WOW_PROJECT_CLASSIC then
-	local isSoD = C_Seasons.GetActiveSeason() == Enum.SeasonID.SeasonOfDiscovery
-	local exceptions = {
-		-- addon uses 2 different keys for nax in different locales 
-		-- should be normalized to one key at some point
-		["NAXX"] = true, 
-	}
-
-	-- Collect tags valid for vanilla
-	local validDungeons = {}
-	for _, key in ipairs(GBB.VanillaDungeonKeys) do
-		validDungeons[key] = true
+if isClassicEra then
+	-- Get available dungeon tag keys up to current expansion
+	-- this includes raids/bgs/arenas/dungeons
+	local validDungeonKeys = GBB.GetSortedDungeonKeys()
+	local validGameVersionKeys = {}
+	for _, key in ipairs(validDungeonKeys) do
+		validGameVersionKeys[key] = true
 	end
-	-- using PvPSodNames just coz it already only has the classic bgs
-	for _, key in ipairs(GBB.PvpSodNames) do
-		if key == "BLOOD" then
-			-- only available in SoD
-			validDungeons[key] = isSoD
-		else
-			validDungeons[key] = true
-		end
-	end
-	for _, key in ipairs(GBB.Misc) do
-		if key == "INCUR" then
-			-- only available in SoD
-			validDungeons[key] = isSoD
-		else
-			validDungeons[key] = true
-		end
+	for _, key in ipairs(GBB.Misc) do	
+		validGameVersionKeys[key] = true
 	end
 	-- iterate over all locales and `nil` out any entries for dungeons not valid for vanilla
 	for locale, dungeonTags in pairs(GBB.dungeonTagsLoc) do
 		for dungeonKey, _ in pairs(dungeonTags) do
-			if not (validDungeons[dungeonKey] 
-				or exceptions[dungeonKey]
+			if not (validGameVersionKeys[dungeonKey] 
 				or GBB.dungeonSecondTags[dungeonKey])
 			then
+				GBB.dungeonTagsLoc[locale][dungeonKey] = nil
+			end
+		end
+	end
+else
+	-- remove Bloodmoon and Incursions
+	for locale, dungeonTags in pairs(GBB.dungeonTagsLoc) do
+		for dungeonKey, _ in pairs(dungeonTags) do
+			if dungeonKey == "BLOOD" or dungeonKey == "INCUR" then
 				GBB.dungeonTagsLoc[locale][dungeonKey] = nil
 			end
 		end

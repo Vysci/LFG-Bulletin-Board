@@ -756,9 +756,6 @@ function GBB.GetRaids()
 	return arr
 end
 
--- used in Tags.lua atm for determining which tags are safe for game version
-GBB.PvpSodNames = pvpNames
-
 -- used in Tags.lua for determining which tags are safe for game version
 GBB.VanillaDungeonKeys = GBB.GetSortedDungeonKeys(
 	GBB.Enum.Expansions.Classic,
