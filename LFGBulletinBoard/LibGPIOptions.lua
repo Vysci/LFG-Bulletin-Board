@@ -184,7 +184,7 @@ end
 	
 function Options.SetRightSide(w)
 	Options.NextRelativ=Options.Prefix.."OptionFrame".. #Options.Panel .."_Title"
-	Options.NextRelativX=310 / Options.scale
+	Options.NextRelativX= (w or 310) / Options.scale
 	Options.NextRelativY=0
 end
 	

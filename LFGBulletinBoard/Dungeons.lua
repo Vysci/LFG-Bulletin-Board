@@ -757,6 +757,7 @@ function GBB.GetRaids()
 end
 
 -- used in Tags.lua for determining which tags are safe for game version
+-- used in Options.lua for determining adding filter boxes
 GBB.VanillaDungeonKeys = GBB.GetSortedDungeonKeys(
 	GBB.Enum.Expansions.Classic,
 	{ GBB.Enum.DungeonType.Dungeon, GBB.Enum.DungeonType.Raid }

@@ -1,4 +1,6 @@
-local TOCNAME,GBB=...
+local TOCNAME,
+	---@class Addon
+	GBB= ...;
 local ChannelIDs
 local ChkBox_FilterDungeon
 local TbcChkBox_FilterDungeon
@@ -243,7 +245,6 @@ function GBB.OptionsInit ()
 	-- a global framexml string that's pre translated by blizzard called RESET_POSITION
 	GBB.Options.AddButton(RESET_POSITION,GBB.ResetWindow)
 	GBB.Options.AddSpace()
-	----
 	
 	-- Second Panel for Wotlk Dungeons
 	if not isClassicEra then
@@ -316,54 +317,96 @@ function GBB.OptionsInit ()
 		GBB.Options.EndInLine()
 	end
 	
-
-	-- Third panel - Filter
+	----------------------------------------------------------
+	-- Vanilla Filters
+	----------------------------------------------------------
 	GBB.Options.AddPanel(GBB.L["PanelFilter"])
-	GBB.Options.AddCategory(GBB.L["HeaderDungeon"])
-	GBB.Options.Indent(10)
-
-	local defaultChecked = false
-
 	ChkBox_FilterDungeon={}
-	for index=1,GBB.DUNGEONBREAK do
-		ChkBox_FilterDungeon[index]=CheckBoxFilter(GBB.dungeonSort[index],true)
-	end	
-
-	GBB.Options.SetRightSide()
-	--GBB.Options.AddCategory("")
-	GBB.Options.Indent(10)	
-	for index=GBB.DUNGEONBREAK+1,GBB.MAXDUNGEON do
-		ChkBox_FilterDungeon[index]=CheckBoxFilter(GBB.dungeonSort[index],true)
-	end
-
-	if isClassicEra then
-		for index=GBB.ENDINGDUNGEONSTART,GBB.ENDINGDUNGEONEND do
-			ChkBox_FilterDungeon[index]=CheckBoxFilter(GBB.dungeonSort[index],true)
+	local maxDungeonIdx = 1 -- used for the select/unselect all buttons
+	local boxWidths = {
+		max = 0,
+		add = function(self, checkBox)
+			self.max = math.max(
+				self.max,
+				_G[checkBox:GetName() .. "Text"]:GetStringWidth()
+			)
 		end
-	end
-	--GBB.Options.AddSpace()
+	}
 
-	--GBB.Options.AddSpace()
-	if isClassicEra then
-		CheckBoxChar("FilterLevel",false)
-		CheckBoxChar("DontFilterOwn",false)
+	--- Dungeons 		
+	GBB.Options.AddCategory(DUNGEONS)
+	local classicDungeonKeys = GBB.GetSortedDungeonKeys(
+		GBB.Enum.Expansions.Classic, GBB.Enum.DungeonType.Dungeon
+	);
+	for _, key in pairs(classicDungeonKeys) do
+		ChkBox_FilterDungeon[maxDungeonIdx]=CheckBoxFilter(key, true)
+		boxWidths:add(ChkBox_FilterDungeon[maxDungeonIdx])
+		maxDungeonIdx = maxDungeonIdx + 1
+	end
+	
+	local col1MaxWidth = boxWidths.max
+	boxWidths.max = 0
+
+	-- Raids
+	GBB.Options.SetRightSide(col1MaxWidth + 20)
+	GBB.Options.AddCategory(RAIDS)
+	local classicRaidKeys = GBB.GetSortedDungeonKeys(
+		GBB.Enum.Expansions.Classic, GBB.Enum.DungeonType.Raid
+	);
+	for _, key in pairs(classicRaidKeys) do
+		ChkBox_FilterDungeon[maxDungeonIdx]=CheckBoxFilter(key, true)
+		boxWidths:add(ChkBox_FilterDungeon[maxDungeonIdx])
+		maxDungeonIdx = maxDungeonIdx + 1
+	end
+	
+	-- Battlegrounds & PVP
+	GBB.Options.AddCategory(BATTLEGROUNDS)
+	local classicBgKeys = GBB.GetSortedDungeonKeys(
+		GBB.Enum.Expansions.Classic, GBB.Enum.DungeonType.Battleground
+	);
+	-- hack: add `BLOOD` for SoD
+	if C_Seasons and (C_Seasons.GetActiveSeason() == Enum.SeasonID.SeasonOfDiscovery) then
+		table.insert(classicBgKeys, "BLOOD")
+	end
+	for _, key in pairs(classicBgKeys) do
+		ChkBox_FilterDungeon[maxDungeonIdx]=CheckBoxFilter(key, true)
+		boxWidths:add(ChkBox_FilterDungeon[maxDungeonIdx])
+		maxDungeonIdx = maxDungeonIdx + 1
+	end
+
+	-- Misc Categories
+	GBB.Options.AddCategory(OTHER)
+	for _, key in pairs(GBB.Misc) do
+		ChkBox_FilterDungeon[maxDungeonIdx]=CheckBoxFilter(key, true)
+		maxDungeonIdx = maxDungeonIdx + 1
+	end
+
+	-- filter specific options
+	CheckBoxChar("FilterLevel",false)
+	CheckBoxChar("DontFilterOwn",false)
+	
+	if not isClassicEra then
 		CheckBoxChar("HeroicOnly", false)
 		CheckBoxChar("NormalOnly", false)
 	end
 
+	-- Select/Unselect All Filters Buttons
 	GBB.Options.InLine()
-
 	GBB.Options.AddButton(GBB.L["BtnSelectAll"],function()
-		DoSelectFilter(true, ChkBox_FilterDungeon, 1, GBB.MAXDUNGEON)
+		DoSelectFilter(true, ChkBox_FilterDungeon, 1, (maxDungeonIdx - 1))
 	end)
 	GBB.Options.AddButton(GBB.L["BtnUnselectAll"],function()
-		DoSelectFilter(false, ChkBox_FilterDungeon, 1, GBB.MAXDUNGEON)
+		DoSelectFilter(false, ChkBox_FilterDungeon, 1, (maxDungeonIdx - 1))
 	end)
 	GBB.Options.EndInLine()
-	GBB.Options.Indent(-10)
+	GBB.Options.Indent(-20)
+	
+	-- Chat Channel Filters
+	GBB.Options.SetRightSide(
+		col1MaxWidth + boxWidths.max + 20
+	);
 	if isClassicEra then
 		SetChatOption()
-		
 	end
 
 	-- Tags
