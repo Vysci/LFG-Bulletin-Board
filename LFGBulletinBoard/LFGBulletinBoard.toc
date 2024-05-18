@@ -12,6 +12,7 @@ LibGPIToolBox.lua
 Chat.lua
 Localization.lua
 dungeons/classic.lua
+dungeons/cata.lua
 Dungeons.lua
 Tags.lua
 RequestList.lua
