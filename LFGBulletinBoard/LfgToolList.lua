@@ -208,34 +208,34 @@ function GBB.GetLfgList()
 end
 
 function GBB.UpdateLfgTool()
-    if LFGBrowseFrame and LFGBrowseFrame.CategoryDropDown.selectedValue == 120 then return end
-    if  LFGBrowseFrame and LFGBrowseFrame.CategoryDropDown.selectedValue == nil then  
-        LFGBrowseFrame.CategoryDropDown.selectedValue = 2
+    if LFGListFrame and LFGListFrame.CategorySelection.selectedCategory == 120 then return end
+    if  LFGListFrame and LFGListFrame.CategorySelection.selectedCategory == nil then  
+        LFGListFrame.CategorySelection.selectedCategory = 2
     end
 
     LastUpdateTime = time()
     GBB.LfgRequestList = {}
     
     local category = 2
-    if LFGBrowseFrame and LFGBrowseFrame.CategoryDropDown.selectedValue ~= nil then 
-        category = LFGBrowseFrame.CategoryDropDown.selectedValue
+    if LFGListFrame and LFGListFrame.CategorySelection.selectedCategory ~= nil then 
+        category = LFGListFrame.CategorySelection.selectedCategory
     end
 
 	local activities = C_LFGList.GetAvailableActivities(category)
 	--C_LFGList.Search(category, activities)
-    if LFGBrowseFrame and LFGBrowseFrame.searching then return end
+    if LFGListFrame and LFGListFrame.searching then return end
 
 	GBB.GetLfgList()
     GBB.LfgUpdateList()
 end
 
 function GBB.UpdateLfgToolNoSearch()
-    if LFGBrowseFrame.CategoryDropDown.selectedValue == 120 then return end
-    if  LFGBrowseFrame.CategoryDropDown.selectedValue == nil then  
-        LFGBrowseFrame.CategoryDropDown.selectedValue = 2
+    if LFGListFrame.CategorySelection.selectedCategory == 120 then return end
+    if  LFGListFrame.CategorySelection.selectedCategory == nil then  
+        LFGListFrame.CategorySelection.selectedCategory = 2
     end
 
-if LFGBrowseFrame.searching then return end
+if LFGListFrame and LFGListFrame.searching then return end
 
     GBB.LfgRequestList = {}
     GBB.GetLfgList()

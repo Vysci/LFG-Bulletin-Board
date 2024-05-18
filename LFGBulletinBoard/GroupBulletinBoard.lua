@@ -813,7 +813,7 @@ function GBB.OnUpdate(elapsed)
 		end;
 
 		if GBB.ElapsedSinceLfgUpdate > 18 and GBB.Tool.GetSelectedTab(GroupBulletinBoardFrame)==2 and GroupBulletinBoardFrame:IsVisible() then
-			LFGBrowseFrameRefreshButton:Click()
+			-- LFGListFrame.SearchPanel.RefreshButton:Click() -- hwevent protected
 			GBB.UpdateLfgTool()
 			GBB.ElapsedSinceLfgUpdate = 0
 		else
