@@ -593,7 +593,7 @@ if WOW_PROJECT_ID == WOW_PROJECT_CLASSIC then
 
 	-- Collect tags valid for vanilla
 	local validDungeons = {}
-	for _, key in ipairs(GBB.VanillDungeonNames) do
+	for _, key in ipairs(GBB.VanillaDungeonNames) do
 		validDungeons[key] = true
 	end
 	-- using PvPSodNames just coz it already only has the classic bgs
