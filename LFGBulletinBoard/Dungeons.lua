@@ -1,5 +1,7 @@
 local TOCNAME,GBB=...
 
+local isClassicEra = WOW_PROJECT_ID == WOW_PROJECT_CLASSIC
+
 local function getSeasonalDungeons()
     local events = {}
 
@@ -773,6 +775,23 @@ local function GetSize(list)
 		size = size + 1
 	end
 	return size
+end
+
+-- hack, include ONY in classic era; add before BWL
+if isClassicEra then
+	for sortIdx = (#GBB.VanillDungeonNames), 1, -1 do
+		if GBB.VanillDungeonNames[sortIdx] == "BWL" then
+			table.insert(GBB.VanillDungeonNames, sortIdx, "ONY")
+			break
+		end
+	end
+	-- remove from WotlkDungeonNames table to not overwrite durring sorting in GetDungeonSort()
+	for sortIdx = (#GBB.WotlkDungeonNames), 1, -1 do
+		if GBB.WotlkDungeonNames[sortIdx] == "ONY" then
+			table.remove(GBB.WotlkDungeonNames, sortIdx)
+			break
+		end
+	end
 end
 
 function GBB.GetDungeonSort()
