@@ -1,4 +1,6 @@
-local TOCNAME,GBB=...
+local TOCNAME,
+	---@class Addon : Addon_DungeonData	
+	GBB = ...;
 
 local isClassicEra = WOW_PROJECT_ID == WOW_PROJECT_CLASSIC
 local isSoD = isClassicEra and C_Seasons.GetActiveSeason() == Enum.SeasonID.SeasonOfDiscovery
@@ -637,16 +639,6 @@ local function mergeTables(...)
 end
 
 -- Generated in /data/dungeons/
--- local vanillaDungeonLevels = {
--- 	["RFC"] = 	{13,18}, ["DM"] = 	{18,23}, ["WC"] = 	{15,25}, ["SFK"] = 	{22,30}, ["STK"] = 	{22,30}, ["BFD"] = 	{24,32},
--- 	["GNO"] = 	{29,38}, ["RFK"] = 	{30,40}, ["SMG"] = 	{28,38}, ["SML"] = 	{29,39}, ["SMA"] = 	{32,42}, ["SMC"] = 	{35,45},
--- 	["RFD"] = 	{40,50}, ["ULD"] = 	{42,52}, ["ZF"] = 	{44,54}, ["MAR"] = 	{46,55}, ["ST"] = 	{50,60}, ["BRD"] = 	{52,60},
--- 	["LBRS"] = 	{55,60}, ["DME"] = 	{58,60}, ["DMN"] = 	{58,60}, ["DMW"] = 	{58,60}, ["STR"] = 	{58,60}, ["SCH"] = 	{58,60},
--- 	["UBRS"] = 	{58,60}, ["MC"] = 	{60,60}, ["ZG"] = 	{60,60}, ["AQ20"]= 	{60,60}, ["BWL"] = {60,60},
--- 	["AQ40"] = 	{60,60}, ["NAX"] = 	{60,60},
--- 	["MISC"]=   {0,100}, ["TRAVEL"]={0,100}, ["INCUR"]={0,100},
--- 	["DEBUG"] = {0,100}, ["BAD"] =	{0,100}, ["TRADE"]=	{0,100}, ["SM2"] =  {28,42}, ["DM2"] =	{58,60}, ["DEADMINES"]={18,23},
--- }
 
 local postTbcDungeonLevels = {
 	["RFC"] = 	{13,20}, ["DM"] = 	{16,24}, ["WC"] = 	{16,24}, ["SFK"] = 	{17,25}, ["STK"] = 	{21,29}, ["BFD"] = 	{20,28},
@@ -692,14 +684,22 @@ local tbcDungeonNames = {
 	"GL", "ZA", "HYJAL", "BT", "SWP",
 }
 
-local pvpNames = isClassicEra 
-	and { "WSG", "AB", "AV", "BLOOD" }
-	or { "WSG", "AB", "AV", "EOTS", "WG", "SOTA", "ARENA" };
+local pvpNames = GBB.GetSortedDungeonKeys(
+	-- not specificying an expansion id here-
+	-- gives **all** available dungeons **up to** current game xpac
+	nil,
+	GBB.Enum.DungeonType.Battleground
+);
+
+-- hack: consider Bloodmoon event as a pvp event in config
+if isSoD then table.insert(pvpNames, "BLOOD") end
 
 local debugNames = {
 	"DEBUG", "BAD", "NIL",
 }
 
+-- the column for "[N]" to show something is a raid is currently disabled in classic
+-- when re-enabling the feature, will update this to use the new data pipeline
 local raidNames = {
 	"ONY", "MC", "ZG", "AQ20", "BWL", "AQ40", "NAX",
 	"KARA", "GL", "MAG", "SSC", "EYE", "ZA", "HYJAL",
@@ -760,16 +760,14 @@ end
 GBB.PvpSodNames = pvpNames
 
 -- used in Tags.lua for determining which tags are safe for game version
-GBB.VanillDungeonNames  = {
-	"RFC", "WC" , "DM" , "SFK", "STK", "BFD", "GNO",
-    "RFK", "SMG", "SML", "SMA", "SMC", "RFD", "ULD",
-    "ZF", "MAR", "ST" , "BRD", "LBRS", "DME", "DMN",
-    "DMW", "STR", "SCH", "UBRS", "MC", "ZG",
-    "AQ20", "BWL", "AQ40", "NAX",
-}
+GBB.VanillaDungeonNames = GBB.GetSortedDungeonKeys(
+	GBB.Enum.Expansions.Classic,
+	{ GBB.Enum.DungeonType.Dungeon, GBB.Enum.DungeonType.Raid }
+);
+
 
 -- used in Tags.lua for determining which tags are safe for game version
-GBB.Misc = {"MISC", "TRADE", "TRAVEL", "INCUR"}
+GBB.Misc = {"MISC", "TRADE", "TRAVEL", (isSoD and "INCUR" or nil)}
 
 -- used to disable holiday specific filters when not in the correct date range
 -- in FixFilters of Options.lua
@@ -778,25 +776,8 @@ GBB.Seasonal = {
 	["HOLLOW"] = { startDate = "10/18", endDate = "11/01"}
 }
 
--- hack: need to add "ONY" and "NAXX"
+-- clear unused dungeons in classic to not generate options/checkboxes
 if isClassicEra then
-	-- remove this hack when updating dungeon name generation to the new data pipeline.
-	-- include ONY in classic era; add before BWL
-	for sortIdx = (#GBB.VanillDungeonNames), 1, -1 do
-		if GBB.VanillDungeonNames[sortIdx] == "BWL" then
-			table.insert(GBB.VanillDungeonNames, sortIdx, "ONY")
-			break
-		end
-	end
-	
-	-- Tags.lua expects to use the key "NAXX" not "NAX"
-	for sortIdx = (#GBB.VanillDungeonNames), 1, -1 do
-		if GBB.VanillDungeonNames[sortIdx] == "NAX" then
-			GBB.VanillDungeonNames[sortIdx] = "NAXX"
-		end
-	end
-	
-	-- clear unused dungeons in classic to not generate options/checkboxes
 	wotlkDungeonNames = {}
 	tbcDungeonNames = {}
 end
@@ -810,10 +791,9 @@ function GBB.GetDungeonSort()
 		end
     end
 
-	local dungeonOrder = { GBB.VanillDungeonNames, tbcDungeonNames, wotlkDungeonNames, pvpNames, GBB.Misc, debugNames}
+	local dungeonOrder = { GBB.VanillaDungeonNames, tbcDungeonNames, wotlkDungeonNames, pvpNames, GBB.Misc, debugNames}
 
-	-- Why does Lua not having a fucking size function
-	local vanillaDungeonSize = GetSize(GBB.VanillDungeonNames)
+	local vanillaDungeonSize = #GBB.VanillaDungeonNames
 
 	local tbcDungeonSize = GetSize(tbcDungeonNames)
 
