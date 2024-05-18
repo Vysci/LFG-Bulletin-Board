@@ -760,7 +760,7 @@ end
 GBB.PvpSodNames = pvpNames
 
 -- used in Tags.lua for determining which tags are safe for game version
-GBB.VanillaDungeonNames = GBB.GetSortedDungeonKeys(
+GBB.VanillaDungeonKeys = GBB.GetSortedDungeonKeys(
 	GBB.Enum.Expansions.Classic,
 	{ GBB.Enum.DungeonType.Dungeon, GBB.Enum.DungeonType.Raid }
 );
@@ -791,9 +791,9 @@ function GBB.GetDungeonSort()
 		end
     end
 
-	local dungeonOrder = { GBB.VanillaDungeonNames, tbcDungeonNames, wotlkDungeonNames, pvpNames, GBB.Misc, debugNames}
+	local dungeonOrder = { GBB.VanillaDungeonKeys, tbcDungeonNames, wotlkDungeonNames, pvpNames, GBB.Misc, debugNames}
 
-	local vanillaDungeonSize = #GBB.VanillaDungeonNames
+	local vanillaDungeonSize = #GBB.VanillaDungeonKeys
 
 	local tbcDungeonSize = GetSize(tbcDungeonNames)
 
