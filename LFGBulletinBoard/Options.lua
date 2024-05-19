@@ -262,7 +262,7 @@ function GBB.OptionsInit ()
 		local wrathRaids = GBB.GetSortedDungeonKeys(
 			GBB.Enum.Expansions.Wrath, GBB.Enum.DungeonType.Raid
 		);
-		local wrathBgs = GBB.GetSortedDungeonKeys(
+		local wrathBgs = GBB.GetSortedDungeonKeys( -- should be empty (if passing wotlk as expansion)
 			-- hack: for now use cata. Bg keys only exists for the latest expansion
 			GBB.Enum.Expansions.Cataclysm, GBB.Enum.DungeonType.Battleground
 		);
@@ -288,20 +288,21 @@ function GBB.OptionsInit ()
 		for _, key in pairs(wrathBgs) do
 			tinsert(WotlkChkBox_FilterDungeon, CheckBoxFilter(key, false))
 		end
-		--GBB.Options.AddSpace()
+		
+		-- filter specific options
 		CheckBoxChar("FilterLevel",false)
 		CheckBoxChar("DontFilterOwn",false)
 		CheckBoxChar("HeroicOnly", false)
 		CheckBoxChar("NormalOnly", false)
 	
 		--GBB.Options.AddSpace()
-		local numCheckBoxes = #WotlkChkBox_FilterDungeon
+		local xpacFilterCount = #WotlkChkBox_FilterDungeon
 		GBB.Options.InLine()
 		GBB.Options.AddButton(GBB.L["BtnSelectAll"],function()
-			DoSelectFilter(true, WotlkChkBox_FilterDungeon, 1, numCheckBoxes)
+			DoSelectFilter(true, WotlkChkBox_FilterDungeon, 1, xpacFilterCount)
 		end)
 		GBB.Options.AddButton(GBB.L["BtnUnselectAll"],function()
-			DoSelectFilter(false, WotlkChkBox_FilterDungeon,1, numCheckBoxes)
+			DoSelectFilter(false, WotlkChkBox_FilterDungeon,1, xpacFilterCount)
 		end)
 	
 		GBB.Options.AddDrop(GBB.DB,"InviteRole", "DPS", {"DPS", "Tank", "Healer"})
@@ -309,30 +310,37 @@ function GBB.OptionsInit ()
 		GBB.Options.Indent(-10)
 		SetChatOption()
 
-			-- Third Panel for TBC Dungeons
+		------------------------------
+		--- TBC Filters
+		------------------------------
 		GBB.Options.AddPanel(GBB.L["TBCPanelFilter"])
-		GBB.Options.AddCategory(GBB.L["HeaderDungeon"])
-		GBB.Options.Indent(10)
-
 		TbcChkBox_FilterDungeon={}
-			
-		for index=GBB.TBCDUNGEONSTART,GBB.TBCDUNGEONBREAK do
-			TbcChkBox_FilterDungeon[index]=CheckBoxFilter(GBB.dungeonSort[index],false)
+		local tbcDungeons = GBB.GetSortedDungeonKeys(
+			GBB.Enum.Expansions.BurningCrusade, GBB.Enum.DungeonType.Dungeon
+		);
+		local tbcRaids = GBB.GetSortedDungeonKeys(
+			GBB.Enum.Expansions.BurningCrusade, GBB.Enum.DungeonType.Raid
+		);
+		-- note: all bgs are included as part of latest xpac filters
+		
+		GBB.Options.AddCategory(DUNGEONS)
+		GBB.Options.Indent(10)
+		for _, key in pairs(tbcDungeons) do
+			tinsert(TbcChkBox_FilterDungeon, CheckBoxFilter(key, false))
 		end
-
 		GBB.Options.SetRightSide()
-		--GBB.Options.AddCategory("")
+		GBB.Options.AddCategory(RAIDS)
 		GBB.Options.Indent(10)	
-		for index=GBB.TBCDUNGEONBREAK+1,GBB.TBCMAXDUNGEON do
-			TbcChkBox_FilterDungeon[index]=CheckBoxFilter(GBB.dungeonSort[index],false)
+		for _, key in pairs(tbcRaids) do
+			tinsert(TbcChkBox_FilterDungeon, CheckBoxFilter(key, false))
 		end
-
+		xpacFilterCount = #TbcChkBox_FilterDungeon
 		GBB.Options.InLine()
 		GBB.Options.AddButton(GBB.L["BtnSelectAll"],function()
-			DoSelectFilter(true, TbcChkBox_FilterDungeon, GBB.TBCDUNGEONSTART, GBB.TBCMAXDUNGEON)
+			DoSelectFilter(true, TbcChkBox_FilterDungeon, 1, xpacFilterCount)
 		end)
 		GBB.Options.AddButton(GBB.L["BtnUnselectAll"],function()
-			DoSelectFilter(false, TbcChkBox_FilterDungeon, GBB.TBCDUNGEONSTART, GBB.TBCMAXDUNGEON)
+			DoSelectFilter(false, TbcChkBox_FilterDungeon, 1, xpacFilterCount)
 		end)
 		GBB.Options.EndInLine()
 	end
