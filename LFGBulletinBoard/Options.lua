@@ -6,7 +6,20 @@ local ChkBox_FilterDungeon
 local TbcChkBox_FilterDungeon
 local isClassicEra = WOW_PROJECT_ID == WOW_PROJECT_CLASSIC
 local isCata = WOW_PROJECT_ID == WOW_PROJECT_CATACLYSM_CLASSIC
-
+local PROJECT_EXPANSION_ID = {
+	[WOW_PROJECT_CLASSIC] = GBB.Enum.Expansions.Classic,
+	[WOW_PROJECT_BURNING_CRUSADE_CLASSIC] = GBB.Enum.Expansions.BurningCrusade,
+	[WOW_PROJECT_WRATH_CLASSIC] = GBB.Enum.Expansions.Wrath,
+	[WOW_PROJECT_CATACLYSM_CLASSIC] = GBB.Enum.Expansions.Cataclysm,
+}
+local EXPANSION_PROJECT_ID = tInvert(PROJECT_EXPANSION_ID)
+local EXPANSION_NAME = {
+	[GBB.Enum.Expansions.Classic] = EXPANSION_NAME0,
+	[GBB.Enum.Expansions.BurningCrusade] = EXPANSION_NAME1,
+	[GBB.Enum.Expansions.Wrath] = 
+		GBB.locales[GetLocale()]["WotlkPanelFilter"],
+	[GBB.Enum.Expansions.Cataclysm] = EXPANSION_NAME3,
+}
 --Options
 -------------------------------------------------------------------------------------
 
@@ -122,7 +135,7 @@ local DoRightClick=function(self)
 	self:SetChecked(true)
 end
 	
-function SetChatOption()
+local function SetChatOption()
 	GBB.Options.AddCategory(GBB.L["HeaderChannel"])
 	GBB.Options.Indent(10)	
 
@@ -135,6 +148,99 @@ function SetChatOption()
 		GBB.Options.EndInLine()
 	end
 	GBB.Options.Indent(-10)
+end
+
+---Generates and options panels with check box filters for the given expansion.
+---if the expansion is the current game client expansion, it will also include misc filters.
+---@param expansionID ExpansionID
+local function GenerateExpansionPanel(expansionID)
+	GBB.Options.AddPanel(EXPANSION_NAME[expansionID])
+	local xOffset = 0
+	local filters = {} ---@type CheckButton[]
+	local dungeons = GBB.GetSortedDungeonKeys(
+		expansionID, GBB.Enum.DungeonType.Dungeon
+	);
+	local raids = GBB.GetSortedDungeonKeys(
+		expansionID, GBB.Enum.DungeonType.Raid
+	);
+	local bgs = GBB.GetSortedDungeonKeys(
+		expansionID, GBB.Enum.DungeonType.Battleground
+	);
+	
+	-- hack to show misc filters on wotlk panel
+	local WOW_PROJECT_ID = WOW_PROJECT_WRATH_CLASSIC;
+	-- hack to show bgs on wotlk panel atm
+	-- Bg keys only exists for the latest expansion
+	if expansionID == GBB.Enum.Expansions.Wrath then
+		bgs = GBB.GetSortedDungeonKeys(
+			GBB.Enum.Expansions.Cataclysm, GBB.Enum.DungeonType.Battleground
+		);
+	end
+
+	-- Dungeons 		
+	GBB.Options.AddCategory(DUNGEONS)
+	GBB.Options.Indent(10)
+	for _, key in pairs(dungeons) do
+		tinsert(filters, CheckBoxFilter(key, false))
+	end	
+	if #dungeons > 20 then
+		-- no space for the raids under the dungeons
+		xOffset = 250; -- move over 1 column
+		GBB.Options.SetRightSide(xOffset)
+	end	
+	-- Raids
+	GBB.Options.Indent(-10)
+	GBB.Options.AddCategory(RAIDS)
+	GBB.Options.Indent(10)
+	for _, key in pairs(raids) do
+		tinsert(filters, CheckBoxFilter(key, false))
+	end
+	-- Battlegrounds
+	if #bgs > 0 then
+		GBB.Options.SetRightSide()
+		GBB.Options.Indent(-10)
+		GBB.Options.AddCategory(BATTLEGROUNDS)
+		GBB.Options.Indent(10)
+		for _, key in pairs(bgs) do
+			tinsert(filters, CheckBoxFilter(key, false))
+		end
+	end
+	-- dont include misc filters in the "select all" buttons
+	local resetLimitIdx = #filters 
+
+	-- Misc Categories (only show for current xpac)
+	if WOW_PROJECT_ID == EXPANSION_PROJECT_ID[expansionID] then
+		GBB.Options.Indent(-10)
+		GBB.Options.AddCategory(OTHER)
+		GBB.Options.Indent(10)		
+		for _, key in pairs(GBB.Misc) do
+			tinsert(filters, CheckBoxFilter(key, false))
+		end
+		
+		-- filter specific options
+		CheckBoxChar("HeroicOnly", false)
+		CheckBoxChar("NormalOnly", false)
+	end
+	CheckBoxChar("FilterLevel",false)
+	CheckBoxChar("DontFilterOwn",false)
+
+	--GBB.Options.AddSpace()
+	GBB.Options.InLine()
+	GBB.Options.AddButton(GBB.L["BtnSelectAll"],function()
+		DoSelectFilter(true, filters, 1, resetLimitIdx)
+	end)
+	GBB.Options.AddButton(GBB.L["BtnUnselectAll"],function()
+		DoSelectFilter(false, filters,1, resetLimitIdx)
+	end)
+
+	GBB.Options.AddDrop(GBB.DB,"InviteRole", "DPS", {"DPS", "Tank", "Healer"})
+	GBB.Options.EndInLine()
+	GBB.Options.Indent(-10)
+	if xOffset > 0 then
+		GBB.Options.SetRightSide(xOffset + 200)
+	end
+	-- Chat Channel Filters
+	SetChatOption()
 end
 
 function GBB.OptionsInit ()
@@ -254,68 +360,7 @@ function GBB.OptionsInit ()
 		------------------------------
 		--- Wrath Filters
 		------------------------------
-		GBB.Options.AddPanel(GBB.L["WotlkPanelFilter"])
-		WotlkChkBox_FilterDungeon={}
-		local wrathDungeons = GBB.GetSortedDungeonKeys(
-			GBB.Enum.Expansions.Wrath, GBB.Enum.DungeonType.Dungeon
-		);
-		local wrathRaids = GBB.GetSortedDungeonKeys(
-			GBB.Enum.Expansions.Wrath, GBB.Enum.DungeonType.Raid
-		);
-		local wrathBgs = GBB.GetSortedDungeonKeys( -- should be empty (if passing wotlk as expansion)
-			-- hack: for now use cata. Bg keys only exists for the latest expansion
-			GBB.Enum.Expansions.Cataclysm, GBB.Enum.DungeonType.Battleground
-		);
-		
-		-- Dungeons 		
-		GBB.Options.AddCategory(DUNGEONS)
-		GBB.Options.Indent(10)
-		for _, key in pairs(wrathDungeons) do
-			tinsert(WotlkChkBox_FilterDungeon, CheckBoxFilter(key, false))
-		end		
-		-- Raids
-		GBB.Options.Indent(-10)
-		GBB.Options.AddCategory(RAIDS)
-		GBB.Options.Indent(10)
-		for _, key in pairs(wrathRaids) do
-			tinsert(WotlkChkBox_FilterDungeon, CheckBoxFilter(key, false))
-		end
-		-- Battlegrounds
-		GBB.Options.SetRightSide()
-		GBB.Options.Indent(-10)
-		GBB.Options.AddCategory(BATTLEGROUNDS)
-		GBB.Options.Indent(10)
-		for _, key in pairs(wrathBgs) do
-			tinsert(WotlkChkBox_FilterDungeon, CheckBoxFilter(key, false))
-		end
-		-- Misc Categories
-		GBB.Options.Indent(-10)
-		GBB.Options.AddCategory(OTHER)
-		GBB.Options.Indent(10)
-		for _, key in pairs(GBB.Misc) do
-			tinsert(WotlkChkBox_FilterDungeon, CheckBoxFilter(key, false))
-		end
-		-- filter specific options
-		CheckBoxChar("FilterLevel",false)
-		CheckBoxChar("DontFilterOwn",false)
-		CheckBoxChar("HeroicOnly", false)
-		CheckBoxChar("NormalOnly", false)
-	
-		--GBB.Options.AddSpace()
-		local xpacFilterCount = #WotlkChkBox_FilterDungeon
-		GBB.Options.InLine()
-		GBB.Options.AddButton(GBB.L["BtnSelectAll"],function()
-			DoSelectFilter(true, WotlkChkBox_FilterDungeon, 1, xpacFilterCount)
-		end)
-		GBB.Options.AddButton(GBB.L["BtnUnselectAll"],function()
-			DoSelectFilter(false, WotlkChkBox_FilterDungeon,1, xpacFilterCount)
-		end)
-	
-		GBB.Options.AddDrop(GBB.DB,"InviteRole", "DPS", {"DPS", "Tank", "Healer"})
-		GBB.Options.EndInLine()
-		GBB.Options.Indent(-10)
-		SetChatOption()
-
+		GenerateExpansionPanel(GBB.Enum.Expansions.Wrath)
 		------------------------------
 		--- TBC Filters
 		------------------------------
@@ -340,7 +385,7 @@ function GBB.OptionsInit ()
 		for _, key in pairs(tbcRaids) do
 			tinsert(TbcChkBox_FilterDungeon, CheckBoxFilter(key, false))
 		end
-		xpacFilterCount = #TbcChkBox_FilterDungeon
+		local xpacFilterCount = #TbcChkBox_FilterDungeon
 		GBB.Options.InLine()
 		GBB.Options.AddButton(GBB.L["BtnSelectAll"],function()
 			DoSelectFilter(true, TbcChkBox_FilterDungeon, 1, xpacFilterCount)
