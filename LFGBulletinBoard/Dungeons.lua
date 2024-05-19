@@ -3,6 +3,7 @@ local TOCNAME,
 	GBB = ...;
 
 local isClassicEra = WOW_PROJECT_ID == WOW_PROJECT_CLASSIC
+local isCata = WOW_PROJECT_ID == WOW_PROJECT_CATACLYSM_CLASSIC
 local isSoD = isClassicEra and C_Seasons.GetActiveSeason() == Enum.SeasonID.SeasonOfDiscovery
 
 local debug = false
@@ -672,17 +673,15 @@ local wotlkDungeonLevels = {
 	["NAXX"] =   {80,80},   ["BREW"] = {65,70},      ["HOLLOW"] = {65,70},
 }
 
-local wotlkDungeonNames = {
-	"UK", "NEX", "AZN", "ANK", "DTK", "VH", "GD", "HOS", "HOL", "COS",
-	"OCC", "UP", "FOS", "POS", "HOR", "CHAMP", "OS", "VOA", "EOE", "ULDAR",
-	"TOTC", "RS", "ICC", "ONY", "NAXX"
-}
+local wotlkDungeonNames = GBB.GetSortedDungeonKeys(
+	GBB.Enum.Expansions.Wrath,
+	{ GBB.Enum.DungeonType.Dungeon, GBB.Enum.DungeonType.Raid }
+);
 
-local tbcDungeonNames = {
-	"RAMPS", "BF", "SH", "MAG", "SP", "UB", "SV", "SSC", "MT", "CRYPTS",
-	"SETH", "SL", "OHB", "BM", "MECH", "BOT", "ARC", "EYE", "MGT", "KARA",
-	"GL", "ZA", "HYJAL", "BT", "SWP",
-}
+local tbcDungeonNames = GBB.GetSortedDungeonKeys(
+	GBB.Enum.Expansions.BurningCrusade,
+	{ GBB.Enum.DungeonType.Dungeon, GBB.Enum.DungeonType.Raid }
+);
 
 local pvpNames = GBB.GetSortedDungeonKeys(
 	-- not specificying an expansion id here-
@@ -698,15 +697,10 @@ local debugNames = {
 	"DEBUG", "BAD", "NIL",
 }
 
--- the column for "[N]" to show something is a raid is currently disabled in classic
--- when re-enabling the feature, will update this to use the new data pipeline
-local raidNames = {
-	"ONY", "MC", "ZG", "AQ20", "BWL", "AQ40", "NAX",
-	"KARA", "GL", "MAG", "SSC", "EYE", "ZA", "HYJAL",
-	"BT", "SWP", "ARENA", "WSG", "AV", "AB", "EOTS",
-	"WG", "SOTA", "BREW", "HOLLOW", "OS", "VOA", "EOE",
-	"ULDAR", "TOTC", "RS", "ICC", "NAXX",
-}
+local raidNames = GBB.GetSortedDungeonKeys(
+	nil, -- all xpacs
+	GBB.Enum.DungeonType.Raid
+);
 
 -- Becasue theyre not actually dungeons and are not parsed by 
 -- `/data/dungeons/{version}.lua` we need to add them manually
@@ -775,12 +769,16 @@ GBB.Seasonal = {
 }
 
 -- clear unused dungeons in classic to not generate options/checkboxes
+-- with the new data pipeline api these tables should already empty anyways when in classic client
 if isClassicEra then
-	wotlkDungeonNames = {}
 	tbcDungeonNames = {}
+	wotlkDungeonNames = {}
 end
 
 function GBB.GetDungeonSort()
+
+	-- at some point we should probably move this to the /dungeons/cata.lua file
+	-- when i add support for the newly added holiday dungeons.
 	for eventName, eventData in pairs(GBB.Seasonal) do
         if GBB.Tool.InDateRange(eventData.startDate, eventData.endDate) then
 			table.insert(wotlkDungeonNames, 1, eventName)
@@ -792,11 +790,9 @@ function GBB.GetDungeonSort()
 	local dungeonOrder = { GBB.VanillaDungeonKeys, tbcDungeonNames, wotlkDungeonNames, pvpNames, GBB.Misc, debugNames}
 
 	local vanillaDungeonSize = #GBB.VanillaDungeonKeys
-
-	local tbcDungeonSize = GetSize(tbcDungeonNames)
-
-	local debugSize = GetSize(debugNames)
-
+	local tbcDungeonSize = #tbcDungeonNames
+	local wotlkDungeonSize = #wotlkDungeonNames
+	local debugSize = #debugNames
 
 	local tmp_dsort, concatenatedSize = ConcatenateLists(dungeonOrder)
 	local dungeonSort = {}
@@ -805,7 +801,7 @@ function GBB.GetDungeonSort()
 	GBB.MAXDUNGEON = vanillaDungeonSize
 	GBB.TBCMAXDUNGEON = vanillaDungeonSize  + tbcDungeonSize
 	GBB.WOTLKDUNGEONSTART = GBB.TBCMAXDUNGEON + 1
-	GBB.WOTLKMAXDUNGEON = GetSize(wotlkDungeonNames) + GBB.TBCMAXDUNGEON
+	GBB.WOTLKMAXDUNGEON = wotlkDungeonSize + GBB.TBCMAXDUNGEON
 	GBB.ENDINGDUNGEONSTART = GBB.WOTLKMAXDUNGEON + 1
 	GBB.ENDINGDUNGEONEND = concatenatedSize - debugSize - 1
 
