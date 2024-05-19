@@ -5,6 +5,8 @@ local ChannelIDs
 local ChkBox_FilterDungeon
 local TbcChkBox_FilterDungeon
 local isClassicEra = WOW_PROJECT_ID == WOW_PROJECT_CLASSIC
+local isCata = WOW_PROJECT_ID == WOW_PROJECT_CATACLYSM_CLASSIC
+
 --Options
 -------------------------------------------------------------------------------------
 
@@ -245,25 +247,46 @@ function GBB.OptionsInit ()
 	-- a global framexml string that's pre translated by blizzard called RESET_POSITION
 	GBB.Options.AddButton(RESET_POSITION,GBB.ResetWindow)
 	GBB.Options.AddSpace()
-	
-	-- Second Panel for Wotlk Dungeons
+	----------------------------------------------------------
+	-- Pre Cataclysm Filters
+	----------------------------------------------------------
 	if not isClassicEra then
-
+		------------------------------
+		--- Wrath Filters
+		------------------------------
 		GBB.Options.AddPanel(GBB.L["WotlkPanelFilter"])
-		GBB.Options.AddCategory(GBB.L["HeaderDungeon"])
-		GBB.Options.Indent(10)
-	
 		WotlkChkBox_FilterDungeon={}
-			
-		for index=GBB.WOTLKDUNGEONSTART,GBB.WOTLKDUNGEONBREAK do
-			WotlkChkBox_FilterDungeon[index]=CheckBoxFilter(GBB.dungeonSort[index],false)
+		local wrathDungeons = GBB.GetSortedDungeonKeys(
+			GBB.Enum.Expansions.Wrath, GBB.Enum.DungeonType.Dungeon
+		);
+		local wrathRaids = GBB.GetSortedDungeonKeys(
+			GBB.Enum.Expansions.Wrath, GBB.Enum.DungeonType.Raid
+		);
+		local wrathBgs = GBB.GetSortedDungeonKeys(
+			-- hack: for now use cata. Bg keys only exists for the latest expansion
+			GBB.Enum.Expansions.Cataclysm, GBB.Enum.DungeonType.Battleground
+		);
+		
+		-- Dungeons 		
+		GBB.Options.AddCategory(DUNGEONS)
+		GBB.Options.Indent(10)
+		for _, key in pairs(wrathDungeons) do
+			tinsert(WotlkChkBox_FilterDungeon, CheckBoxFilter(key, false))
+		end		
+		-- Raids
+		GBB.Options.Indent(-10)
+		GBB.Options.AddCategory(RAIDS)
+		GBB.Options.Indent(10)
+		for _, key in pairs(wrathRaids) do
+			tinsert(WotlkChkBox_FilterDungeon, CheckBoxFilter(key, false))
 		end
-	
+		-- Battlegrounds
 		GBB.Options.SetRightSide()
-		--GBB.Options.AddCategory("")
-		GBB.Options.Indent(10)	
-		for index=GBB.WOTLKDUNGEONBREAK+1,GBB.WOTLKMAXDUNGEON do
-			WotlkChkBox_FilterDungeon[index]=CheckBoxFilter(GBB.dungeonSort[index],false)
+		GBB.Options.Indent(-10)
+		GBB.Options.AddCategory(BATTLEGROUNDS)
+		GBB.Options.Indent(10)
+		for _, key in pairs(wrathBgs) do
+			tinsert(WotlkChkBox_FilterDungeon, CheckBoxFilter(key, false))
 		end
 		--GBB.Options.AddSpace()
 		CheckBoxChar("FilterLevel",false)
@@ -272,22 +295,19 @@ function GBB.OptionsInit ()
 		CheckBoxChar("NormalOnly", false)
 	
 		--GBB.Options.AddSpace()
-	
+		local numCheckBoxes = #WotlkChkBox_FilterDungeon
 		GBB.Options.InLine()
 		GBB.Options.AddButton(GBB.L["BtnSelectAll"],function()
-			DoSelectFilter(true, WotlkChkBox_FilterDungeon, GBB.WOTLKDUNGEONSTART, GBB.WOTLKMAXDUNGEON) -- Doing -2 to not select trade and misc
+			DoSelectFilter(true, WotlkChkBox_FilterDungeon, 1, numCheckBoxes)
 		end)
 		GBB.Options.AddButton(GBB.L["BtnUnselectAll"],function()
-			DoSelectFilter(false, WotlkChkBox_FilterDungeon, GBB.WOTLKDUNGEONSTART, GBB.WOTLKMAXDUNGEON)
+			DoSelectFilter(false, WotlkChkBox_FilterDungeon,1, numCheckBoxes)
 		end)
 	
 		GBB.Options.AddDrop(GBB.DB,"InviteRole", "DPS", {"DPS", "Tank", "Healer"})
 		GBB.Options.EndInLine()
 		GBB.Options.Indent(-10)
-		for index=GBB.ENDINGDUNGEONSTART,GBB.ENDINGDUNGEONEND do
-			WotlkChkBox_FilterDungeon[index]=CheckBoxFilter(GBB.dungeonSort[index],true)
-			SetChatOption()
-		end
+		SetChatOption()
 
 			-- Third Panel for TBC Dungeons
 		GBB.Options.AddPanel(GBB.L["TBCPanelFilter"])
