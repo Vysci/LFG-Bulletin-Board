@@ -288,7 +288,13 @@ function GBB.OptionsInit ()
 		for _, key in pairs(wrathBgs) do
 			tinsert(WotlkChkBox_FilterDungeon, CheckBoxFilter(key, false))
 		end
-		
+		-- Misc Categories
+		GBB.Options.Indent(-10)
+		GBB.Options.AddCategory(OTHER)
+		GBB.Options.Indent(10)
+		for _, key in pairs(GBB.Misc) do
+			tinsert(WotlkChkBox_FilterDungeon, CheckBoxFilter(key, false))
+		end
 		-- filter specific options
 		CheckBoxChar("FilterLevel",false)
 		CheckBoxChar("DontFilterOwn",false)
@@ -387,33 +393,32 @@ function GBB.OptionsInit ()
 		maxDungeonIdx = maxDungeonIdx + 1
 	end
 	
-	-- Battlegrounds & PVP
-	GBB.Options.AddCategory(BATTLEGROUNDS)
-	local classicBgKeys = GBB.GetSortedDungeonKeys(
-		GBB.Enum.Expansions.Classic, GBB.Enum.DungeonType.Battleground
-	);
-	-- hack: add `BLOOD` for SoD
-	if C_Seasons and (C_Seasons.GetActiveSeason() == Enum.SeasonID.SeasonOfDiscovery) then
-		table.insert(classicBgKeys, "BLOOD")
-	end
-	for _, key in pairs(classicBgKeys) do
-		ChkBox_FilterDungeon[maxDungeonIdx]=CheckBoxFilter(key, true)
-		boxWidths:add(ChkBox_FilterDungeon[maxDungeonIdx])
-		maxDungeonIdx = maxDungeonIdx + 1
-	end
-
-	-- Misc Categories
-	GBB.Options.AddCategory(OTHER)
-	for _, key in pairs(GBB.Misc) do
-		ChkBox_FilterDungeon[maxDungeonIdx]=CheckBoxFilter(key, true)
-		maxDungeonIdx = maxDungeonIdx + 1
-	end
-
-	-- filter specific options
-	CheckBoxChar("FilterLevel",false)
-	CheckBoxChar("DontFilterOwn",false)
+	if isClassicEra then -- dont redraw these when not in classic era
+		-- Battlegrounds & PVP
+		GBB.Options.AddCategory(BATTLEGROUNDS)
+		local classicBgKeys = GBB.GetSortedDungeonKeys(
+			GBB.Enum.Expansions.Classic, GBB.Enum.DungeonType.Battleground
+		);
+		-- hack: add `BLOOD` for SoD
+		if C_Seasons and (C_Seasons.GetActiveSeason() == Enum.SeasonID.SeasonOfDiscovery) then
+			table.insert(classicBgKeys, "BLOOD")
+		end
+		for _, key in pairs(classicBgKeys) do
+			ChkBox_FilterDungeon[maxDungeonIdx]=CheckBoxFilter(key, true)
+			boxWidths:add(ChkBox_FilterDungeon[maxDungeonIdx])
+			maxDungeonIdx = maxDungeonIdx + 1
+		end
 	
-	if not isClassicEra then
+		-- Misc Categories
+		GBB.Options.AddCategory(OTHER)
+		for _, key in pairs(GBB.Misc) do
+			ChkBox_FilterDungeon[maxDungeonIdx]=CheckBoxFilter(key, true)
+			maxDungeonIdx = maxDungeonIdx + 1
+		end
+
+		-- filter specific options
+		CheckBoxChar("FilterLevel",false)
+		CheckBoxChar("DontFilterOwn",false)
 		CheckBoxChar("HeroicOnly", false)
 		CheckBoxChar("NormalOnly", false)
 	end
