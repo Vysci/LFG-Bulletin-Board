@@ -639,39 +639,14 @@ local function mergeTables(...)
 	return resulting
 end
 
--- Generated in /data/dungeons/
+-- Generated in `/dungeons/{version}.lua` files
+local classicDungeonLevels = GBB.GetDungeonLevelRanges(GBB.Enum.Expansions.Classic)
 
-local postTbcDungeonLevels = {
-	["RFC"] = 	{13,20}, ["DM"] = 	{16,24}, ["WC"] = 	{16,24}, ["SFK"] = 	{17,25}, ["STK"] = 	{21,29}, ["BFD"] = 	{20,28},
-	["GNO"] = 	{24,40}, ["RFK"] = 	{23,31}, ["SMG"] = 	{28,34}, ["SML"] = 	{30,38}, ["SMA"] = 	{32,42}, ["SMC"] = 	{35,44},
-	["RFD"] = 	{33,41}, ["ULD"] = 	{36,44}, ["ZF"] = 	{42,50}, ["MAR"] = 	{40,52}, ["ST"] = 	{45,54}, ["BRD"] = 	{48,60},
-	["LBRS"] = 	{54,60}, ["DME"] = 	{54,61}, ["DMN"] = 	{54,61}, ["DMW"] = 	{54,61}, ["STR"] = 	{56,61}, ["SCH"] = 	{56,61},
-	["UBRS"] = 	{53,61}, ["MC"] = 	{60,60}, ["ZG"] = 	{60,60}, ["AQ20"]= 	{60,60}, ["BWL"] = {60,60},
-	["AQ40"] = 	{60,60}, ["NAX"] = 	{60,60},
-	["MISC"] =  {0,100}, ["TRAVEL"]={0,100}, ["INCUR"]={0,100},
-	["DEBUG"] = {0,100}, ["BAD"] =	{0,100}, ["TRADE"]=	{0,100}, ["SM2"] =  {28,42}, ["DM2"] =	{58,60}, ["DEADMINES"]={16,24},
-}
+local tbcDungeonLevels = GBB.GetDungeonLevelRanges(GBB.Enum.Expansions.BurningCrusade)
 
-local tbcDungeonLevels = {
-	["RAMPS"] =  {60,62}, 	["BF"] = 	 {61,63},     ["SP"] = 	 {62,64},    ["UB"] = 	 {63,65},     ["MT"] = 	 {64,66},     ["CRYPTS"] = {65,67},
-	["SETH"] =   {67,69},  	["OHB"] = 	 {66,68},     ["MECH"] =   {69,70},    ["BM"] =      {69,70},    ["MGT"] =	 {70,70},    ["SH"] =	 {70,70},
-	["BOT"] =    {70,70},    ["SL"] = 	 {70,70},    ["SV"] =     {70,70},   ["ARC"] = 	 {70,70},    ["KARA"] = 	 {70,70},    ["GL"] = 	 {70,70},
-	["MAG"] =    {70,70},    ["SSC"] =    {70,70}, 	["EYE"] =    {70,70},   ["ZA"] = 	 {70,70},    ["HYJAL"] =  {70,70}, 	["BT"] =     {70,70},
-	["SWP"] =    {70,70},
-}
+local pvpLevels = GBB.GetDungeonLevelRanges(nil, GBB.Enum.DungeonType.Battleground)
 
-local pvpLevels = {
-	["WSG"] = 	{10,70}, ["AB"] = 	{20,70}, ["AV"] = 	{51,70},   ["WG"] = {80,80}, ["SOTA"] = {80,80},  ["EOTS"] =   {15,70},   ["ARENA"] = {70,80},
-	["BLOOD"] = {0,100},
-}
-
-local wotlkDungeonLevels = {
-	["UK"] =    {68,80},    ["NEX"] =    {69,80},    ["AZN"] =    {70,80},    ["ANK"] =    {71,80},    ["DTK"] =    {72,80},    ["VH"] =    {73,80},
-	["GD"] =    {74,80},    ["HOS"] =    {75,80},    ["HOL"] =    {76,80},    ["COS"] =    {78,80},    ["OCC"] =    {77,80},    ["UP"] =    {77,80},
-	["FOS"] =    {80,80},   ["POS"] =    {80,80},    ["HOR"] =    {80,80},    ["CHAMP"] =  {78,80},    ["OS"] =    {80,80},    ["VOA"] =    {80,80},
-	["EOE"] =    {80,80},   ["ULDAR"] =  {80,80},    ["TOTC"] =     {80,80},    ["RS"] =     {80,80},    ["ICC"] =    {80,80},    ["ONY"] =    {80,80},
-	["NAXX"] =   {80,80},   ["BREW"] = {65,70},      ["HOLLOW"] = {65,70},
-}
+local wotlkDungeonLevels = GBB.GetDungeonLevelRanges(GBB.Enum.Expansions.WrathOfTheLichKing)
 
 local wotlkDungeonNames = GBB.GetSortedDungeonKeys(
 	GBB.Enum.Expansions.Wrath,
@@ -824,16 +799,11 @@ function GBB.GetDungeonSort()
 	return dungeonSort
 end
 
-local function DetermineVanillDungeonRange()
-	return postTbcDungeonLevels
-end
-
-GBB.dungeonLevel = mergeTables(DetermineVanillDungeonRange(), tbcDungeonLevels, wotlkDungeonLevels, pvpLevels)
-
 if isClassicEra then
-	-- includes valid dungeons/raids/bgs
-	local dungeonLevels = GBB.GetDungeonLevelRanges()
-	-- needed because Option.lua hardcodes a checkbox for "DEADMINES"
-	dungeonLevels["DEADMINES"] = dungeonLevels["DM"]
-	GBB.dungeonLevel = mergeTables(dungeonLevels, miscCatergoriesLevels)
+	GBB.dungeonLevel = mergeTables(classicDungeonLevels, miscCatergoriesLevels)
+else
+	GBB.dungeonLevel = mergeTables(classicDungeonLevels, tbcDungeonLevels, wotlkDungeonLevels, pvpLevels, miscCatergoriesLevels)
 end
+
+-- needed because Option.lua hardcodes a checkbox for "DEADMINES"
+GBB.dungeonLevel["DEADMINES"] = GBB.dungeonLevel["DM"]
