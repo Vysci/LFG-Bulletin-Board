@@ -31,7 +31,14 @@ local function CheckBoxChar (Var,Init)
 	return GBB.Options.AddCheckBox(GBB.DBChar,Var,Init,GBB.L["CboxChar"..Var])
 end
 local function CheckBoxFilter (Dungeon,Init)
-	return GBB.Options.AddCheckBox(GBB.DBChar,"FilterDungeon".. Dungeon,Init,GBB.dungeonNames[Dungeon].." "..GBB.LevelRange(Dungeon,true))
+	local dungeonName = (GBB.GetDungeonInfo(Dungeon, true) or {}).name
+	return GBB.Options.AddCheckBox(
+		GBB.DBChar, "FilterDungeon".. Dungeon, 
+		Init, 
+		((GBB.dungeonNames[Dungeon] 
+			or dungeonName or "ERROR"
+		).." "..GBB.LevelRange(Dungeon,true))
+	)
 end
 local function CreateEditBoxNumber (Var,Init,width,width2)
 	return GBB.Options.AddEditBox(GBB.DB,Var,Init,GBB.L["Edit"..Var],width,width2,true)
@@ -46,8 +53,15 @@ local function CreateEditBoxDungeon(Dungeon,Init,width,width2)
 		GBB.DB.Custom[Dungeon]=GBB.DB["Custom_"..Dungeon]
 		GBB.DB["Custom_"..Dungeon]=nil
 	end
-	if GBB.dungeonNames[Dungeon] then
-		GBB.Options.AddEditBox(GBB.DB.Custom, Dungeon, Init, GBB.dungeonNames[Dungeon].." "..GBB.LevelRange(Dungeon,true), width, width2, false,nil, GBB.Tool.Combine(GBB.dungeonTagsLoc["enGB"][Dungeon]))
+	local dungeonName = (GBB.GetDungeonInfo(Dungeon, true) or {}).name
+	if GBB.dungeonNames[Dungeon] or dungeonName then
+		GBB.Options.AddEditBox(GBB.DB.Custom, Dungeon, Init, 
+			((GBB.dungeonNames[Dungeon] or 
+				dungeonName).." "..GBB.LevelRange(Dungeon,true)
+			),
+			width, width2, false, nil, 
+			GBB.Tool.Combine(GBB.dungeonTagsLoc["enGB"][Dungeon])
+		)
 	else
 		local txt=""
 		if Dungeon=="Search" then

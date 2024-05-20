@@ -31,22 +31,22 @@ local DungeonType = {
 -- These same keys are used for identifying the preset tags/keywords for each dungeon. If a tags Key is missing from this table, the tags will not be registered.
 -- modifications here should be reflected in the `Tags.lua` file and vice versa.
 local LFGDungeonIDs = {
-	NULL = 358,	-- 10v10 Rated Battleground (RBG)
+	RBG = 358,	-- 10v10 Rated Battleground (RBG)
 	AQ20 = 160,	-- Ahn'Qiraj Ruins
 	AQ40 = 161,	-- Ahn'Qiraj Temple
 	ANK = 218,	-- Ahn'kahet: The Old Kingdom
 	CRYPTS = 149,	-- Auchenai Crypts
 	AZN = 204,	-- Azjol-Nerub
-	NULL = 328,	-- Baradin Hold
+	BH = 328,	-- Baradin Hold
 	BT = 196,	-- Black Temple
 	BFD = 10,   -- Blackfathom Deeps
-	NULL = 303,	-- Blackrock Caverns
+	BRC = 303,	-- Blackrock Caverns
 	
 	-- These get put into "BRD"
 	NULL = 30,  -- Blackrock Depths - Detention Block
 	NULL = 276,	-- Blackrock Depths - Upper City
 	
-	NULL = 313,	-- Blackwing Descent
+	BWD = 313,	-- Blackwing Descent
 	BWL = 50,   -- Blackwing Lair
 	BF = 137,	-- Blood Furnace
 	DM = 6,     -- Deadmines
@@ -55,25 +55,25 @@ local LFGDungeonIDs = {
 	DME = 34,	-- Dire Maul - East (Renamed in Cata)
 	DMN = 38,	-- Dire Maul - North (Renamed in Cata)
 	DMW = 36,	-- Dire Maul - West (Renamed in Cata)
-	NULL = 447,	-- Dragon Soul
+	-- DS = 447,	-- Dragon Soul
 	DTK = 214,	-- Drak'Tharon Keep
-	NULL = 435,	-- End Time
-	NULL = 417,	-- Fall of Deathwing
-	NULL = 361,	-- Firelands
+	-- END_TIME = 435,	-- End Time
+	NULL = 417,	-- Fall of Deathwing (LFR)
+	-- FL = 361,	-- Firelands
 	GNO = 14,   -- Gnomeregan
-	NULL = 304,	-- Grim Batol
+	GB = 304,	-- Grim Batol
 	GL = 177,	-- Gruul's Lair
 	GD = 216,	-- Gundrak
 	HOL = 207,	-- Halls of Lightning
-	NULL = 305,	-- Halls of Origination
+	HOO = 305,	-- Halls of Origination
 	HOR = 255,	-- Halls of Reflection
 	HOS = 208,	-- Halls of Stone
 	RAMPS = 136,-- Hellfire Ramparts
-	NULL = 439,	-- Hour of Twilight
+	-- HOT = 439,	-- Hour of Twilight
 	HYJAL = 195,-- Hyjal Past
 	ICC = 279,	-- Icecrown Citadel
 	KARA = 175,	-- Karazhan
-	NULL = 312,	-- Lost City of the Tol'vir
+	TOLVIR = 312,	-- Lost City of the Tol'vir
 	LBRS = 32,  -- Lower Blackrock Spire
 	MGT = 198,	-- Magisters' Terrace
 	MAG = 176,	-- Magtheridon's Lair
@@ -118,7 +118,7 @@ local LFGDungeonIDs = {
 	ST = 28,    -- Sunken Temple
 	EYE = 193,	-- Tempest Keep (The Eye)
 	ARC = 174,	-- The Arcatraz
-	NULL = 315,	-- The Bastion of Twilight
+	BOT2 = 315,	-- The Bastion of Twilight
 	BOT = 173,	-- The Botanica
 	COS = 209,	-- The Culling of Stratholme
 	OHB = 170,	-- The Escape From Durnholde (Old Hillsbrad Foothills)
@@ -128,13 +128,13 @@ local LFGDungeonIDs = {
 	NEX = 225,	-- The Nexus
 	OS = 224,	-- The Obsidian Sanctum
 	OCC = 206,	-- The Oculus
-	NULL = 416,	-- The Siege of Wyrmrest Temple
+	NULL = 416,	-- The Siege of Wyrmrest Temple (LFR)
 	SV = 147,	-- The Steamvault
-	NULL = 307,	-- The Stonecore
+	TSC = 307,	-- The Stonecore
 	SWP = 199,	-- The Sunwell
-	NULL = 311,	-- The Vortex Pinnacle
-	NULL = 317,	-- Throne of the Four Winds
-	NULL = 302,	-- Throne of the Tides
+	VP = 311,	-- The Vortex Pinnacle
+	TOFW = 317,	-- Throne of the Four Winds
+	TOTT = 302,	-- Throne of the Tides
 	CHAMP = 245,-- Trial of the Champion
 	TOTC = {
 		246,	-- Trial of the Crusader
@@ -156,15 +156,15 @@ local LFGDungeonIDs = {
 
 	-- Seasonal
 	BREW = 287,	-- Coren Direbrew (Brewfest)
-	NULL = 288,	-- The Crown Chemical Co. (Love is in the Air)
-	NULL = 286,	-- The Frost Lord Ahune (Midsummer)
+	LOVE = 288,	-- The Crown Chemical Co. (Love is in the Air)
+	SUMMER = 286,	-- The Frost Lord Ahune (Midsummer)
 	HOLLOW = 285,	-- The Headless Horseman (Hallow's End)
 
-	-- Cata prepatch bosses
-	EARTH_PORTAL = 297,	-- Crown Princess Theradras
-	FIRE_PORTAL = 296,	-- Grand Ambassador Flamelash
-	WATER_PORTAL = 298,	-- Kai'ju Gahz'rilla
-	AIR_PORTAL = 299,	-- Prince Sarsarun
+	-- Cata prepatch bosses (unused for cata rerelease)
+	-- EARTH_PORTAL = 297,	-- Crown Princess Theradras
+	-- FIRE_PORTAL = 296,	-- Grand Ambassador Flamelash
+	-- WATER_PORTAL = 298,	-- Kai'ju Gahz'rilla
+	-- AIR_PORTAL = 299,	-- Prince Sarsarun
 }
 local dungeonIDToKey = {}
 for key, dungeonID in pairs(LFGDungeonIDs) do
@@ -302,7 +302,7 @@ local infoOverrides = {
 	-- DMN = { minLevel = 42, maxLevel = 52 },
 	-- The pvp dungeons arent in th LFGDungeons table in the cata client atm. (except for RBG)
 	-- and the GetActivityInfoTable API is returning `0` for min/max level so we'll just hardcode it here.
-	ARENA = { minLevel = 10, maxLevel = effectiveMaxLevel },
+	ARENA = { minLevel = effectiveMaxLevel, maxLevel = effectiveMaxLevel },
 	WSG = { minLevel = 10, maxLevel = effectiveMaxLevel },
 	AB = { minLevel = 10, maxLevel = effectiveMaxLevel },
 	EOTS = { minLevel = 35, maxLevel = effectiveMaxLevel },
