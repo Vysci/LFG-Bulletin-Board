@@ -617,6 +617,12 @@ function GBB.GetDungeonNames()
 	end
 
 
+	-- use client generated names instead of english- 
+	-- as fallbacks for missing manual translations
+	local dungeonKeys = GBB.GetSortedDungeonKeys()
+	for _, key in ipairs(dungeonKeys) do
+		DefaultEnGB[key] = GBB.GetDungeonInfo(key).name or DefaultEnGB[key]
+	end
 	setmetatable(dungeonNames, {__index = DefaultEnGB})
 
 	dungeonNames["DEADMINES"]=dungeonNames["DM"]
