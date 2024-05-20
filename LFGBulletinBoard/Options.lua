@@ -19,8 +19,7 @@ local EXPANSION_FILTER_NAME = {
 		GBB.locales[GetLocale()]["PanelFilter"] or EXPANSION_NAME0,
 	[GBB.Enum.Expansions.BurningCrusade] = 
 		GBB.locales[GetLocale()]["TBCPanelFilter"] or EXPANSION_NAME1,
-	[GBB.Enum.Expansions.Wrath] = 
-		GBB.locales[GetLocale()]["WotlkPanelFilter"] or EXPANSION_NAME2,
+	[GBB.Enum.Expansions.Wrath] = EXPANSION_NAME2,
 	[GBB.Enum.Expansions.Cataclysm] = EXPANSION_NAME3,
 }
 --Options
@@ -159,11 +158,7 @@ end
 local function GenerateExpansionPanel(expansionID)
 	GBB.Options.AddPanel(EXPANSION_FILTER_NAME[expansionID], false, true)
 	
-	-- hack to show misc filters on wotlk panel
-	local WOW_PROJECT_ID = isCata and WOW_PROJECT_WRATH_CLASSIC or WOW_PROJECT_ID;
-	
 	local isCurrentXpac = expansionID == PROJECT_EXPANSION_ID[WOW_PROJECT_ID];
-	local xOffset = 0
 	local filters = {} ---@type CheckButton[]
 	local dungeons = GBB.GetSortedDungeonKeys(
 		expansionID, GBB.Enum.DungeonType.Dungeon
@@ -175,14 +170,6 @@ local function GenerateExpansionPanel(expansionID)
 		expansionID, GBB.Enum.DungeonType.Battleground
 	);
 	
-	-- hack to show bgs on wotlk panel atm
-	-- Bg keys only exists for the latest expansion
-	if expansionID == GBB.Enum.Expansions.Wrath then
-		bgs = GBB.GetSortedDungeonKeys(
-			GBB.Enum.Expansions.Cataclysm, GBB.Enum.DungeonType.Battleground
-		);
-	end
-
 	-- Dungeons 		
 	GBB.Options.AddCategory(DUNGEONS)
 	GBB.Options.Indent(10)
@@ -372,24 +359,19 @@ function GBB.OptionsInit ()
 	GBB.Options.AddButton(RESET_POSITION,GBB.ResetWindow)
 	GBB.Options.AddSpace()
 	----------------------------------------------------------
-	-- Pre Cataclysm Filters
+	-- Expansion specific filters
 	----------------------------------------------------------
-	if not isClassicEra then
-		------------------------------
+	if not isClassicEra then 
+		--- Cata Filters
+		GenerateExpansionPanel(GBB.Enum.Expansions.Cataclysm)
 		--- Wrath Filters
-		------------------------------
 		GenerateExpansionPanel(GBB.Enum.Expansions.Wrath)
-		------------------------------
 		--- TBC Filters
-		------------------------------
 		GenerateExpansionPanel(GBB.Enum.Expansions.BurningCrusade)
 	end
-	
-	----------------------------------------------------------
 	-- Vanilla Filters
-	----------------------------------------------------------
 	GenerateExpansionPanel(GBB.Enum.Expansions.Classic)
-	
+		
 	----------------------------------------------------------
 	-- Tags
 	----------------------------------------------------------
