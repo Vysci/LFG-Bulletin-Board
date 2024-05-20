@@ -166,6 +166,14 @@ local LFGDungeonIDs = {
 	-- WATER_PORTAL = 298,	-- Kai'ju Gahz'rilla
 	-- AIR_PORTAL = 299,	-- Prince Sarsarun
 }
+
+-- hack: add cata versions of sfk and deadmines at max level
+local isCataLevel = UnitLevel("player") >= 84
+if isCataLevel then
+	LFGDungeonIDs.DM = 326
+	LFGDungeonIDs.SFK = 327
+end
+
 local dungeonIDToKey = {}
 for key, dungeonID in pairs(LFGDungeonIDs) do
     if type(dungeonID) == "table" then
@@ -311,7 +319,14 @@ local infoOverrides = {
 	WG = { minLevel = 71, maxLevel = effectiveMaxLevel },
 	RBG = { typeID = DungeonType.Battleground }, -- GetLFGDungeonInfo considers it a raid for some reason.
 	-- TB = { minLevel = effectiveMaxLevel, maxLevel = effectiveMaxLevel },
-
+	DM = isCataLevel and {
+		name = DUNGEON_NAME_WITH_DIFFICULTY:format(
+				DUNGEON_FLOOR_THEDEADMINES1, DUNGEON_DIFFICULTY2),
+		} or nil,
+	SFK = isCataLevel and { 
+		name = DUNGEON_NAME_WITH_DIFFICULTY:format(
+			GetRealZoneText(33), DUNGEON_DIFFICULTY2)
+	} or nil,
 }
 
 ---@type {[DungeonID]: DungeonInfo}
