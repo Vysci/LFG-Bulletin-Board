@@ -14,13 +14,12 @@ local PROJECT_EXPANSION_ID = {
 	[WOW_PROJECT_CATACLYSM_CLASSIC or 0] = GBB.Enum.Expansions.Cataclysm,
 }
 local EXPANSION_PROJECT_ID = tInvert(PROJECT_EXPANSION_ID)
+
 local EXPANSION_FILTER_NAME = {
-	[GBB.Enum.Expansions.Classic] = 
-		GBB.locales[GetLocale()]["PanelFilter"] or EXPANSION_NAME0,
-	[GBB.Enum.Expansions.BurningCrusade] = 
-		GBB.locales[GetLocale()]["TBCPanelFilter"] or EXPANSION_NAME1,
-	[GBB.Enum.Expansions.Wrath] = EXPANSION_NAME2,
-	[GBB.Enum.Expansions.Cataclysm] = EXPANSION_NAME3,
+	[GBB.Enum.Expansions.Classic] = SUBTITLE_FORMAT:format(FILTERS, EXPANSION_NAME0),
+	[GBB.Enum.Expansions.BurningCrusade] = SUBTITLE_FORMAT:format(FILTERS, EXPANSION_NAME1),
+	[GBB.Enum.Expansions.Wrath] = SUBTITLE_FORMAT:format(FILTERS, EXPANSION_NAME2),
+	[GBB.Enum.Expansions.Cataclysm] = SUBTITLE_FORMAT:format(FILTERS, EXPANSION_NAME3),
 }
 --Options
 -------------------------------------------------------------------------------------
