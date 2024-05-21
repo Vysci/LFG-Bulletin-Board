@@ -111,8 +111,12 @@ local dungeonTags = {
 		zhTW = nil,
 		zhCN = "艾卓",
 	},
-	NULL = { -- Baradin Hold
-
+	BH = { -- Baradin Hold
+		enGB = "bh baradin",
+		ruRU = nil,  
+		frFR = nil,  
+		zhTW = nil,
+		zhCN = nil,
 	},
 	BT = { -- Black Temple
 		enGB = "bt",
@@ -130,8 +134,12 @@ local dungeonTags = {
 		zhTW = "黑暗深淵",
 		zhCN = "黑暗深渊",
 	},
-	NULL = { -- Blackrock Caverns
-
+	BRC = { -- Blackrock Caverns
+		enGB = "brc",
+		ruRU = nil,  
+		frFR = nil,  
+		zhTW = nil,
+		zhCN = nil,
 	},
 
 	-- all these can get redirected to the pre-cata "BRD" for the time being.
@@ -143,8 +151,13 @@ local dungeonTags = {
 
 	},
 
-	NULL = { -- Blackwing Descent
-
+	BWD = { -- Blackwing Descent
+		enGB = "bwd descent bwd10 bwd25",
+		deDE = nil,
+		ruRU = nil,
+		frFR = nil,
+		zhTW = nil,
+		zhCN = nil,
 	},
 	BWL = { -- Blackwing Lair
 		enGB = "blackwing bwl",
@@ -234,8 +247,13 @@ local dungeonTags = {
 		zhTW = "諾姆瑞根",
 		zhCN = "诺莫瑞根",
 	},
-	NULL = { -- Grim Batol
-
+	GB = { -- Grim Batol
+		enGB = "gb grim batol",
+		deDE = nil,
+		ruRU = nil,
+		frFR = nil,
+		zhTW = nil,
+		zhCN = nil,
 	},
 	GL = { -- Gruul's Lair
 		enGB = "gl gruul gruuls gruul's",
@@ -261,8 +279,13 @@ local dungeonTags = {
 		zhTW = nil,
 		zhCN = "闪电大厅",
 	},
-	NULL = { -- Halls of Origination
-
+	HOO = { -- Halls of Origination
+		enGB = "hoo origination",
+		deDE = nil,
+		ruRU = nil,
+		frFR = nil,
+		zhTW = nil,
+		zhCN = nil,
 	},
 	HOR = { -- Halls of Reflection
 		enGB = "hor reflection",
@@ -316,8 +339,13 @@ local dungeonTags = {
 		zhTW = "卡拉 卡啦",
 		zhCN = "KLZ 卡拉赞",
 	},
-	NULL = { -- Lost City of the Tol'vir
-
+	TOLVIR = { -- Lost City of the Tol'vir
+		enGB = "tol'vir tolvir",
+		deDE = nil,
+		ruRU = nil,
+		frFR = nil,
+		zhTW = nil,
+		zhCN = nil,
 	},
 	LBRS = { -- Lower Blackrock Spire
 		enGB = "lower lbrs lrbs",
@@ -562,8 +590,13 @@ local dungeonTags = {
 		zhTW = "亞克",
 		zhCN = "禁魔监狱",
 	},	
-	NULL = { -- The Bastion of Twilight
-
+	BOT2 = { -- The Bastion of Twilight
+		enGB = "bot bastion twilight bot10 bot25",
+		deDE = nil,
+		ruRU = nil,
+		frFR = nil,
+		zhTW = nil,
+		zhCN = nil,
 	},	
 	BOT = { -- The Botanica
 		enGB = "botanica bot",
@@ -661,8 +694,13 @@ local dungeonTags = {
 		zhTW = "蒸氣 蒸汽",
 		zhCN = "蒸汽 地窖",
 	},	
-	NULL = { -- The Stonecore
-
+	TSC = { -- The Stonecore
+		enGB = "stonecore sc",
+		deDE = nil,
+		ruRU = nil,
+		frFR = nil,
+		zhTW = nil,
+		zhCN = nil,
 	},	
 	SWP = { -- The Sunwell
 		enGB = "swp sunwell plateau plataeu sunwel",
@@ -672,14 +710,29 @@ local dungeonTags = {
 		zhTW = "太陽",
 		zhCN = "太阳井",
 	},	
-	NULL = { -- The Vortex Pinnacle
-
+	VP = { -- The Vortex Pinnacle
+		enGB = "VP vortex pinnacle",
+		deDE = nil,
+		ruRU = nil,
+		frFR = nil,
+		zhTW = nil,
+		zhCN = nil,
+	},
+	TOFW = { -- Throne of the Four Winds
+		enGB = "totfw toftw tofw four winds tofw10 tofw25",
+		deDE = nil,
+		ruRU = nil,
+		frFR = nil,
+		zhTW = nil,
+		zhCN = nil,
 	},	
-	NULL = { -- Throne of the Four Winds
-
-	},	
-	NULL = { -- Throne of the Tides
-
+	TOTT = { -- Throne of the Tides
+		enGB = "tott tides",
+		deDE = nil,
+		ruRU = nil,
+		frFR = nil,
+		zhTW = nil,
+		zhCN = nil,
 	},	
 	CHAMP = { -- Trial of the Champion
 		enGB = "champ toc champion",
@@ -851,6 +904,12 @@ local dungeonTags = {
 
 	-- PvP
 	RBG = { -- 10v10 Rated Battleground
+		enGB = "rbgs rbg rated",
+		deDE = nil, 
+		ruRU = nil,  
+		frFR = nil,  
+		zhTW = nil,
+		zhCN = nil,
 	},
 	ARENA = { -- 2v2 3v3 5v5 Arena
 		enGB = "2s 3s 5s 3v3 5v5 2v2 2vs2 3vs3 5vs5",
