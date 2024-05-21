@@ -1,5 +1,5 @@
 local TOCNAME,
-	---@class Addon : Addon_DungeonData	
+	---@class Addon_Dungeons : Addon_DungeonData	
 	GBB = ...;
 
 local isClassicEra = WOW_PROJECT_ID == WOW_PROJECT_CLASSIC
