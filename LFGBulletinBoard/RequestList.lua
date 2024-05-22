@@ -76,66 +76,70 @@ end)()
 -- this table is wiped on every `GBB.UpdateList` when the board is re-drawn
 local existingHeaders= {}
 
----@param yy integer The current bottom pos from the top of the scroll frame
+---@param scrollPos integer The current bottom pos from the top of the scroll frame
 ---@param dungeon string The dungeons "key" ie DM|MC|BWL|etc
----@return integer yy The updated bottom pos of the scroll frame after adding the header
-local function CreateHeader(yy, dungeon)
+---@return integer newScrollPos The updated bottom pos of the scroll frame after adding the header
+local function CreateHeader(scrollPos, dungeon)
 	local AnchorTop="GroupBulletinBoardFrame_ScrollChildFrame"
-	local AnchorRight="GroupBulletinBoardFrame_ScrollChildFrame"
 	local ItemFrameName="GBB.Dungeon_"..dungeon
+	local header = GBB.FramesEntries[dungeon]
+	local padY = 4 -- px, vspace around text
+	local bottomMargin = 3 -- px, vspace beneath the header
+	if not header then
+		---@class requestHeader : Frame
+		header = CreateFrame(
+			"Frame", ItemFrameName,
+			GroupBulletinBoardFrame_ScrollChildFrame, "GroupBulletinBoard_TmpHeader"
+		);
+		header:SetPoint("RIGHT", GroupBulletinBoardFrame_ScrollChildFrame, "RIGHT")
+		header:SetScript("OnMouseDown", GBB.ClickDungeon)
+		header:SetHeight(20)
 
-	if GBB.FramesEntries[dungeon]==nil then
-		GBB.FramesEntries[dungeon]=CreateFrame("Frame",ItemFrameName , GroupBulletinBoardFrame_ScrollChildFrame, "GroupBulletinBoard_TmpHeader")
-		GBB.FramesEntries[dungeon]:SetPoint("RIGHT", _G[AnchorRight], "RIGHT", 0, 0)
-		_G[ItemFrameName.."_name"]:SetPoint("RIGHT",GBB.FramesEntries[dungeon], "RIGHT", 0,0)
-		local fname,h=_G[ItemFrameName.."_name"]:GetFont()
-		_G[ItemFrameName.."_name"]:SetHeight(h)
-		_G[ItemFrameName]:SetHeight(h+5)
-		_G[ItemFrameName.."_name"]:SetFontObject(GBB.DB.FontSize)
+		header.Name = _G[ItemFrameName.."_name"] ---@type FontString
+		header.Name:SetAllPoints()
+		header.Name:SetFontObject(GBB.DB.FontSize)
+		header.Name:SetJustifyH("LEFT")
+		header.Name:SetJustifyV("MIDDLE")
 
+		GBB.FramesEntries[dungeon] = header
 	end
-
-	local colTXT
+	
+	local categoryName = GBB.dungeonNames[dungeon]
+	local levelRange = WrapTextInColorCode(GBB.LevelRange(dungeon), "FFAAAAAA")
+	
+	if GBB.FoldedDungeons[dungeon] then
+		categoryName = "[+] "..categoryName
+	end
+	
 	if GBB.DB.ColorOnLevel then
-		if GBB.dungeonLevel[dungeon][1] ==0 then
-			colTXT="|r"
+		if GBB.dungeonLevel[dungeon][1] == 0 then
+			-- skip
 		elseif GBB.dungeonLevel[dungeon][2] < GBB.UserLevel then
-			colTXT="|cFFAAAAAA"
+			categoryName = TRIVIAL_DIFFICULTY_COLOR:WrapTextInColorCode(categoryName)
 		elseif GBB.UserLevel<GBB.dungeonLevel[dungeon][1] then
-			colTXT="|cffff4040"
+			categoryName = IMPOSSIBLE_DIFFICULTY_COLOR:WrapTextInColorCode(categoryName)
 		else
-			colTXT="|cff00ff00"
+			categoryName = EASY_DIFFICULTY_COLOR:WrapTextInColorCode(categoryName)
 		end
-	else
-		colTXT="|r"
 	end
-
+	
 	-- Initialize this value now so we can (un)fold only existing entries later
 	-- while still allowing new headers to follow the HeadersStartFolded setting
 	if GBB.FoldedDungeons[dungeon] == nil then
 		GBB.FoldedDungeons[dungeon]=GBB.DB.HeadersStartFolded
 	end
 
-	if lastHeaderCategory~="" and not (lastIsFolded and GBB.FoldedDungeons[dungeon]) then
-		yy=yy+10
-	end
-
-	if GBB.FoldedDungeons[dungeon]==true then
-		colTXT=colTXT.."[+] "
-		lastIsFolded=true
-	else
-		lastIsFolded=false
-	end
-
-	_G[ItemFrameName.."_name"]:SetText(colTXT..GBB.dungeonNames[dungeon].." |cFFAAAAAA"..GBB.LevelRange(dungeon).."|r")
-	_G[ItemFrameName.."_name"]:SetFontObject(GBB.DB.FontSize)
-	GBB.FramesEntries[dungeon]:SetPoint("TOPLEFT",_G[AnchorTop], "TOPLEFT", 0,-yy)
-	GBB.FramesEntries[dungeon]:Show()
-
-	yy=yy+_G[ItemFrameName]:GetHeight()
+	header.Name:SetText(("%s %s"):format(categoryName, levelRange))
+	header.Name:SetFontObject(GBB.DB.FontSize)
+	local _, fontHeight = header.Name:GetFontObject():GetFont()
+	header:SetHeight(fontHeight + padY)
+	header:Show()
+	
+	header:SetPoint("TOPLEFT", GroupBulletinBoardFrame_ScrollChildFrame, "TOPLEFT", 0, -scrollPos)
+	scrollPos = scrollPos + header:GetHeight()
 	lastHeaderCategory = dungeon
 	existingHeaders[dungeon] = true
-	return yy
+	return scrollPos + bottomMargin
 end
 
 local function CreateItem(yy,i,doCompact,req,forceHight)
