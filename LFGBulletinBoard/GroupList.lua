@@ -64,7 +64,7 @@ function GBB.AddGroupList(entry)
 	end
 	GroupBulletinBoardFrame_GroupFrame:AddMessage(
 		"|Hplayer:".. entry.name .."|h"..
-		GBB.Tool.IconClass[entry.class]..
+		(GBB.Tool.GetClassIcon(entry.class) or "")..
 		"|c"..GBB.Tool.ClassColor[entry.class].colorStr ..
 		entry.name..
 		
@@ -139,9 +139,11 @@ local function EnterHyperlink(self,link,text)
 				GameTooltip_SetDefaultAnchor(GameTooltip,UIParent)
 				GameTooltip:SetOwner(GroupBulletinBoardFrame, "ANCHOR_BOTTOM", 0,-25)
 				GameTooltip:ClearLines()
-				GameTooltip:AddLine(GBB.Tool.IconClass[entry.class]..
+				GameTooltip:AddLine(
+					(GBB.Tool.GetClassIcon(entry.class) or "")..
 					"|c"..GBB.Tool.ClassColor[entry.class].colorStr ..
-					entry.name)			
+					entry.name
+				);			
 				if entry.dungeon then
 					GameTooltip:AddLine(entry.dungeon)
 				end

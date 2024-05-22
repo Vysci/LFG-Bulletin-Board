@@ -4,31 +4,24 @@ local Tool=Addon.Tool
 
 Tool.IconClassTexture="Interface\\GLUES\\CHARACTERCREATE\\UI-CHARACTERCREATE-CLASSES"
 Tool.IconClassTextureWithoutBorder="Interface\\WorldStateFrame\\ICONS-CLASSES"
-Tool.IconClassTextureCoord=CLASS_ICON_TCOORDS
-Tool.IconClass={
-  ["WARRIOR"]=	"|TInterface\\WorldStateFrame\\ICONS-CLASSES:0:0:0:0:256:256:0:64:0:64|t",
-  ["MAGE"]=		"|TInterface\\WorldStateFrame\\ICONS-CLASSES:0:0:0:0:256:256:64:128:0:64|t",
-  ["ROGUE"]=	"|TInterface\\WorldStateFrame\\ICONS-CLASSES:0:0:0:0:256:256:128:192:0:64|t",
-  ["DRUID"]=	"|TInterface\\WorldStateFrame\\ICONS-CLASSES:0:0:0:0:256:256:192:256:0:64|t",
-  ["HUNTER"]=	"|TInterface\\WorldStateFrame\\ICONS-CLASSES:0:0:0:0:256:256:0:64:64:128|t",
-  ["SHAMAN"]=	"|TInterface\\WorldStateFrame\\ICONS-CLASSES:0:0:0:0:256:256:64:128:64:128|t",
-  ["PRIEST"]=	"|TInterface\\WorldStateFrame\\ICONS-CLASSES:0:0:0:0:256:256:128:192:64:128|t",
-  ["WARLOCK"]=	"|TInterface\\WorldStateFrame\\ICONS-CLASSES:0:0:0:0:256:256:192:256:64:128|t",
-  ["PALADIN"]=	"|TInterface\\WorldStateFrame\\ICONS-CLASSES:0:0:0:0:256:256:0:64:128:192|t",
-  ["DEATHKNIGHT"]=	"|TInterface\\WorldStateFrame\\ICONS-CLASSES:0:0:0:0:256:256:64:128:128:192|t",
-  }
-Tool.IconClassBig={
-  ["WARRIOR"]=	"|TInterface\\WorldStateFrame\\ICONS-CLASSES:18:18:-4:4:256:256:0:64:0:64|t",
-  ["MAGE"]=		"|TInterface\\WorldStateFrame\\ICONS-CLASSES:18:18:-4:4:256:256:64:128:0:64|t",
-  ["ROGUE"]=	"|TInterface\\WorldStateFrame\\ICONS-CLASSES:18:18:-4:4:256:256:128:192:0:64|t",
-  ["DRUID"]=	"|TInterface\\WorldStateFrame\\ICONS-CLASSES:18:18:-4:4:256:256:192:256:0:64|t",
-  ["HUNTER"]=	"|TInterface\\WorldStateFrame\\ICONS-CLASSES:18:18:-4:4:256:256:0:64:64:128|t",
-  ["SHAMAN"]=	"|TInterface\\WorldStateFrame\\ICONS-CLASSES:18:18:-4:4:256:256:64:128:64:128|t",
-  ["PRIEST"]=	"|TInterface\\WorldStateFrame\\ICONS-CLASSES:18:18:-4:4:256:256:128:192:64:128|t",
-  ["WARLOCK"]=	"|TInterface\\WorldStateFrame\\ICONS-CLASSES:18:18:-4:4:256:256:192:256:64:128|t",
-  ["PALADIN"]=	"|TInterface\\WorldStateFrame\\ICONS-CLASSES:18:18:-4:4:256:256:0:64:128:192|t",
-  ["DEATHKNIGHT"]=	"|TInterface\\WorldStateFrame\\ICONS-CLASSES:18:18:-4:4:256:256:64:128:128:192|t",
-  }  
+
+---@param classFile string
+---@param size number?
+function Tool.GetClassIcon(classFile, size)
+	assert(type(classFile) == "string", "Usage: Tool.GetClassIcon(class: string, size: number?)", classFile)
+	local coords = CLASS_ICON_TCOORDS[classFile:upper()];
+	local size = size or 14;
+	if coords then
+		local icon = CreateTextureMarkup(
+			"Interface\\WorldStateFrame\\ICONS-CLASSES",
+			256, 256, -- og size
+			size, size, -- new size
+			coords[1], coords[2], coords[3], coords[4], -- texCoords
+			0, 1 -- x, y offsets
+		);
+		return icon;
+	end
+end
   
 Tool.RaidIconNames=ICON_TAG_LIST
 Tool.RaidIcon={

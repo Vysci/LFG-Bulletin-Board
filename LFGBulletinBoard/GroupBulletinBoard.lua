@@ -731,9 +731,10 @@ local function Event_CHAT_MSG_SYSTEM(arg1)
 			local txt
 			
 			if class and class~="" then 
-				txt="|Hplayer:"..name.."|h"..GBB.Tool.IconClass[class]..
-				"|c"..GBB.Tool.ClassColor[class].colorStr ..
-				name.."|r"..symbol.."|h"
+				txt="|Hplayer:"..name.."|h"
+					..(GBB.Tool.GetClassIcon(req.class) or "")
+					.."|c"..GBB.Tool.ClassColor[class].colorStr .. name.."|r"
+					..symbol.."|h";
 			else
 				txt="|Hplayer:"..name.."|h"..name..symbol.."|h"
 			end
