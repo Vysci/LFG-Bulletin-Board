@@ -1010,6 +1010,10 @@ local otherTags = {
 	  zhTW = nil,
 	  zhCN = nil,
 	} or nil,
+	--- Random Dungeon Finder
+	RDF = not isClassicEra and {
+	  enGB = "rdf random dungeons spam heroics",
+	} or nil
 }
 
 --- Secondary Dungeon Tags: related to identifying dungeon or activity name from a message.
@@ -1061,7 +1065,8 @@ end
 for locale, dungeonTags in pairs(GBB.dungeonTagsLoc) do
 	for dungeonKey, _ in pairs(dungeonTags) do
 		if not (validGameVersionKeys[dungeonKey] 
-			or GBB.dungeonSecondTags[dungeonKey])
+			or GBB.dungeonSecondTags[dungeonKey]
+			or otherTags[dungeonKey])
 		then
 			GBB.dungeonTagsLoc[locale][dungeonKey] = nil
 		end
