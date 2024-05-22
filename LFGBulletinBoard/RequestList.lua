@@ -196,7 +196,6 @@ local function CreateItem(scrollPos,i,scale,req,forceHeight)
 		entry.Message = _G[ItemFrameName.."_message"] ---@type FontString
 		entry.Time = _G[ItemFrameName.."_time"] ---@type FontString
 		
-
 		entry.Name:SetPoint("TOPLEFT", 0,-1.5)
 		entry.Name:SetFontObject(GBB.DB.FontSize)
 		entry.Time:SetPoint("TOP", entry.Name, "TOP", 0, 0)
@@ -236,6 +235,11 @@ local function CreateItem(scrollPos,i,scale,req,forceHeight)
 	-- request message
 	entry.Message:SetFontObject(GBB.DB.FontSize)
 	entry.Message:SetMaxLines(GBB.DB.DontTrunicate and 99 or 1)
+	entry.Message:SetJustifyV("MIDDLE")
+	entry.Message:ClearAllPoints() -- incase swapped to 2-line mode
+	entry.Message:SetText(" ") 
+	local lineHeight = entry.Message:GetStringHeight() + 1 -- ui nit +1 offset
+	
 	if GBB.DontTrunicate then
 		-- make sure the initial size of the FontString object is big enough
 		-- to allow for all possible text when not truncating
@@ -337,6 +341,7 @@ local function CreateItem(scrollPos,i,scale,req,forceHeight)
 	if scale < 1 then -- aka GBB.DB.CompactStyle
 		entry.Message:SetPoint("TOPLEFT",entry.Name, "BOTTOMLEFT", 0, -2)
 		entry.Message:SetPoint("RIGHT",entry.Time, "RIGHT", 0,0)
+		entry.Message:SetJustifyV("TOP")
 	else
 		entry.Message:SetPoint("TOPLEFT",entry.Name, "TOPRIGHT", 10)
 		entry.Message:SetPoint("RIGHT",entry.Time, "LEFT", -10,0) 
@@ -367,19 +372,14 @@ local function CreateItem(scrollPos,i,scale,req,forceHeight)
 	else
 		if scale < 1 then
 			projectedHeight = entry.Name:GetStringHeight() + entry.Message:GetStringHeight()
-		elseif GBB.DB.DontTrunicate then
-			projectedHeight = entry.Message:GetStringHeight()
-			entry.Message:SetJustifyV("TOP")
 		else
-			projectedHeight = math.max(
-				entry.Message:GetStringHeight(), entry.Name:GetStringHeight()
-			);
-			entry.Message:SetJustifyV("MIDDLE")
+			projectedHeight = GBB.DB.DontTrunicate 
+				and entry.Message:GetStringHeight()
+				or lineHeight;
 		end
 	end
 	if not GBB.DB.DontTrunicate and forceHeight then
 		projectedHeight=forceHeight
-		entry.Message:SetJustifyV("MIDDLE")
 	end
 	
 	-- finally set element heights and return container height
@@ -571,7 +571,7 @@ function GBB.UpdateList()
 						or itemsInCategory < GBB.DB.ShowOnlyNb) -- or limit not reached
 					and doesRequestMatchResultsFilter(req.message) -- matches global results filter
 				then
-					scrollHeight= scrollHeight + CreateItem(scrollHeight,requestIdx,itemScale,req,baseItemHeight) + 3 -- why add 3? 
+					scrollHeight= scrollHeight + CreateItem(scrollHeight,requestIdx,itemScale,req) + 3 -- why add 3? 
 					itemsInCategory = itemsInCategory + 1
 				end
 			end
