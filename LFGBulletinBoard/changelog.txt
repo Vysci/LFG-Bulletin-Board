@@ -2,10 +2,11 @@
 
 Group Bulletin Board 	
 3.3alpha
+ - Added hover highlights on entries and categories to better differentiate the frames the user is about to click.
  - Added a "Random Dungeon" category under "Others" for cataclysm RDF
  - "Tool Request" tab temporarily disabled until it can be fixed
  - Search pattern support for cata dungeons (see Search Patterns in addon settings, only english presets atm)
- - missing localizations for dungeon names added. (includes ptBR)
+ - Missing localizations for dungeon names added. (includes ptBR)
  - Updates to expansion filters in the config panel.
  - fixes to duplicate request with realm names enabled
 
