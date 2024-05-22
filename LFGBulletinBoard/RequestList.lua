@@ -86,7 +86,7 @@ local function CreateHeader(scrollPos, dungeon)
 	local padY = 4 -- px, vspace around text
 	local bottomMargin = 3 -- px, vspace beneath the header
 	if not header then
-		---@class requestHeader : Frame
+		---@class RequestHeader : Frame
 		header = CreateFrame(
 			"Frame", ItemFrameName,
 			GroupBulletinBoardFrame_ScrollChildFrame, "GroupBulletinBoard_TmpHeader"
@@ -108,9 +108,23 @@ local function CreateHeader(scrollPos, dungeon)
 			GameFontNormalLarge = "GameFontHighlightLarge",
 		}
 		header:SetScript("OnEnter", function(self)
+			---@cast self RequestHeader
+			if GBB.DB.ColorOnLevel then
+				-- save color esacped text
+				self.Name.savedText = self.Name:GetText()
+				local name, levels = self.Name.savedText:match("|c%x%x%x%x%x%x%x%x(.+)|r(.+)");
+				if name then
+					self.Name:SetText(name..(levels or ""))			
+				end
+			end
 			self.Name:SetFontObject(matchedHighlight[GBB.DB.FontSize or "GameFontNormal"])
 		end)
 		header:SetScript("OnLeave", function(self)
+			---@cast self RequestHeader
+			if GBB.DB.ColorOnLevel then
+				-- restore color escaped text
+				self.Name:SetText(self.Name.savedText)			
+			end
 			self.Name:SetFontObject(GBB.DB.FontSize or "GameFontNormal")
 		end)
 		
