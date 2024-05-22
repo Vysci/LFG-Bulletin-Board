@@ -100,6 +100,20 @@ local function CreateHeader(scrollPos, dungeon)
 		header.Name:SetFontObject(GBB.DB.FontSize)
 		header.Name:SetJustifyH("LEFT")
 		header.Name:SetJustifyV("MIDDLE")
+		
+		-- add fontstring highlight on header hover
+		local matchedHighlight = {
+			GameFontNormal = "GameFontHighlight",
+			GameFontNormalSmall = "GameFontHighlightSmall",
+			GameFontNormalLarge = "GameFontHighlightLarge",
+		}
+		header:SetScript("OnEnter", function(self)
+			self.Name:SetFontObject(matchedHighlight[GBB.DB.FontSize or "GameFontNormal"])
+		end)
+		header:SetScript("OnLeave", function(self)
+			self.Name:SetFontObject(GBB.DB.FontSize or "GameFontNormal")
+		end)
+		
 
 		GBB.FramesEntries[dungeon] = header
 	end
@@ -161,6 +175,18 @@ local function CreateItem(yy,i,doCompact,req,forceHight)
 		if GBB.DontTrunicate then
 			GBB.ClearNeeded=true
 		end
+		-- add a light hightlight on mouseover, requires we add a texture child		
+		-- Draw on "HIGHTLIGHT" layer to use base xml highlighting script
+		local hoverTex = GBB.FramesEntries[i]:CreateTexture(nil, "HIGHLIGHT")
+		-- padding used compensate text clipping out of its containing frame
+		local pad = 2 
+		hoverTex:SetPoint("TOPLEFT", -pad, pad)
+		hoverTex:SetPoint("BOTTOMRIGHT", pad, -pad)
+		hoverTex:SetAtlas("search-highlight")
+		hoverTex:SetDesaturated(true) -- its comes blue by default
+		hoverTex:SetVertexColor(1, 1, 1, 0.4)
+		hoverTex:SetBlendMode("ADD")
+
 		GBB.Tool.EnableHyperlink(GBB.FramesEntries[i])
 	end
 
