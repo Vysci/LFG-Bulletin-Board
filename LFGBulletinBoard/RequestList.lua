@@ -676,7 +676,21 @@ function GBB.GetDungeons(msg,name)
 				hasTag=true
 				isGood=true
 			else
-				dungeons[x]=true
+				local skip = false
+				if dungeons.TRADE and x ~= "TRADE" then
+					-- if a trade keyword and dungeon keyword are both present
+					-- disambiguate between items and dungeons.
+
+					-- useful for dungeons with more general search patterns
+					-- like "Throne of Four Winds"
+
+					local itemPattern =  "|hitem.*|h%[.*"..word..".*%]"
+					if msg:lower():find(itemPattern) then
+						-- keyword was part of a linked item not a dungeon request
+						skip = true
+					end
+				end
+				dungeons[x]= not skip
 			end
 		end
 		wordcount = #(parts)
