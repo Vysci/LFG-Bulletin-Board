@@ -1054,7 +1054,7 @@ dungeonTags["DEADMINES"] = { enGB = "dm" } -- should normalize "DM" to "DEADMINE
 -- see `CustomCategories.lua` for additional user-editable categories/tags
 local miscTags = {
 	TRADE = { -- Trade Services
-	  enGB = "buy buying sell selling wts wtb hitem henchant htrade enchanter",
+	  enGB = "buy buying sell selling wts wtb hitem henchant htrade enchanter wtt",
 	  deDE = "kaufe verkauf kauf verkaufe ah vk tg trinkgeld trinkgold vz schneider verzauberer verzaubere schliesskassetten schließkassetten kassetten schlossknacken schloßknacken alchimie",
 	  ruRU = "куплю продам втс втб чантера чант энчантера скрафчу сделаю чарю чары",
 	  frFR = "achete vends enchanteur vend",
