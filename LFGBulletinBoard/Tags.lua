@@ -597,7 +597,15 @@ local dungeonTags = {
 		frFR = nil,
 		zhTW = nil,
 		zhCN = nil,
-	},	
+	},
+	BFG = { -- The Battle for Gilneas
+		enGB = "bfg tbfg gilneas",
+		deDE = nil,
+		ruRU = nil,
+		frFR = nil,
+		zhTW = nil,
+		zhCN = nil,
+	},
 	BOT = { -- The Botanica
 		enGB = "botanica bot",
 		deDE = "bota botanika botanica",
@@ -733,7 +741,15 @@ local dungeonTags = {
 		frFR = nil,
 		zhTW = nil,
 		zhCN = nil,
-	},	
+	},
+	TB = { -- Tol Barad
+		enGB = "tb bftb barad",
+		deDE = nil,
+		ruRU = nil,
+		frFR = nil,
+		zhTW = nil,
+		zhCN = nil,
+	},
 	CHAMP = { -- Trial of the Champion
 		enGB = "champ toc champion",
 		deDE = nil,
@@ -749,6 +765,14 @@ local dungeonTags = {
 		frFR = "tc totc totc10 totc25 toc10 toc25 togc",
 		zhTW = nil,
 		zhCN = "十字军的试炼",
+	},
+	TP = { -- Twin Peaks
+		enGB = "tp peaks",
+		deDE = nil,
+		ruRU = nil,
+		frFR = nil,
+		zhTW = nil,
+		zhCN = nil,
 	},
 	ULD = { -- Uldaman
 		enGB = "uld ulda uldaman ulduman uldman uldama udaman",
@@ -943,8 +967,13 @@ local dungeonTags = {
 		zhTW = "暴風眼 暴風之眼",
 		zhCN = "风暴之眼",
 	},	
-	NULL = { -- Isle of Conquest
-
+	IOC = { -- Isle of Conquest
+		enGB = "ioc",
+		deDE = nil,
+		ruRU = nil,
+		frFR = nil,
+		zhTW = nil,
+		zhCN = nil,
 	},	
 	SOTA = { -- Strand of the Ancients
 		enGB = "sota strand ancient",

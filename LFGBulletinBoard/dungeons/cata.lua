@@ -26,10 +26,16 @@ local DungeonType = {
     -- Possible to use 5 for BG's but i want to preserve the ID just incase
 	Random = 6,
 	Battleground = 7
+	-- thinking of using 8 for "Rated" for rbgs and arenas to be sorted after normal bgs. 
 }
+
+local cataMaxLevel = GetMaxLevelForExpansionLevel(Expansions.Cataclysm)
+local isCataLevel = UnitLevel("player") >= (cataMaxLevel - 2) -- when to show Heroic DM & SFK as part of cata.
+
 -- The keys to this table need to be manually matched to the appropriate dungeonID
--- These same keys are used for identifying the preset tags/keywords for each dungeon. If a tags Key is missing from this table, the tags will not be registered.
--- modifications here should be reflected in the `Tags.lua` file and vice versa.
+-- These same keys are used for identifying the preset tags/keywords for each dungeon. 
+-- If a tag's Key is missing from here or the ActivityIDs table, the tags will not be registered.
+-- Modifications to keys in these tables should be reflected in the `Tags.lua` file and vice versa.
 local LFGDungeonIDs = {
 	RBG = 358,	-- 10v10 Rated Battleground (RBG)
 	AQ20 = 160,	-- Ahn'Qiraj Ruins
@@ -168,7 +174,6 @@ local LFGDungeonIDs = {
 }
 
 -- hack: add cata versions of sfk and deadmines at max level
-local isCataLevel = UnitLevel("player") >= 84
 if isCataLevel then
 	LFGDungeonIDs.DM = 326
 	LFGDungeonIDs.SFK = 327
@@ -185,7 +190,10 @@ for key, dungeonID in pairs(LFGDungeonIDs) do
     end
 end
 -- Following have no DungeonID in cata client so use a related ActivityID
+-- For those that are neither in the LFGDungeonIDs nor the GroupFinderActivity tables
+-- we can use a non colliding fake ID and spoof the data by other means. 
 -- https://wago.tools/db2/GroupFinderActivity?build=4.4.0.54525
+-- Note: this API seems to missing levels as of 4.40.5901. Manually enter in infoOverrides.
 local ActivityIDs = {
     ARENA = {
         936,    -- 2v2 Arena
@@ -196,21 +204,35 @@ local ActivityIDs = {
 	AB = 926,	-- Arathi Basin
 	BRD = 811,	-- Blackrock Depths 
 	EOTS = 934,	-- Eye of the Storm
-	NULL = 1144,	-- Isle of Conquest
-	SOTA = 1142,	-- Strand of the Ancients
+	SOTA = 1142,-- Strand of the Ancients
 	STR = 816,	-- Stratholme
-	-- BM = 831,	-- The Black Morass (only used in overrides)
 	WSG = 919,	-- Warsong Gulch
-	WG = 1117, -- Wintergrasp
+	WG = 1117, 	-- Wintergrasp
+	IOC = 1144, -- Isle of Conquest 
+	TB = 939, 	-- Battle for Tol Barad (Spoofed in infoOverrides)
+	TP = 940, 	-- Twin Peaks missing (Spoofed)
+	BFG = 941, 	-- Battle for Gilneas missing (Spoofed)
+	-- BM = 831,	-- The Black Morass (only used in overrides)
     -- MARA = 809,	-- Maraudon (now split into 3 wings)
 	-- STK = 802,	-- Stormwind Stockades (Use "Stormwind Stockade")
 	-- UB = 821,	-- Coilfang - Underbog (Just use Underbog)
 	-- DME = 813,	-- Dire Maul - East (Renamed in Cata)
 	-- DMN = 815,	-- Dire Maul - North (Renamed in Cata)
 	-- DMW = 814,	-- Dire Maul - West (Renamed in Cata)
-	-- Battle for Tol Barad missing
-	-- Twin Peaks missing
 }
+---@param name string
+---@param minLevel? number
+---@param maxLevel? number
+---@return DungeonInfo
+local spoofBattleground = function(name, minLevel, maxLevel, typeID, expansionID)
+	return {
+		name = name,
+		minLevel = minLevel or cataMaxLevel,
+		maxLevel = maxLevel or cataMaxLevel,
+		typeID = typeID or DungeonType.Battleground,
+		expansionID = expansionID or Expansions.Cataclysm,
+	}
+end	
 local activityIDToKey = {}
 for key, activityID in pairs(ActivityIDs) do
     if type(activityID) == "table" then
@@ -279,7 +301,6 @@ end
 -- For any data that isnt available in either api, we can manually override it here.
 -- Either manually hardcoded or by using a different api to get the data.
 -- key by dungeonKey, `nil`/missing info entries will be ignored.
-local effectiveMaxLevel = GetEffectivePlayerMaxLevel()
 local infoOverrides = {
 	-- Most People know this dungeon as "black morass" but its officially called "Opening of the Dark Portal" in lfgdungeoninfo
 	BM = { name = DUNGEON_FLOOR_COTTHEBLACKMORASS1 },
@@ -311,21 +332,26 @@ local infoOverrides = {
 	-- The pvp dungeons arent in th LFGDungeons table in the cata client atm. (except for RBG)
 	-- and the GetActivityInfoTable API is returning `0` for min/max level so we'll just hardcode it here.
 	ARENA = { 
-		minLevel = effectiveMaxLevel, maxLevel = effectiveMaxLevel,
+		minLevel = cataMaxLevel, maxLevel = cataMaxLevel,
 		name = C_LFGList.GetActivityGroupInfo(299), -- this is the only localized reference to "Arenas" i could find
 	}, 
-	WSG = { minLevel = 10, maxLevel = effectiveMaxLevel },
-	AB = { minLevel = 10, maxLevel = effectiveMaxLevel },
-	EOTS = { minLevel = 35, maxLevel = effectiveMaxLevel },
-	AV = { minLevel = 45, maxLevel = effectiveMaxLevel },
-	SOTA = { minLevel = 65, maxLevel = effectiveMaxLevel },
-	WG = { minLevel = 71, maxLevel = effectiveMaxLevel },
+	WSG = { minLevel = 10, maxLevel = cataMaxLevel },
+	AB = { minLevel = 10, maxLevel = cataMaxLevel },
+	EOTS = { minLevel = 35, maxLevel = cataMaxLevel },
+	AV = { minLevel = 45, maxLevel = cataMaxLevel },
+	SOTA = { minLevel = 65, maxLevel = cataMaxLevel },
+	WG = { minLevel = 71, maxLevel = cataMaxLevel },
 	RBG = { typeID = DungeonType.Battleground }, -- GetLFGDungeonInfo considers it a raid for some reason.
-	-- TB = { minLevel = effectiveMaxLevel, maxLevel = effectiveMaxLevel },
+	IOC = { minLevel = 71, maxLevel = cataMaxLevel },
+	-- Completely spoofed entries, missing in both LFGDungeons and GroupFinderActivity
+	TB = spoofBattleground(GetRealZoneText(732)),
+	TP = spoofBattleground(GetRealZoneText(726)),
+	BFG = spoofBattleground(GetRealZoneText(761)),
+	-- DM and SFK only "Heroic" @ max level
 	DM = isCataLevel and {
 		name = DUNGEON_NAME_WITH_DIFFICULTY:format(
-				DUNGEON_FLOOR_THEDEADMINES1, DUNGEON_DIFFICULTY2),
-		} or nil,
+			DUNGEON_FLOOR_THEDEADMINES1, DUNGEON_DIFFICULTY2)
+	} or nil,
 	SFK = isCataLevel and { 
 		name = DUNGEON_NAME_WITH_DIFFICULTY:format(
 			GetRealZoneText(33), DUNGEON_DIFFICULTY2)
@@ -340,16 +366,18 @@ do
     local function cacheActivityInfo(activityID)
         local cached = {}
         local activityInfo = C_LFGList.GetActivityInfoTable(activityID)
-		local additionalInfo = groupIDAdditionalInfo[activityInfo.groupFinderActivityGroupID]
-        cached = {
-			name = activityInfo.shortName or activityInfo.fullName,
-            minLevel = activityInfo.minLevel,
-            maxLevel = activityInfo.maxLevel,
-			expansionID = additionalInfo.expansionID,
-			typeID = additionalInfo.typeID,
-            tagKey = activityIDToKey[activityID],
-        }
-		-- Note: this API seems to missing levels.
+		if activityInfo then -- spoofied entries will be nil
+			local additionalInfo = groupIDAdditionalInfo[activityInfo.groupFinderActivityGroupID]
+			cached = {
+				name = activityInfo.shortName or activityInfo.fullName,
+				minLevel = activityInfo.minLevel,
+				maxLevel = activityInfo.maxLevel,
+				expansionID = additionalInfo.expansionID,
+				typeID = additionalInfo.typeID,
+				tagKey = activityIDToKey[activityID]
+			}
+		else cached.tagKey = activityIDToKey[activityID] end
+
 		local overrides = infoOverrides[cached.tagKey]
 		if overrides then
 			for key, value in pairs(overrides) do
@@ -461,6 +489,10 @@ function addon.GetSortedDungeonKeys(expansionID, typeID)
         if infoA.typeID == infoB.typeID then
             if infoA.minLevel == infoB.minLevel then
                 if infoA.maxLevel == infoB.maxLevel then
+					-- Edge case: Sort RBGS and ARENAS *after* normal bgs.
+					if infoA.typeID == DungeonType.Battleground then
+						return keyB == "RBG" or keyB == "ARENA"
+					end
                     if infoA.name == infoB.name then
                         return keyA < keyB
                     else return infoA.name < infoB.name end
