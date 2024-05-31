@@ -310,7 +310,10 @@ local infoOverrides = {
 	-- DMN = { minLevel = 42, maxLevel = 52 },
 	-- The pvp dungeons arent in th LFGDungeons table in the cata client atm. (except for RBG)
 	-- and the GetActivityInfoTable API is returning `0` for min/max level so we'll just hardcode it here.
-	ARENA = { minLevel = effectiveMaxLevel, maxLevel = effectiveMaxLevel },
+	ARENA = { 
+		minLevel = effectiveMaxLevel, maxLevel = effectiveMaxLevel,
+		name = C_LFGList.GetActivityGroupInfo(299), -- this is the only localized reference to "Arenas" i could find
+	}, 
 	WSG = { minLevel = 10, maxLevel = effectiveMaxLevel },
 	AB = { minLevel = 10, maxLevel = effectiveMaxLevel },
 	EOTS = { minLevel = 35, maxLevel = effectiveMaxLevel },
