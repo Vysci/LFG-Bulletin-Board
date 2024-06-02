@@ -585,34 +585,25 @@ GBB.dungeonSecondTags = {
 }
 
 -- Remove any unused dungeon tags based on game version
-if isClassicEra then
-	-- Get available dungeon tag keys up to current expansion
-	-- this includes raids/bgs/arenas/dungeons
-	local validDungeonKeys = GBB.GetSortedDungeonKeys()
-	local validGameVersionKeys = {}
-	for _, key in ipairs(validDungeonKeys) do
-		validGameVersionKeys[key] = true
-	end
-	for _, key in ipairs(GBB.Misc) do	
-		validGameVersionKeys[key] = true
-	end
-	-- iterate over all locales and `nil` out any entries for dungeons not valid for vanilla
-	for locale, dungeonTags in pairs(GBB.dungeonTagsLoc) do
-		for dungeonKey, _ in pairs(dungeonTags) do
-			if not (validGameVersionKeys[dungeonKey] 
-				or GBB.dungeonSecondTags[dungeonKey])
-			then
-				GBB.dungeonTagsLoc[locale][dungeonKey] = nil
-			end
-		end
-	end
-else
-	-- remove Bloodmoon and Incursions
-	for locale, dungeonTags in pairs(GBB.dungeonTagsLoc) do
-		for dungeonKey, _ in pairs(dungeonTags) do
-			if dungeonKey == "BLOOD" or dungeonKey == "INCUR" then
-				GBB.dungeonTagsLoc[locale][dungeonKey] = nil
-			end
+
+-- Passing no specific dungeonType or ExpansionID will yeild all available.
+-- This includes raids/bgs/arenas/dungeons from classic up to current expansion
+local validDungeonKeys = GBB.GetSortedDungeonKeys()
+local validGameVersionKeys = {}
+for _, key in ipairs(validDungeonKeys) do
+	validGameVersionKeys[key] = true
+end
+-- manually add MISC entries to validGameVersionKeys, this is kinda hacky atm.
+for _, key in ipairs(GBB.Misc) do	
+	validGameVersionKeys[key] = true
+end
+-- iterate over all locales and `nil` out any entries for dungeons not in current client
+for locale, dungeonTags in pairs(GBB.dungeonTagsLoc) do
+	for dungeonKey, _ in pairs(dungeonTags) do
+		if not (validGameVersionKeys[dungeonKey] 
+			or GBB.dungeonSecondTags[dungeonKey])
+		then
+			GBB.dungeonTagsLoc[locale][dungeonKey] = nil
 		end
 	end
 end

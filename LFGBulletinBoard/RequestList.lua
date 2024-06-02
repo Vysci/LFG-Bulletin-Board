@@ -445,10 +445,8 @@ function GBB.UpdateList()
 	existingHeaders = {} 
 
 	if GBB.DBChar.DontFilterOwn then
-		local playername=(UnitFullName("player"))
-
 		for i,req in pairs(GBB.RequestList) do
-			if type(req) == "table" and req.name==playername and req.last + GBB.DB.TimeOut*2 > time()then
+			if type(req) == "table" and req.guid == UnitGUID("player") and req.last + GBB.DB.TimeOut*2 > time()then
 				ownRequestDungeons[req.dungeon]=true
 			end
 		end
@@ -691,8 +689,9 @@ function GBB.GetDungeons(msg,name)
 	return dungeons, isGood, isBad, wordcount, isHeroic
 end
 
-function GBB.ParseMessage(msg,name,guid,channel)
-	if GBB.Initalized==false or name==nil or name=="" or msg==nil or msg=="" or string.len(msg)<4 then
+local fullNameByGUID = {} ---@type table<string, string> 
+function GBB.ParseMessage(msg,sender,guid,channel)
+	if GBB.Initalized==false or sender==nil or sender=="" or msg==nil or msg=="" or string.len(msg)<4 then
 		return
 	end
 
@@ -703,9 +702,17 @@ function GBB.ParseMessage(msg,name,guid,channel)
 
 	local locClass,engClass,locRace,engRace,Gender,gName,gRealm = GetPlayerInfoByGUID(guid)
 
-	-- Add server name to player name by commenting out the split
-	if GBB.DB.RemoveRealm then
-		name=GBB.Tool.Split(name, "-")[1] -- remove GBB.ServerName
+	-- track server name by player guid (sometimes no server is seen on initial messages)
+	local name, server = strsplit("-", sender)
+	if server then
+		fullNameByGUID[guid] = sender
+	end
+	if not GBB.DB.RemoveRealm then
+		sender = fullNameByGUID[guid] or sender
+		-- "mail" shows all realms
+		-- "none" shows realm only when different realm
+		-- "guild" like "none", but doesnt show guild realms names.
+		name = Ambiguate(sender, "none")
 	end
 
 	if GBB.DB.RemoveRaidSymbols then
@@ -716,7 +723,7 @@ function GBB.ParseMessage(msg,name,guid,channel)
 
 	local updated=false
 	for ir,req in pairs(GBB.RequestList) do
-		if type(req) == "table" and req.name == name and req.last+GBB.COMBINEMSGTIMER>=requestTime then
+		if type(req) == "table" and req.guid == guid and req.last+GBB.COMBINEMSGTIMER>=requestTime then
 			if req.dungeon=="TRADE" then
 				updated=true
 				if msg~=req.message then
@@ -756,7 +763,7 @@ function GBB.ParseMessage(msg,name,guid,channel)
 
 				if dungeon~="TRADE" then
 					for ir,req in pairs(GBB.RequestList) do
-						if type(req) == "table" and req.name == name and req.dungeon == dungeon then
+						if type(req) == "table" and req.guid == guid and req.dungeon == dungeon then
 							index=ir
 							break
 						end
@@ -768,7 +775,7 @@ function GBB.ParseMessage(msg,name,guid,channel)
 				if index==0 then
 					index=#GBB.RequestList +1
 					GBB.RequestList[index]={}
-					GBB.RequestList[index].name=name
+					GBB.RequestList[index].guid=guid
 					GBB.RequestList[index].class=engClass
 					GBB.RequestList[index].start=requestTime
 					GBB.RequestList[index].dungeon=dungeon
@@ -785,6 +792,7 @@ function GBB.ParseMessage(msg,name,guid,channel)
 					end
 				end
 
+				GBB.RequestList[index].name=name --update name incase realm found
 				GBB.RequestList[index].message=msg
 				GBB.RequestList[index].IsHeroic = isHeroic
 				GBB.RequestList[index].IsRaid = isRaid
@@ -816,7 +824,7 @@ function GBB.ParseMessage(msg,name,guid,channel)
 	if doUpdate then
 		for i,req in pairs(GBB.RequestList) do
 			if type(req) == "table" then
-				if req.name == name and req.last ~= requestTime then
+				if req.guid == guid and req.last ~= requestTime then
 					GBB.RequestList[i]=nil
 					GBB.ClearNeeded=true
 				end
@@ -828,6 +836,7 @@ function GBB.ParseMessage(msg,name,guid,channel)
 		local index=#GBB.RequestList +1
 		GBB.RequestList[index]={}
 		GBB.RequestList[index].name=name
+		GBB.RequestList[index].guid=guid
 		GBB.RequestList[index].class=engClass
 		GBB.RequestList[index].start=requestTime
 		if isBad then

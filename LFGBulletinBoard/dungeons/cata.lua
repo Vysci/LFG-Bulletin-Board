@@ -422,6 +422,7 @@ end
 --Optionally filter by expansionID and/or typeID
 ---@param expansionID ExpansionID?
 ---@param typeID DungeonTypeID|DungeonTypeID[]?
+---@return string[]
 function addon.GetSortedDungeonKeys(expansionID, typeID)
 	local keys = {}
 	for tagKey, info in pairs(infoByTagKey) do
