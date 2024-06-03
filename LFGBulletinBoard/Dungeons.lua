@@ -617,6 +617,12 @@ function GBB.GetDungeonNames()
 	end
 
 
+	-- use client generated names instead of english- 
+	-- as fallbacks for missing manual translations
+	local dungeonKeys = GBB.GetSortedDungeonKeys()
+	for _, key in ipairs(dungeonKeys) do
+		DefaultEnGB[key] = GBB.GetDungeonInfo(key).name or DefaultEnGB[key]
+	end
 	setmetatable(dungeonNames, {__index = DefaultEnGB})
 
 	dungeonNames["DEADMINES"]=dungeonNames["DM"]
@@ -642,11 +648,10 @@ end
 -- Generated in `/dungeons/{version}.lua` files
 local classicDungeonLevels = GBB.GetDungeonLevelRanges(GBB.Enum.Expansions.Classic)
 
-local tbcDungeonLevels = GBB.GetDungeonLevelRanges(GBB.Enum.Expansions.BurningCrusade)
-
-local pvpLevels = GBB.GetDungeonLevelRanges(nil, GBB.Enum.DungeonType.Battleground)
-
-local wotlkDungeonLevels = GBB.GetDungeonLevelRanges(GBB.Enum.Expansions.WrathOfTheLichKing)
+local cataDungeonKeys = GBB.GetSortedDungeonKeys(
+	GBB.Enum.Expansions.Cataclysm,
+	{ GBB.Enum.DungeonType.Dungeon, GBB.Enum.DungeonType.Raid }
+);
 
 local wotlkDungeonNames = GBB.GetSortedDungeonKeys(
 	GBB.Enum.Expansions.Wrath,
@@ -684,7 +689,6 @@ local miscCatergoriesLevels = {
 	["DEBUG"] = {0,100}, ["BAD"] =	{0,100}, ["TRADE"]=	{0,100},
 	["BLOOD"] = {0,100}, ["NIL"] = {0,100}
 }
-
 
 -- Needed because Lua sucks, Blizzard switch to Python please
 -- Takes in a list of dungeon lists, it will then concatenate the lists into a single list
@@ -740,11 +744,13 @@ GBB.Misc = {"MISC", "TRADE", "TRAVEL", (isSoD and "INCUR" or nil)}
 -- in FixFilters of Options.lua
 GBB.Seasonal = {
     ["BREW"] = { startDate = "09/20", endDate = "10/06"},
-	["HOLLOW"] = { startDate = "10/18", endDate = "11/01"}
+	["HOLLOW"] = { startDate = "10/18", endDate = "11/01"},
+	["LOVE"] = {startDate = "02/03", endDate = "02/17"},
+	["SUMMER"] = {startDate = "06/21", endDate = "07/05"},
 }
 
--- clear unused dungeons in classic to not generate options/checkboxes
--- with the new data pipeline api these tables should already empty anyways when in classic client
+-- clear unused dungeons in classic to not generate options/checkboxes with the-
+-- new data pipeline api these tables should already empty anyways when in classic client
 if isClassicEra then
 	tbcDungeonNames = {}
 	wotlkDungeonNames = {}
@@ -756,17 +762,21 @@ function GBB.GetDungeonSort()
 	-- when i add support for the newly added holiday dungeons.
 	for eventName, eventData in pairs(GBB.Seasonal) do
         if GBB.Tool.InDateRange(eventData.startDate, eventData.endDate) then
-			table.insert(wotlkDungeonNames, 1, eventName)
+			table.insert(cataDungeonKeys, 1, eventName)
 		else
 			table.insert(debugNames, 1, eventName)
 		end
     end
 
-	local dungeonOrder = { GBB.VanillaDungeonKeys, tbcDungeonNames, wotlkDungeonNames, pvpNames, GBB.Misc, debugNames}
+	local dungeonOrder = { 
+		GBB.VanillaDungeonKeys, tbcDungeonNames, wotlkDungeonNames, cataDungeonKeys, 
+		pvpNames, GBB.Misc, debugNames
+	}
 
 	local vanillaDungeonSize = #GBB.VanillaDungeonKeys
 	local tbcDungeonSize = #tbcDungeonNames
 	local wotlkDungeonSize = #wotlkDungeonNames
+	local cataDungeonSize = #cataDungeonKeys
 	local debugSize = #debugNames
 
 	local tmp_dsort, concatenatedSize = ConcatenateLists(dungeonOrder)
@@ -776,8 +786,10 @@ function GBB.GetDungeonSort()
 	GBB.MAXDUNGEON = vanillaDungeonSize
 	GBB.TBCMAXDUNGEON = vanillaDungeonSize  + tbcDungeonSize
 	GBB.WOTLKDUNGEONSTART = GBB.TBCMAXDUNGEON + 1
-	GBB.WOTLKMAXDUNGEON = wotlkDungeonSize + GBB.TBCMAXDUNGEON
+	GBB.WOTLKMAXDUNGEON = wotlkDungeonSize + GBB.TBCMAXDUNGEON + cataDungeonSize
 	GBB.ENDINGDUNGEONSTART = GBB.WOTLKMAXDUNGEON + 1
+	
+	-- used in Options.lua for drawing dungeon editboxes for search patterns 
 	GBB.ENDINGDUNGEONEND = concatenatedSize - debugSize - 1
 
 	for dungeon,nb in pairs(tmp_dsort) do
@@ -792,9 +804,10 @@ function GBB.GetDungeonSort()
 	dungeonSort[dungeonSort["SM2"]] = "SM2"
 	dungeonSort[dungeonSort["DM2"]] = "DM2"
 
-	-- This is set to a high index with no reverse link because we dont ever want to show this in the list during `UpdateList()`
+	-- This is set to a high index with no reverse link because-
+	-- we dont ever want to show this in the list during `UpdateList()` (might not be relevant anymore)
 	-- Ideally the "DEADMINES" key should never make it to the `req.dungeon` field as it should be converted to either "DM" or "DM2"/"DMW"/"DME"/"DMN" in GBB.GetDungeon() 
-	dungeonSort["DEADMINES"] = 99
+	dungeonSort["DEADMINES"] = GBB.ENDINGDUNGEONEND + 20
 	
 	return dungeonSort
 end
@@ -802,7 +815,10 @@ end
 if isClassicEra then
 	GBB.dungeonLevel = mergeTables(classicDungeonLevels, miscCatergoriesLevels)
 else
-	GBB.dungeonLevel = mergeTables(classicDungeonLevels, tbcDungeonLevels, wotlkDungeonLevels, pvpLevels, miscCatergoriesLevels)
+	GBB.dungeonLevel = mergeTables(
+		GBB.GetDungeonLevelRanges(), -- all dungeon types, all expansions
+		miscCatergoriesLevels
+	)
 end
 
 -- needed because Option.lua hardcodes a checkbox for "DEADMINES"

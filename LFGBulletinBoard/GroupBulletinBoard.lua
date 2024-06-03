@@ -637,8 +637,12 @@ function GBB.Init()
 		GroupBulletinBoardFrame_GroupFrame:Hide()
 	else
 		GBB.Tool.AddTab(GroupBulletinBoardFrame,GBB.L.TabRequest,GroupBulletinBoardFrame_ScrollFrame)
-		GBB.Tool.AddTab(GroupBulletinBoardFrame,GBB.L.TabLfg,GroupBulletinBoardFrame_LfgFrame)
-		GBB.Tool.AddTab(GroupBulletinBoardFrame,GBB.L.TabGroup,GroupBulletinBoardFrame_GroupFrame)
+		GBB.Tool.AddTab(GroupBulletinBoardFrame,GBB.L.TabLfg,GroupBulletinBoardFrame_LfgFrame);
+		(GroupBulletinBoardFrame.Tabs[2]--[[@as button]]):SetText(
+			WrapTextInColorCode(GroupBulletinBoardFrame.Tabs[2]:GetText(), "FF6D6D6D")
+		);
+		(GroupBulletinBoardFrame.Tabs[2]--[[@as button]]):EnableMouse(false);
+		-- GBB.Tool.AddTab(GroupBulletinBoardFrame,GBB.L.TabGroup,GroupBulletinBoardFrame_GroupFrame)
 	end
 	GBB.Tool.SelectTab(GroupBulletinBoardFrame,1)
 	if GBB.DB.EnableGroup then

@@ -14,14 +14,12 @@ local PROJECT_EXPANSION_ID = {
 	[WOW_PROJECT_CATACLYSM_CLASSIC or 0] = GBB.Enum.Expansions.Cataclysm,
 }
 local EXPANSION_PROJECT_ID = tInvert(PROJECT_EXPANSION_ID)
+
 local EXPANSION_FILTER_NAME = {
-	[GBB.Enum.Expansions.Classic] = 
-		GBB.locales[GetLocale()]["PanelFilter"] or EXPANSION_NAME0,
-	[GBB.Enum.Expansions.BurningCrusade] = 
-		GBB.locales[GetLocale()]["TBCPanelFilter"] or EXPANSION_NAME1,
-	[GBB.Enum.Expansions.Wrath] = 
-		GBB.locales[GetLocale()]["WotlkPanelFilter"] or EXPANSION_NAME2,
-	[GBB.Enum.Expansions.Cataclysm] = EXPANSION_NAME3,
+	[GBB.Enum.Expansions.Classic] = SUBTITLE_FORMAT:format(FILTERS, EXPANSION_NAME0),
+	[GBB.Enum.Expansions.BurningCrusade] = SUBTITLE_FORMAT:format(FILTERS, EXPANSION_NAME1),
+	[GBB.Enum.Expansions.Wrath] = SUBTITLE_FORMAT:format(FILTERS, EXPANSION_NAME2),
+	[GBB.Enum.Expansions.Cataclysm] = SUBTITLE_FORMAT:format(FILTERS, EXPANSION_NAME3),
 }
 --Options
 -------------------------------------------------------------------------------------
@@ -33,7 +31,14 @@ local function CheckBoxChar (Var,Init)
 	return GBB.Options.AddCheckBox(GBB.DBChar,Var,Init,GBB.L["CboxChar"..Var])
 end
 local function CheckBoxFilter (Dungeon,Init)
-	return GBB.Options.AddCheckBox(GBB.DBChar,"FilterDungeon".. Dungeon,Init,GBB.dungeonNames[Dungeon].." "..GBB.LevelRange(Dungeon,true))
+	local dungeonName = (GBB.GetDungeonInfo(Dungeon, true) or {}).name
+	return GBB.Options.AddCheckBox(
+		GBB.DBChar, "FilterDungeon".. Dungeon, 
+		Init, 
+		((GBB.dungeonNames[Dungeon] 
+			or dungeonName or "ERROR"
+		).." "..GBB.LevelRange(Dungeon,true))
+	)
 end
 local function CreateEditBoxNumber (Var,Init,width,width2)
 	return GBB.Options.AddEditBox(GBB.DB,Var,Init,GBB.L["Edit"..Var],width,width2,true)
@@ -48,8 +53,15 @@ local function CreateEditBoxDungeon(Dungeon,Init,width,width2)
 		GBB.DB.Custom[Dungeon]=GBB.DB["Custom_"..Dungeon]
 		GBB.DB["Custom_"..Dungeon]=nil
 	end
-	if GBB.dungeonNames[Dungeon] then
-		GBB.Options.AddEditBox(GBB.DB.Custom, Dungeon, Init, GBB.dungeonNames[Dungeon].." "..GBB.LevelRange(Dungeon,true), width, width2, false,nil, GBB.Tool.Combine(GBB.dungeonTagsLoc["enGB"][Dungeon]))
+	local dungeonName = (GBB.GetDungeonInfo(Dungeon, true) or {}).name
+	if GBB.dungeonNames[Dungeon] or dungeonName then
+		GBB.Options.AddEditBox(GBB.DB.Custom, Dungeon, Init, 
+			((GBB.dungeonNames[Dungeon] or 
+				dungeonName).." "..GBB.LevelRange(Dungeon,true)
+			),
+			width, width2, false, nil, 
+			GBB.Tool.Combine(GBB.dungeonTagsLoc["enGB"][Dungeon])
+		)
 	else
 		local txt=""
 		if Dungeon=="Search" then
@@ -159,11 +171,7 @@ end
 local function GenerateExpansionPanel(expansionID)
 	GBB.Options.AddPanel(EXPANSION_FILTER_NAME[expansionID], false, true)
 	
-	-- hack to show misc filters on wotlk panel
-	local WOW_PROJECT_ID = isCata and WOW_PROJECT_WRATH_CLASSIC or WOW_PROJECT_ID;
-	
 	local isCurrentXpac = expansionID == PROJECT_EXPANSION_ID[WOW_PROJECT_ID];
-	local xOffset = 0
 	local filters = {} ---@type CheckButton[]
 	local dungeons = GBB.GetSortedDungeonKeys(
 		expansionID, GBB.Enum.DungeonType.Dungeon
@@ -175,14 +183,6 @@ local function GenerateExpansionPanel(expansionID)
 		expansionID, GBB.Enum.DungeonType.Battleground
 	);
 	
-	-- hack to show bgs on wotlk panel atm
-	-- Bg keys only exists for the latest expansion
-	if expansionID == GBB.Enum.Expansions.Wrath then
-		bgs = GBB.GetSortedDungeonKeys(
-			GBB.Enum.Expansions.Cataclysm, GBB.Enum.DungeonType.Battleground
-		);
-	end
-
 	-- Dungeons 		
 	GBB.Options.AddCategory(DUNGEONS)
 	GBB.Options.Indent(10)
@@ -372,24 +372,19 @@ function GBB.OptionsInit ()
 	GBB.Options.AddButton(RESET_POSITION,GBB.ResetWindow)
 	GBB.Options.AddSpace()
 	----------------------------------------------------------
-	-- Pre Cataclysm Filters
+	-- Expansion specific filters
 	----------------------------------------------------------
-	if not isClassicEra then
-		------------------------------
+	if not isClassicEra then 
+		--- Cata Filters
+		GenerateExpansionPanel(GBB.Enum.Expansions.Cataclysm)
 		--- Wrath Filters
-		------------------------------
 		GenerateExpansionPanel(GBB.Enum.Expansions.Wrath)
-		------------------------------
 		--- TBC Filters
-		------------------------------
 		GenerateExpansionPanel(GBB.Enum.Expansions.BurningCrusade)
 	end
-	
-	----------------------------------------------------------
 	-- Vanilla Filters
-	----------------------------------------------------------
 	GenerateExpansionPanel(GBB.Enum.Expansions.Classic)
-	
+		
 	----------------------------------------------------------
 	-- Tags
 	----------------------------------------------------------

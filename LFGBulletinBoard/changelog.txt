@@ -1,6 +1,13 @@
 --[[
 
 Group Bulletin Board 	
+3.3alpha
+ - Tool request tab temporarily disabled until it can be fixed
+ - Search pattern support for cata dungeons (see Search Patterns config)
+ - missing localizations for dungeon names added. (includes ptBR)
+ - Updates to expansion filters in the config panel.
+ - cataclysm basic support (no search tags yet just ui) 
+ - fixes to duplicate request with realm names enabled
 
 3.24  
  - All credit goes to juemrami for all the fixes.
