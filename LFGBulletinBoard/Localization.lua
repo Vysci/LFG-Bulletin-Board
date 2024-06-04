@@ -1,5 +1,71 @@
-local TOCNAME,GBB=...
+local TOCNAME,
+	---@class Addon_Localization
+	GBB=...;
 
+	---Supports utf8 strings non english clients
+local initialChar = function(str)
+	---@cast str string
+	local initialByte = str:byte(1)
+	if initialByte <= 127 then
+		return string.char(str:byte(1))
+	elseif initialByte >= 192 and initialByte <= 223 then
+		return string.char(str:byte(1, 2))
+	elseif initialByte >= 224 and initialByte <= 239 then
+		return string.char(str:byte(1, 3))
+	end
+	return string.char(str:byte(1, 4))
+end
+
+-- Limited fallback localizations for missing locales
+local preLocalizedFallbacks = {
+	-- must be the default chat-name!
+	["lfg_channel"]= (function()
+		-- https://wago.tools/db2/ChatChannels?build=4.4.0.54986
+		-- enumarated following db order, LFG is always last channel
+		local channels = {EnumerateServerChannels()}
+		return channels[#channels]
+	end)(),
+	["world_channel"] = CHANNEL_CATEGORY_WORLD,
+	["GuildChannel"] = GUILD_CHAT,
+	["msgLevelRange"] = LFD_LEVEL_FORMAT_RANGE:gsub("%(", ("(%s "):format(LEVEL)),
+	["msgLevelRangeShort"]= LFD_LEVEL_FORMAT_RANGE:gsub("%s", ""),
+	["msgAddNote"] = SET_FRIENDNOTE_LABEL,
+	["msgLocalRestart"] = REQUIRES_RELOAD,
+	["heroicAbr"] = initialChar(PLAYER_DIFFICULTY2),
+	["normalAbr"] = initialChar(PLAYER_DIFFICULTY1),
+	["raidAbr"] = initialChar(LFG_TYPE_RAID),
+	["msgFontSize"] = ("%s (%s)"):format(FONT_SIZE, REQUIRES_RELOAD),
+
+	-- option panel
+	["HeaderSettings"] = SETTINGS,
+	-- ["HeaderTags"]="Search patterns",
+	["HeaderTagsCustom"] = CHANNEL_CATEGORY_CUSTOM,
+	-- ["PanelTags"]="Search patterns",
+	["PanelLocales"] = BUG_CATEGORY15, -- "Language Translations"
+	["HeaderChannel"] = CHANNELS,
+	["PanelAbout"] = COMBAT_MISC_INFO, -- "Misc Info"
+	["HeaderSlashCommand"] = CHAT_HELP_TEXT_LINE1, -- "Chat Commands: "
+	-- ["HeaderCredits"] = CREDITS, -- DNE
+	["HeaderInfo"] = INFO,
+	["CboxTagsCustom"] = CUSTOM,
+	["CboxColorByClass"]= SHOW_CLASS_COLOR,
+
+	["EditCustom_Bad"] = IGNORED,
+	["EditCustom_Heroic"] = PLAYER_DIFFICULTY2,
+
+	["BtnUnselectAll"] = CLEAR_ALL,
+	["BtnSelectAll"] = CHECK_ALL,
+	["BtnWhisper"] = WHISPER.." %s",
+	["BtnInvite"] = INVITE.." %s",
+	["BtnWho"] = WHO.." %s",
+	["BtnIgnore"]= IGNORE_PLAYER.." %s",
+	["BtnCancel"]  = CANCEL,
+
+	["TabRequest"]= LFGUILD_TAB_REQUESTS_NONE, --"Requests"
+	["TabGroup"] = MEMBERS,
+}
+
+---Localized addon strings, keyed by locale
 GBB.locales = {
 	enGB = {
 		["lfg_channel"]="LookingForGroup", -- must be the default chat-name!
@@ -732,36 +798,36 @@ GBB.locales = {
 		["AboutInfo"]="GBB provides an overview of the endless requests in the chat channels. It detects all requests to the classic dungeons, sorts them and presents them clearly way. Numerous filtering options reduce the gigantic number to exactly the dungeons that interest you. And if that's not enough, GBB will let you know about any new request via a sound or chat notification. And finally, GBB can post your request repeatedly.",
 		["AboutCredits"]="Original by GPI / Erytheia-Razorfen",
 	},
-
 }
-
 GBB.locales.esES=GBB.locales.esMX
 GBB.locales.enUS=GBB.locales.enGB
 
+---Returns localized addon display strings
+---@return table<string, string> L 
 function GBB.LocalizationInit()
 	local locale = GetLocale()
-	local l = GBB.locales[locale] or {}
-
-	if GroupBulletinBoardDB and GroupBulletinBoardDB.CustomLocales and type(GroupBulletinBoardDB.CustomLocales) == "table" then
-		for key,value in pairs(GroupBulletinBoardDB.CustomLocales) do
-			if value~=nil and value ~="" then
-				l[key.."_org"]=l[key] or GBB.locales.enGB[key]
-				l[key]=value
+	local localizedStrings = GBB.locales[locale] or {};
+	
+	if GroupBulletinBoardDB
+	and type(GroupBulletinBoardDB.CustomLocales) == "table"
+	then
+		-- insert any user set custom translations
+		for key, custom in pairs(GroupBulletinBoardDB.CustomLocales) do
+			if custom~=nil and custom ~="" then
+				-- save the original (set by us) 
+				localizedStrings[key.."_org"]=localizedStrings[key] or GBB.locales.enGB[key]
+				localizedStrings[key]=custom
 			end
 		end
 	end
 
-	-- Needed to not cause overflow when using english
+	-- Check needed to not cause overflow when using english
 	if (locale ~= "enGB" and locale ~= "enUS") then
-		setmetatable(l, {__index = function (t, k)
-			if GBB.l and GBB.l[k] then
-				return GBB.l[k]
-			elseif GBB.locales.enGB and GBB.locales.enGB[k] then
-				return GBB.locales.enGB[k]
-			else
-				return "["..k.."]"
-			end
+		setmetatable(localizedStrings, {__index = function (self, key)
+			local englishStr = GBB.locales.enGB[key]
+			local clientStr = preLocalizedFallbacks[key]
+			return clientStr or englishStr or "["..key.."]"
 		end})
 	end
-	return l
+	return localizedStrings
 end
