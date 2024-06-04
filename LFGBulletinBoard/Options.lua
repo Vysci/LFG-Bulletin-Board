@@ -1,5 +1,5 @@
 local TOCNAME,
-	---@class Addon
+	---@class Addon_Options : Addon_Localization
 	GBB= ...;
 local ChannelIDs
 local ChkBox_FilterDungeon
@@ -14,7 +14,8 @@ local PROJECT_EXPANSION_ID = {
 	[WOW_PROJECT_CATACLYSM_CLASSIC or 0] = GBB.Enum.Expansions.Cataclysm,
 }
 local EXPANSION_PROJECT_ID = tInvert(PROJECT_EXPANSION_ID)
-
+---hack to remove "World of Warcraft: " from classic on esES/esMX clients
+local EXPANSION_NAME0 = EXPANSION_NAME0:gsub("World of Warcraft: ", "")
 local EXPANSION_FILTER_NAME = {
 	[GBB.Enum.Expansions.Classic] = SUBTITLE_FORMAT:format(FILTERS, EXPANSION_NAME0),
 	[GBB.Enum.Expansions.BurningCrusade] = SUBTITLE_FORMAT:format(FILTERS, EXPANSION_NAME1),
@@ -386,11 +387,11 @@ function GBB.OptionsInit ()
 	GenerateExpansionPanel(GBB.Enum.Expansions.Classic)
 		
 	----------------------------------------------------------
-	-- Tags
+	-- Language Tags and Search Patterns
 	----------------------------------------------------------
 	GBB.Options.AddPanel(GBB.L["PanelTags"],false,true)
 	
-	GBB.Options.AddCategory(GBB.L["HeaderTags"])
+	GBB.Options.AddCategory(LANGUAGES_LABEL)
 	GBB.Options.Indent(10)
 	GBB.Options.InLine()
 	local locale = GetLocale()
@@ -400,7 +401,11 @@ function GBB.OptionsInit ()
 	CheckBox("TagsFrench", locale == "frFR")
 	CheckBox("TagsZhtw",locale == "zhTW")
 	CheckBox("TagsZhcn",locale == "zhCN")
-
+	GBB.Options.EndInLine()
+	GBB.Options.InLine()
+	-- hack: add ptBR, and esES/esMX checkboxes
+	CheckBox("TagsSpanish", locale == "esES" or locale == "esMX")
+	CheckBox("TagsPortuguese", locale == "ptBR")
 	CheckBox("TagsCustom",true)
 	GBB.Options.EndInLine()
 	GBB.Options.Indent(-10)
@@ -433,11 +438,11 @@ function GBB.OptionsInit ()
 	GBB.Options.AddSpace()
 	local locales= GBB.locales.enGB
 	local t={}
-	for key,value in pairs(locales) do 
+	for key, _ in pairs(locales) do 
 		table.insert(t,key)
 	end
 	table.sort(t)
-	for i,key in ipairs(t) do 
+	for _,key in ipairs(t) do 
 		
 		local col=GBB.L[key]~=nil and "|cffffffff" or "|cffff4040"
 		local txt=GBB.L[key.."_org"]~="["..key.."_org]" and GBB.L[key.."_org"] or GBB.L[key]
