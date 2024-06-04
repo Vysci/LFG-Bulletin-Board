@@ -33,6 +33,8 @@ local suffixTags = {
 	frFR = "groupe",
 	zhTW = "",
 	zhCN = "",
+	esES = "",
+	ptBR = ""
 }
 
 --- Search Tags: usually prepended to an looking for group chat message, ie the "lfg" in "lfg wailing caverns"
@@ -46,6 +48,8 @@ local searchTags = {
 
 	zhTW = "缺 來 找 徵 坦 補 DD 輸出 戰 聖 薩 獵 德 賊 法 牧 術",
 	zhCN = "= 缺 来 找 德 T N ND DZ FS SS SM",
+	esES = "buscando grupo bm bdg bg",
+	ptBR = "procurando grupo pm pg"
 }
 
 --- Bad Tags: for messages to ignore which may have matched a searchTag, like
@@ -57,6 +61,8 @@ local badTags = {
 	frFR = "",
 	zhTW = "影布 回流",
 	zhCN = "影布 回流",
+	esES = "",
+	ptBR = ""
 }
 
 --- Heroic Tags: for identifying dungeon/raid difficulties
@@ -67,6 +73,8 @@ local heroicTags = {
 	frFR = "h hc heroic hm hero heroique",
 	zhTW = "h 英雄",
 	zhCN = "h H 英雄",
+	esES = "h hc heroico heroica",
+	ptBR = "h hc heroico",
 }
 
 --- Dungeon Tags: for identifying dungeons related to messages.
@@ -78,6 +86,8 @@ local dungeonTags = {
 		frFR = nil,
 		zhTW = "RAQ AQ20 廢墟",
 		zhCN = "FX 废墟",
+		esES = "",
+		ptBR = ""
 	},
 	AQ40 = { -- Ahn'Qiraj Temple
 		enGB = "aq40",

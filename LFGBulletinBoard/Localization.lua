@@ -63,6 +63,10 @@ local preLocalizedFallbacks = {
 
 	["TabRequest"]= LFGUILD_TAB_REQUESTS_NONE, --"Requests"
 	["TabGroup"] = MEMBERS,
+
+	-- Language checkboxes 
+	["CboxTagsPortuguese"] = LFG_LIST_LANGUAGE_PTBR,
+	["CboxTagsSpanish"] = LFG_LIST_LANGUAGE_ESES,
 }
 
 ---Localized addon strings, keyed by locale
@@ -828,6 +832,9 @@ function GBB.LocalizationInit()
 			local clientStr = preLocalizedFallbacks[key]
 			return clientStr or englishStr or "["..key.."]"
 		end})
+	else -- insert new any *new* game translations to enUS/enGB
+		-- could also just manually insert them to the `GBB.locales.enGB` table
+		setmetatable(GBB.locales.enUS, {__index = preLocalizedFallbacks})
 	end
 	return localizedStrings
 end
