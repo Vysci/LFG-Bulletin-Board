@@ -483,16 +483,23 @@ function addon.GetSortedDungeonKeys(expansionID, typeID)
 			tinsert(keys, tagKey)
 		end
 	end
-		table.sort(keys, function(keyA, keyB)
+	local isRated = { -- move this to a trait on the info table
+		RBG = true,
+		ARENA = true
+	}
+	table.sort(keys, function(keyA, keyB)
 		local infoA = infoByTagKey[keyA];
         local infoB = infoByTagKey[keyB];
         if infoA.typeID == infoB.typeID then
             if infoA.minLevel == infoB.minLevel then
                 if infoA.maxLevel == infoB.maxLevel then
 					-- Edge case: Sort RBGS and ARENAS *after* normal bgs.
-					if infoA.typeID == DungeonType.Battleground then
-						return keyB == "RBG" or keyB == "ARENA"
+					if not isRated[keyA] and isRated[keyB] then
+						return true
+					elseif isRated[keyA] and not isRated[keyB] then
+						return false
 					end
+
                     if infoA.name == infoB.name then
                         return keyA < keyB
                     else return infoA.name < infoB.name end
