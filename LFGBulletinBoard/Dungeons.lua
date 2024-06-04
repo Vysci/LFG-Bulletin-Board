@@ -1,5 +1,5 @@
 local TOCNAME,
-	---@class Addon : Addon_DungeonData	
+	---@class Addon_Dungeons : Addon_DungeonData	
 	GBB = ...;
 
 local isClassicEra = WOW_PROJECT_ID == WOW_PROJECT_CLASSIC
@@ -623,6 +623,8 @@ function GBB.GetDungeonNames()
 	for _, key in ipairs(dungeonKeys) do
 		DefaultEnGB[key] = GBB.GetDungeonInfo(key).name or DefaultEnGB[key]
 	end
+	DefaultEnGB["RDF"] = LFG_TYPE_RANDOM_DUNGEON
+
 	setmetatable(dungeonNames, {__index = DefaultEnGB})
 
 	dungeonNames["DEADMINES"]=dungeonNames["DM"]
@@ -687,7 +689,7 @@ local raidNames = GBB.GetSortedDungeonKeys(
 local miscCatergoriesLevels = {
 	["MISC"] =  {0,100}, ["TRAVEL"]={0,100}, ["INCUR"]={0,100},
 	["DEBUG"] = {0,100}, ["BAD"] =	{0,100}, ["TRADE"]=	{0,100},
-	["BLOOD"] = {0,100}, ["NIL"] = {0,100}
+	["BLOOD"] = {0,100}, ["NIL"] = {0,100}, ["RDF"] = {0, 100},
 }
 
 -- Needed because Lua sucks, Blizzard switch to Python please
@@ -738,7 +740,10 @@ GBB.VanillaDungeonKeys = GBB.GetSortedDungeonKeys(
 
 
 -- used in Tags.lua for determining which tags are safe for game version
-GBB.Misc = {"MISC", "TRADE", "TRAVEL", (isSoD and "INCUR" or nil)}
+GBB.Misc = {
+	(isCata and "RDF" or nil), "MISC", "TRADE", "TRAVEL",
+	(isSoD and "INCUR" or nil)
+}
 
 -- used to disable holiday specific filters when not in the correct date range
 -- in FixFilters of Options.lua
