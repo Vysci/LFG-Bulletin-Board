@@ -361,11 +361,12 @@ local function CreateItem(yy,i,doCompact,req,forceHight)
 			prefix="|r"
 		end
 		local ClassIcon=""
-		if GBB.DB.ShowClassIcon and req.class and GBB.Tool.IconClass[req.class] then
+		if GBB.DB.ShowClassIcon and req.class then
 			if doCompact<1  or GBB.DB.ChatStyle then
-				ClassIcon=GBB.Tool.IconClass[req.class]
+				ClassIcon = GBB.Tool.GetClassIcon(req.class) or ""
+
 			else
-				ClassIcon=GBB.Tool.IconClassBig[req.class]
+				ClassIcon = GBB.Tool.GetClassIcon(req.class, 18) or ""
 			end
 		end
 
@@ -705,7 +706,7 @@ function GBB.LfgRequestShowTooltip(self)
 		if GBB.DB.EnableGroup and GBB.GroupTrans and GBB.GroupTrans[req.name] then
 			local entry=GBB.GroupTrans[req.name]
 
-			GameTooltip:AddLine(GBB.Tool.IconClass[entry.class]..
+			GameTooltip:AddLine((GBB.Tool.GetClassIcon(entry.class) or "")..
 				"|c"..GBB.Tool.ClassColor[entry.class].colorStr ..
 				entry.name)
 			if entry.dungeon then
