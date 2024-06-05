@@ -1,14 +1,14 @@
---[[
+Group Bulletin Board
 
-Group Bulletin Board 	
-3.3alpha
- - Added hover highlights on entries and categories to better differentiate the frames the user is about to click.
- - Added a "Random Dungeon" category under "Others" for cataclysm RDF
- - "Tool Request" tab temporarily disabled until it can be fixed
- - Search pattern support for cata dungeons (see Search Patterns in addon settings, only english presets atm)
- - Missing localizations for dungeon names added. (includes ptBR)
- - Updates to expansion filters in the config panel.
- - fixes to duplicate request with realm names enabled
+3.3
+ - Language support for `ptBR` and `esES`/`esMX` added. (Contributions for presets welcomed)
+ - Updates to settings translations for non-english clients.
+ - Fixes to pattern matching for messages with accented characters.
+ - Added hover highlights on entries and categories.
+ - "Tool Request" tab temporarily disabled until fixed
+ - English presets for Cataclysm dungeons Added.
+ - Filter settings for Cataclysm dungeons Added.
+ - Fixes to duplicate request with realm names enabled
 
 3.24  
  - All credit goes to juemrami for all the fixes.
@@ -281,5 +281,3 @@ Group Bulletin Board
 - option "Show a fixed number of requests"
 - option "Chat Style"
 - About-Panel
-		
-]]--
