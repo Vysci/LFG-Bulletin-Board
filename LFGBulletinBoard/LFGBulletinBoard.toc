@@ -20,5 +20,5 @@ RequestList.lua
 Options.lua
 GroupList.Lua
 GroupBulletinBoard.lua
-LfgToolList.lua
 GroupBulletinBoard.xml
+LfgToolList.lua
