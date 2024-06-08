@@ -41,6 +41,7 @@ GBB.COMBINEMSGTIMER=10
 GBB.MAXCOMPACTWIDTH=350
 GBB.ShouldReset = false
 
+local isClassicEra = WOW_PROJECT_ID == WOW_PROJECT_CLASSIC
 -- Tools
 -------------------------------------------------------------------------------------
 
@@ -633,29 +634,33 @@ function GBB.Init()
 	GBB.Initalized=true
 	
 	GBB.PopupDynamic=GBB.Tool.CreatePopup(GBB.OptionsUpdate)
-	-- Get build version to check against classic
-	local version, build, date, tocversion = GetBuildInfo()
-
 	GBB.InitGroupList()
-	if WOW_PROJECT_ID == WOW_PROJECT_CLASSIC then
-		GBB.Tool.AddTab(GroupBulletinBoardFrame,GBB.L.TabRequest,GroupBulletinBoardFrame_ScrollFrame)
-		GroupBulletinBoardFrame_LfgFrame:Hide()
+
+	if isClassicEra then
+		GBB.Tool.AddTab(GroupBulletinBoardFrame, GBB.L.TabRequest, GroupBulletinBoardFrame_ScrollFrame);
+		
+		-- GBB.Tool.AddTab(GroupBulletinBoardFrame, GBB.L.TabGroup, GroupBulletinBoardFrame_GroupFrame);
 		GroupBulletinBoardFrame_GroupFrame:Hide()
-	else
-		GBB.Tool.AddTab(GroupBulletinBoardFrame,GBB.L.TabRequest,GroupBulletinBoardFrame_ScrollFrame)
-		GBB.Tool.AddTab(GroupBulletinBoardFrame,GBB.L.TabLfg,GroupBulletinBoardFrame_LfgFrame);
-		(GroupBulletinBoardFrame.Tabs[2]--[[@as button]]):SetText(
-			WrapTextInColorCode(GroupBulletinBoardFrame.Tabs[2]:GetText(), "FF6D6D6D")
-		);
-		(GroupBulletinBoardFrame.Tabs[2]--[[@as button]]):EnableMouse(false);
-		-- GBB.Tool.AddTab(GroupBulletinBoardFrame,GBB.L.TabGroup,GroupBulletinBoardFrame_GroupFrame)
+		
+		-- Group Finder doesnt exist in classic era
+		GroupBulletinBoardFrame_LfgFrame:Hide()
+	else -- cata client
+		-- Hide all tabs except requests for the time being
+		
+		GBB.Tool.AddTab(GroupBulletinBoardFrame, GBB.L.TabRequest, GroupBulletinBoardFrame_ScrollFrame);
+
+		-- GBB.Tool.AddTab(GroupBulletinBoardFrame, GBB.L.TabGroup, GroupBulletinBoardFrame_GroupFrame);
+		GroupBulletinBoardFrame_GroupFrame:Hide()
+		
+		-- GBB.Tool.AddTab(GroupBulletinBoardFrame, GBB.L.TabLfg, GroupBulletinBoardFrame_LfgFrame);
+		GroupBulletinBoardFrame_LfgFrame:Hide()
 	end
 	GBB.Tool.SelectTab(GroupBulletinBoardFrame,1)
-	if GBB.DB.EnableGroup then
-		GBB.Tool.TabShow(GroupBulletinBoardFrame, 3)
-	else		
-		GBB.Tool.TabHide(GroupBulletinBoardFrame, 3)
-	end
+	-- if GBB.DB.EnableGroup then
+	-- 	GBB.Tool.TabShow(GroupBulletinBoardFrame, 3)
+	-- else		
+	-- 	GBB.Tool.TabHide(GroupBulletinBoardFrame, 3)
+	-- end
 	
 	GBB.Tool.TabOnSelect(GroupBulletinBoardFrame,3,GBB.UpdateGroupList)
 	GBB.Tool.TabOnSelect(GroupBulletinBoardFrame,2,GBB.UpdateLfgTool)
