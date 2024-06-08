@@ -84,12 +84,17 @@ local transliterations = {
 local function EnterHyperlink(self,link,text)
 	--print(link,text)
 	local part=Tool.Split(link,":")
-	if part[1]=="spell" or part[1]=="unit" or part[1]=="item" or part[1]=="enchant" or part[1]=="player" or part[1]=="quest" or part[1]=="trade"  then
-		GameTooltip_SetDefaultAnchor(GameTooltip,UIParent)
-		GameTooltip:SetOwner(UIParent,"ANCHOR_PRESERVE")
-		GameTooltip:ClearLines()
-		GameTooltip:SetHyperlink(link)
-		GameTooltip:Show()
+	if part[1]=="spell" or part[1]=="unit" 
+	or part[1]=="item" or part[1]=="enchant"
+	or part[1]=="player"or part[1]=="quest"
+	or part[1]=="trade"
+	then
+		local tooltip = ItemRefTooltip  -- or GameTooltip
+		GameTooltip_SetDefaultAnchor(tooltip, UIParent)
+		tooltip:SetOwner(UIParent,"ANCHOR_PRESERVE")
+		tooltip:ClearLines()
+		tooltip:SetHyperlink(link)
+		tooltip:Show()
 	end
 end
 local function LeaveHyperlink(self)
@@ -99,8 +104,8 @@ end
 
 function Tool.EnableHyperlink(frame)
 	frame:SetHyperlinksEnabled(true);
-	frame:SetScript("OnHyperlinkEnter",EnterHyperlink)
-	frame:SetScript("OnHyperlinkLeave",LeaveHyperlink)	
+	frame:SetScript("OnHyperlinkClick",EnterHyperlink)
+	-- frame:SetScript("OnHyperlinkLeave",LeaveHyperlink)	
 end
 	
 -- EventHandler
