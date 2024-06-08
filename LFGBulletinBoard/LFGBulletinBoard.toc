@@ -13,6 +13,7 @@ Chat.lua
 Localization.lua
 dungeons/classic.lua
 dungeons/cata.lua
+CustomCategories.lua
 Dungeons.lua
 Tags.lua
 RequestList.lua
