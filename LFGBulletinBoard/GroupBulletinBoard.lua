@@ -1,4 +1,6 @@
-local TOCNAME,GBB=...
+local TOCNAME,
+	---@class Addon_GroupBulletinBoard : Addon_Localization, Addon_CustomFilters, Addon_Dungeons, Addon_Tags, Addon_Options
+	GBB = ...;
 
 GroupBulletinBoard_Addon=GBB
 
@@ -536,12 +538,23 @@ function GBB.Init()
 	GBB.DB.showminimapbutton=nil
 	GBB.DB.minimapPos=nil
 	
+	GBB.InitializeCustomFilters();
+	
 	-- Get localize and Dungeon-Information
 	GBB.L = GBB.LocalizationInit()	
 	GBB.dungeonNames = GBB.GetDungeonNames()
+	-- Add custom categories to `dungeonNames`
+	MergeTable(GBB.dungeonNames, GBB.GetCustomFilterNames());
+	-- add custom categories to levels table
+	MergeTable(GBB.dungeonLevel, GBB.GetAllCustomFilterLevels());
+	-- add custom categories to `dungeonSort` (adds internally)
+	local additionalCategories = GBB.GetCustomFilterKeys();
+	GBB.dungeonSort = GBB.GetDungeonSort(additionalCategories);
 	GBB.RaidList = GBB.GetRaids()
-	--GBB.dungeonLevel
-	GBB.dungeonSort = GBB.GetDungeonSort()	
+
+	-- Add tags for custom categories into `dungeonTagsLoc`. 
+	-- Must do before the call to `GBB.CreateTagList()` below
+	GBB.AddCustomFilterTags(GBB.dungeonTagsLoc);
 
 	-- Reset Request-List
 	GBB.RequestList={}

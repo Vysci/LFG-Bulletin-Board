@@ -1,6 +1,10 @@
-local TOCNAME,Addon = ...
-Addon.Options=Addon.Options or {}
-local Options=Addon.Options
+local TOCNAME,
+	---@class Addon_LibGPIOptions	
+	Addon = ...;
+
+---@class Lib_GPIOptions
+local Options = Addon.Options or {}
+Addon.Options = Options
 
 local function Options_CheckButtonRightClick(self,button)
 	if button=="RightButton" then
