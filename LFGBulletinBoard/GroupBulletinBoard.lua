@@ -175,19 +175,22 @@ end
 
 function GBB.JoinLFG()
 	if GBB.Initalized and not GBB.LFG_Successfulljoined then 
-		if GBB.L["lfg_channel"] and GBB.L["lfg_channel"] ~= "" then 
-			local id, name = GetChannelName(GBB.L["lfg_channel"])
-			if id and id > 0  then 
-				GBB.LFG_Successfulljoined=true
+		if GBB.L["lfg_channel"] and GBB.L["lfg_channel"] ~= "" then
+			local id, _ = GetChannelName(GBB.L["lfg_channel"])
+			if id and id > 0 then
+				GBB.LFG_Successfulljoined = true
 			else
 				-- related issue: #247, wait for player to join any game channel before joining lfg channel.
-				local channel1 = GetChannelList()
-				if channel1 then 
+				local general, localD, globalD, _ = EnumerateServerChannels()
+				if (general and GetChannelName(general) > 0)
+				or (localD and GetChannelName(localD) > 0)
+				or (globalD and GetChannelName(globalD) > 0)
+				then
 					JoinChannelByName(GBB.L["lfg_channel"])
 				end
-			end	
+			end
 		else
-			-- missing localization
+			-- missing localization (show debug message?)
 			GBB.LFG_Successfulljoined=true
 		end
 	end
