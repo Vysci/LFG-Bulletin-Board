@@ -174,20 +174,21 @@ function GBB.PhraseChannelList(...)
 end
 
 function GBB.JoinLFG()
-	if GBB.Initalized==true and GBB.LFG_Successfulljoined==false then 
-		if GBB.L["lfg_channel"]~=nil and GBB.L["lfg_channel"]~="" then 
-			local id,name=GetChannelName(GBB.L["lfg_channel"])
-			if  id~=nil and id >0  then 
-				--DEFAULT_CHAT_FRAME:AddMessage("Success join lfg-channel")
+	if GBB.Initalized and not GBB.LFG_Successfulljoined then 
+		if GBB.L["lfg_channel"] and GBB.L["lfg_channel"] ~= "" then 
+			local id, name = GetChannelName(GBB.L["lfg_channel"])
+			if id and id > 0  then 
 				GBB.LFG_Successfulljoined=true
 			else
-				--DEFAULT_CHAT_FRAME:AddMessage("try join lfg-channel")
-				JoinChannelByName(GBB.L["lfg_channel"])
+				-- related issue: #247, wait for player to join any game channel before joining lfg channel.
+				local channel1 = GetChannelList()
+				if channel1 then 
+					JoinChannelByName(GBB.L["lfg_channel"])
+				end
 			end	
 		else
 			-- missing localization
 			GBB.LFG_Successfulljoined=true
-			--DEFAULT_CHAT_FRAME:AddMessage("Channel not definied for "..GetLocale())
 		end
 	end
 end
