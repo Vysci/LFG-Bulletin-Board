@@ -2,7 +2,9 @@ local TOCNAME,
 	---@class Addon_Localization
 	GBB=...;
 
-	---Supports utf8 strings non english clients
+local isClassicEra = WOW_PROJECT_ID == WOW_PROJECT_CLASSIC
+
+---Supports utf8 strings for non-english clients
 local initialChar = function(str)
 	---@cast str string
 	local initialByte = str:byte(1)
@@ -16,14 +18,16 @@ local initialChar = function(str)
 	return string.char(str:byte(1, 4))
 end
 
--- Limited fallback localizations for missing locales
+-- Limited fallback localizations for missing locales, these are generated with FrameXML global strings
+-- or info from game API's that return already localized strings for the user client's locale
 local preLocalizedFallbacks = {
 	-- must be the default chat-name!
 	["lfg_channel"]= (function()
-		-- https://wago.tools/db2/ChatChannels?build=4.4.0.54986
-		-- enumarated following db order, LFG is always last channel
-		local channels = {EnumerateServerChannels()}
-		return channels[#channels]
+		-- related issues: #207
+		-- client specific Id's here: https://wago.tools/db2/ChatChannels?build=4.4.0.54986
+		local lfgChannelID = isClassicEra and 24 or 26
+		local localizedName = C_ChatInfo.GetChannelShortcutForChannelID(lfgChannelID)
+		return localizedName
 	end)(),
 	["world_channel"] = CHANNEL_CATEGORY_WORLD,
 	["GuildChannel"] = GUILD_CHAT,
@@ -72,7 +76,7 @@ local preLocalizedFallbacks = {
 ---Localized addon strings, keyed by locale
 GBB.locales = {
 	enGB = {
-		["lfg_channel"]="LookingForGroup", -- must be the default chat-name!
+		["lfg_channel"] = preLocalizedFallbacks["lfg_channel"], -- may as well use the client generated string
 		["world_channel"]="World", -- must be the default chat-name!
 		["GuildChannel"]="Guild Channel",
 
@@ -281,7 +285,7 @@ GBB.locales = {
 	["HeaderTags"] = "Wörterlisten",
 	["HeaderTagsCustom"] = "Eigene Wörterlisten",
 	["HeaderUsage"] = "Benutzung",
-	["lfg_channel"] = "SucheNachGruppe",
+	-- ["lfg_channel"] = "SucheNachGruppe", -- uses pre-localized fallback
 	["world_channel"] = "Welt",
 	["msgAddNote"] = "Notiz von %s",
 	["msgCustomList"] = "Hier die eigenen eindeutigen Suchbegriffe eingeben. Wenn nichts vorhanden ist, werden die englischen als ausgegraues Beispiel angezeigt.",
@@ -314,11 +318,11 @@ GBB.locales = {
 	["TabRequest"] = "Anfragen"
 	},
 	esMX = {
-		["lfg_channel"]="BuscarGrupo",
+		-- ["lfg_channel"]="BuscarGrupo", -- uses fallback
 		["world_channel"] = "Mundo",
 	},
 	frFR = {
-	["lfg_channel"]="RechercheGroupe",
+	-- ["lfg_channel"]="RechercheGroupe", -- uses fallback
 	["world_channel"] = "Général",
 	["GuildChannel"]="Guilde",
 	["msgNbRequest"]="%d Requête(s) - cliquez pour envoyer un message - shift+click pour regarder les informations - ctrl+click pour inviter - alt+clic pour envoyer un message de role",
@@ -516,7 +520,7 @@ GBB.locales = {
 		["HeaderTags"]="Шаблоны поиска",
 		["HeaderTagsCustom"]="Пользовательские шаблоны поиска",
 		["HeaderUsage"]="Использование",
-		["lfg_channel"]="ПоискСпутников",
+		-- ["lfg_channel"]="ПоискСпутников", -- uses fallback
 		["world_channel"]="Мир",
 		["msgCustomList"]="Введите здесь свои уникальные шаблоны для поиска. Если занчение не заполнено, английские шаблоны отображаются в виде примера серым цветом.",
 		["msgDoAnnounce"]="Запрос объявлен.",
@@ -545,7 +549,7 @@ GBB.locales = {
 		["SlashReset"]="Сбросить положение главного окна",
 	},
 	zhTW = {
-		["lfg_channel"]="尋求組隊", -- must be the default chat-name!
+		-- ["lfg_channel"]="尋求組隊", -- uses fallback
 		["world_channel"]="綜合", -- must be the default chat-name!
 		["GuildChannel"]="公會",
 
@@ -674,7 +678,7 @@ GBB.locales = {
 		["AboutCredits"]="Original by GPI / Erytheia-Razorfen",
 	},
 	zhCN = {
-		["lfg_channel"]="寻求组队", -- must be the default chat-name!
+		-- ["lfg_channel"]="寻求组队", -- uses fallback
 		["world_channel"]="综合", -- must be the default chat-name!
 		["GuildChannel"]="公会",
 
@@ -825,6 +829,7 @@ function GBB.LocalizationInit()
 		end
 	end
 
+	-- Set fallback localizations for missing non-english locales
 	-- Check needed to not cause overflow when using english
 	if (locale ~= "enGB" and locale ~= "enUS") then
 		setmetatable(localizedStrings, {__index = function (self, key)
