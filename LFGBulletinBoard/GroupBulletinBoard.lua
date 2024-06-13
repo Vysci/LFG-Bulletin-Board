@@ -181,16 +181,31 @@ function GBB.JoinLFG()
 				GBB.LFG_Successfulljoined = true
 			else
 				-- related issue: #247, wait for player to join any game channel before joining lfg channel.
-				local general, localD, globalD, _ = EnumerateServerChannels()
-				if (general and GetChannelName(general) > 0)
-				or (localD and GetChannelName(localD) > 0)
-				or (globalD and GetChannelName(globalD) > 0)
-				then
-					JoinChannelByName(GBB.L["lfg_channel"])
+				-- note: this will still join LFG in `/1` if the slot is empty. 
+				local general, localDefense = EnumerateServerChannels()
+				local generalID = general and GetChannelName(general)
+				local tradeOrDefenseID = localDefense and GetChannelName(localDefense) -- trade in main cities.
+				if (generalID and generalID > 0) or (tradeOrDefenseID and tradeOrDefenseID > 0) then
+					local _, name = JoinPermanentChannel(GBB.L["lfg_channel"])
+					local info = C_ChatInfo.GetChannelInfoFromIdentifier(name or "")
+					if info then
+						-- notify user that the addon has joined the channel.
+						DEFAULT_CHAT_FRAME:AddMessage(
+							GBB.MSGPREFIX..CHAT_YOU_JOINED_NOTICE:format(
+								info.localID,
+								("%d. %s"):format(info.localID, info.name)
+							), Chat_GetChannelColor(ChatTypeInfo["CHANNEL"])
+						)
+					else
+						-- notify user that the addon failed to join the channel.
+						DEFAULT_CHAT_FRAME:AddMessage(
+							GBB.MSGPREFIX..CHAT_INVALID_NAME_NOTICE..": ".. GBB.L["lfg_channel"],
+							Chat_GetChannelColor(ChatTypeInfo["CHANNEL"])
+						)
+					end
 				end
 			end
 		else
-			-- missing localization (show debug message?)
 			GBB.LFG_Successfulljoined=true
 		end
 	end
