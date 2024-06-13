@@ -204,6 +204,7 @@ GBB.locales = {
 		["AboutSlashCommand"]="<value> can be true, 1, enable, false, 0, disable. If <value> is omitted, the current status switches.",
 		["AboutInfo"]="GBB provides an overview of the endless requests in the chat channels. It detects all requests to the classic dungeons, sorts them and presents them clearly way. Numerous filtering options reduce the gigantic number to exactly the dungeons that interest you. And if that's not enough, GBB will let you know about any new request via a sound or chat notification. And finally, GBB can post your request repeatedly.",
 		["AboutCredits"]="Original by GPI / Erytheia-Razorfen",
+		["SAVE_ON_ENTER"] = ("Press \"%s\" to save changes."):format(KEY_ENTER),
 	},
 	deDE = {
 	["AboutInfo"] = "GBB verschafft euch den Überblick über die endlosen Anfragen in den Chat-Channels. Es erkennt alle Anfragen zu den klassischen Instanzen, sortiert sie und stellt sie übersichtlich da. Filtermöglichkeiten reduziert die gigantische Anzahl auf genau die Instanzen, die dich interessieren. Und falls das nicht reicht, informiert GBB dich über jede neue Anfrage mittels eines Sounds oder Chat-Benachrichtigung. Und abschließend kann GBB deine persönliche Anfrage wiederholt veröffentlichen.",
@@ -315,11 +316,13 @@ GBB.locales = {
 	["SlashDefault"] = "Hauptfenster öffnen",
 	["SlashReset"] = "Hauptfenster zurücksetzen",
 	["TabGroup"] = "Mitglieder",
-	["TabRequest"] = "Anfragen"
+	["TabRequest"] = "Anfragen",
+	["SAVE_ON_ENTER"] = ("Drücken Sie \"%s\", um die Änderungen zu speichern."):format(KEY_ENTER),
 	},
 	esMX = {
 		-- ["lfg_channel"]="BuscarGrupo", -- uses fallback
 		["world_channel"] = "Mundo",
+		["SAVE_ON_ENTER"] = ("Pulse \"%strings\" para guardar los cambios."):format(KEY_ENTER),
 	},
 	frFR = {
 	-- ["lfg_channel"]="RechercheGroupe", -- uses fallback
@@ -438,6 +441,7 @@ GBB.locales = {
 	["AboutSlashCommand"]="<value> peut être true, 1, enable, false, 0, disable. Si <value> est omise, l'état actuel commute.",
 	["AboutInfo"]="GBB fournit un aperçu des demandes sans fin dans les canaux de discussion. Il détecte toutes les demandes concernant les donjons classiques, les trie et les présente de manière claire. De nombreuses options de filtrage réduisent le nombre gigantesque à exactement les donjons qui vous intéressent. Et si cela ne suffit pas, GBB vous informe de toute nouvelle demande par une notification sonore ou par chat. Et enfin, GBB peut poster votre demande à plusieurs reprises",
 	["AboutCredits"]="Original par GPI / Erytheia-Razorfen",
+	["SAVE_ON_ENTER"] =("Appuyez sur « %s » pour enregistrer les modifications."),
 	},
 	ruRU = {
 		["AboutInfo"]="GBB обеспечивает группировку нескончаемых запросов в каналах чата. Он обнаруживает все сообщения про поиск группы в классические подземелья, сортирует и удобно представляет их. Многочисленные опции фильтрации уменьшают гигантское число сообщений и оставляют только те подземелья, которые вас интересуют. А если этого недостаточно, GBB сообщит вам о любом новом запросе через звуковое или чат-уведомление. И, наконец, GBB может публиковать ваш запрос повторно.",
@@ -547,6 +551,7 @@ GBB.locales = {
 		["SlashConfig"]="Открыть конфигурацию",
 		["SlashDefault"]="открыть главное окно",
 		["SlashReset"]="Сбросить положение главного окна",
+		["SAVE_ON_ENTER"] = ("Нажмите \"%s\", чтобы сохранить изменения."):format(KEY_ENTER),
 	},
 	zhTW = {
 		-- ["lfg_channel"]="尋求組隊", -- uses fallback
@@ -676,6 +681,7 @@ GBB.locales = {
 
 		["AboutInfo"]="GBB provides an overview of the endless requests in the chat channels. It detects all requests to the classic dungeons, sorts them and presents them clearly way. Numerous filtering options reduce the gigantic number to exactly the dungeons that interest you. And if that's not enough, GBB will let you know about any new request via a sound or chat notification. And finally, GBB can post your request repeatedly.",
 		["AboutCredits"]="Original by GPI / Erytheia-Razorfen",
+		["SAVE_ON_ENTER"] = ("按下「%s」以儲存變更。"):format(KEY_ENTER),
 	},
 	zhCN = {
 		-- ["lfg_channel"]="寻求组队", -- uses fallback
@@ -805,7 +811,11 @@ GBB.locales = {
 
 		["AboutInfo"]="GBB provides an overview of the endless requests in the chat channels. It detects all requests to the classic dungeons, sorts them and presents them clearly way. Numerous filtering options reduce the gigantic number to exactly the dungeons that interest you. And if that's not enough, GBB will let you know about any new request via a sound or chat notification. And finally, GBB can post your request repeatedly.",
 		["AboutCredits"]="Original by GPI / Erytheia-Razorfen",
+		["SAVE_ON_ENTER"] = ("按下\"%s\"以保存更改。"):format(KEY_ENTER),
 	},
+	ptBR = {
+		SAVE_ON_ENTER = ("Pressione \"%s\" para salvar as alterações."):format(KEY_ENTER)
+	}
 }
 GBB.locales.esES=GBB.locales.esMX
 GBB.locales.enUS=GBB.locales.enGB

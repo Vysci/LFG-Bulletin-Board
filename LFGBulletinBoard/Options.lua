@@ -402,6 +402,14 @@ function GBB.OptionsInit ()
 	GenerateExpansionPanel(GBB.Enum.Expansions.Classic)
 		
 	----------------------------------------------------------
+	-- Custom Filters/Categories
+	----------------------------------------------------------
+	local scrollChild = GBB.Options.AddPanel(ADDITIONAL_FILTERS, false, true);
+	scrollChild:SetWidth(
+		InterfaceOptionsFramePanelContainer:GetWidth() - scrollChild:GetParent().ScrollBar:GetWidth()
+	);
+	GBB.UpdateAdditionalFiltersPanel(scrollChild);
+	----------------------------------------------------------
 	-- Language Tags and Search Patterns
 	----------------------------------------------------------
 	GBB.Options.AddPanel(GBB.L["PanelTags"],false,true)
