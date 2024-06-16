@@ -25,7 +25,7 @@ local PartyChangeEvent={ "GROUP_JOINED", "GROUP_ROSTER_UPDATE", "RAID_ROSTER_UPD
 -- GBB.RequestForPopup
 
 -- GBB.DataBrockerInitalized
-GBB.MSGPREFIX="GBB: "
+GBB.MSGPREFIX="LFG Bulletin Board: "
 GBB.TAGBAD="---"
 GBB.TAGSEARCH="+++"
 
@@ -173,6 +173,23 @@ function GBB.PhraseChannelList(...)
 	return t
 end
 
+local addonLinkStub = "\124Haddon:%s:%s\124h[%s]\124h\124r"
+local gotoSettingsArg1 = "GBB_GOTO_CHAT_SETTINGS"
+local linkDisplayStr = (function() 
+	local str = { -- todo move to Localization.lua
+        ["enUS"] = "Click Here to Reorder Chat Channels!",
+        ["deDE"] = "Klicken Sie hier, um die Chat-Kanäle neu zu ordnen!",
+        ["esES"] = "¡Haz clic aquí para reordenar los canales del chat!",
+        ["esMX"] = "¡Haz clic aquí para reordenar los canales de chat!",
+        ["frFR"] = "Cliquez ici pour réorganiser les canaux de discussion !",
+        ["koKR"] = "여기를 클릭하여 채팅 채널을 재정렬하십시오!",
+        ["ptBR"] = "Clique aqui para reordenar os canais de bate-papo!",
+        ["ruRU"] = "Щелкните здесь, чтобы изменить порядок каналов чата!",
+        ["zhCN"] = "点击此处重新排序聊天频道！",
+        ["zhTW"] = "點擊這裡重新排序聊天頻道！",
+    }
+	return str[GetLocale()] or str["enUS"]
+end)()
 function GBB.JoinLFG()
 	if GBB.Initalized and not GBB.LFG_Successfulljoined then 
 		if GBB.L["lfg_channel"] and GBB.L["lfg_channel"] ~= "" then
@@ -203,6 +220,13 @@ function GBB.JoinLFG()
 							Chat_GetChannelColor(ChatTypeInfo["CHANNEL"])
 						)
 					end
+					if generalID ~= 1 then -- prompt user to reorder chat channels
+						local link = WrapTextInColorCode(
+							addonLinkStub:format(TOCNAME, gotoSettingsArg1, linkDisplayStr), 
+							CreateColor(Chat_GetChannelColor(ChatTypeInfo["SYSTEM"])):GenerateHexColor()
+						)
+						DEFAULT_CHAT_FRAME:AddMessage(GBB.MSGPREFIX..link)
+					end
 				end
 			end
 		else
@@ -210,6 +234,17 @@ function GBB.JoinLFG()
 		end
 	end
 end
+hooksecurefunc("SetItemRef", function(link)
+	local linkType, addon, arg1 = strsplit(":", link)
+	if linkType == "addon" and addon == TOCNAME then
+		if arg1 == gotoSettingsArg1 then
+			ShowUIPanel(ChatConfigFrame)
+			PlaySound(SOUNDKIT.IG_MAINMENU_OPTION)
+			ChatConfigFrame.ChatTabManager:UpdateSelection(1); -- General tab
+			ChatConfigCategoryFrameButton3:Click() -- Channels category
+		end
+	end
+end)
 
 function GBB.BtnSelectChannel()
 	if UIDROPDOWNMENU_OPEN_MENU ~=  GBB.FramePullDownChannel then 
