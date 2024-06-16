@@ -203,7 +203,20 @@ function GBB.JoinLFG()
 				local generalID = general and GetChannelName(general)
 				local tradeOrDefenseID = localDefense and GetChannelName(localDefense) -- trade in main cities.
 				if (generalID and generalID > 0) or (tradeOrDefenseID and tradeOrDefenseID > 0) then
-					local _, name = JoinPermanentChannel(GBB.L["lfg_channel"])
+					local numChannelsJoined = C_ChatInfo.GetNumActiveChannels() or 0
+					local nextAvailableChannelIndex = numChannelsJoined + 1
+					for i = 1, numChannelsJoined do
+						if not C_ChatInfo.GetChannelInfoFromIdentifier(i) then
+							nextAvailableChannelIndex = i
+							break
+						end
+					end
+					local _, name 
+					if nextAvailableChannelIndex > 1 then 
+						_, name = JoinPermanentChannel(GBB.L["lfg_channel"])
+					else
+						_, name = JoinTemporaryChannel(GBB.L["lfg_channel"]);
+					end
 					local info = C_ChatInfo.GetChannelInfoFromIdentifier(name or "")
 					if info then
 						-- notify user that the addon has joined the channel.
