@@ -25,7 +25,7 @@ local PartyChangeEvent={ "GROUP_JOINED", "GROUP_ROSTER_UPDATE", "RAID_ROSTER_UPD
 -- GBB.RequestForPopup
 
 -- GBB.DataBrockerInitalized
-GBB.MSGPREFIX="GBB: "
+GBB.MSGPREFIX="LFG Bulletin Board: "
 GBB.TAGBAD="---"
 GBB.TAGSEARCH="+++"
 
@@ -173,24 +173,91 @@ function GBB.PhraseChannelList(...)
 	return t
 end
 
+local addonLinkStub = "\124Haddon:%s:%s\124h[%s]\124h\124r"
+local gotoSettingsArg1 = "GBB_GOTO_CHAT_SETTINGS"
+local linkDisplayStr = (function() 
+	local str = { -- todo move to Localization.lua
+        ["enUS"] = "Click Here to Reorder Chat Channels!",
+        ["deDE"] = "Klicken Sie hier, um die Chat-Kanäle neu zu ordnen!",
+        ["esES"] = "¡Haz clic aquí para reordenar los canales del chat!",
+        ["esMX"] = "¡Haz clic aquí para reordenar los canales de chat!",
+        ["frFR"] = "Cliquez ici pour réorganiser les canaux de discussion !",
+        ["koKR"] = "여기를 클릭하여 채팅 채널을 재정렬하십시오!",
+        ["ptBR"] = "Clique aqui para reordenar os canais de bate-papo!",
+        ["ruRU"] = "Щелкните здесь, чтобы изменить порядок каналов чата!",
+        ["zhCN"] = "点击此处重新排序聊天频道！",
+        ["zhTW"] = "點擊這裡重新排序聊天頻道！",
+    }
+	return str[GetLocale()] or str["enUS"]
+end)()
 function GBB.JoinLFG()
-	if GBB.Initalized==true and GBB.LFG_Successfulljoined==false then 
-		if GBB.L["lfg_channel"]~=nil and GBB.L["lfg_channel"]~="" then 
-			local id,name=GetChannelName(GBB.L["lfg_channel"])
-			if  id~=nil and id >0  then 
-				--DEFAULT_CHAT_FRAME:AddMessage("Success join lfg-channel")
-				GBB.LFG_Successfulljoined=true
+	if GBB.Initalized and not GBB.LFG_Successfulljoined then 
+		if GBB.L["lfg_channel"] and GBB.L["lfg_channel"] ~= "" then
+			local id, _ = GetChannelName(GBB.L["lfg_channel"])
+			if id and id > 0 then
+				GBB.LFG_Successfulljoined = true
 			else
-				--DEFAULT_CHAT_FRAME:AddMessage("try join lfg-channel")
-				JoinChannelByName(GBB.L["lfg_channel"])
-			end	
+				-- related issue: #247, wait for player to join any game channel before joining lfg channel.
+				-- note: this will still join LFG in `/1` if the slot is empty. 
+				local general, localDefense = EnumerateServerChannels()
+				local generalID = general and GetChannelName(general)
+				local tradeOrDefenseID = localDefense and GetChannelName(localDefense) -- trade in main cities.
+				if (generalID and generalID > 0) or (tradeOrDefenseID and tradeOrDefenseID > 0) then
+					local numChannelsJoined = C_ChatInfo.GetNumActiveChannels() or 0
+					local nextAvailableChannelIndex = numChannelsJoined + 1
+					for i = 1, numChannelsJoined do
+						if not C_ChatInfo.GetChannelInfoFromIdentifier(i) then
+							nextAvailableChannelIndex = i
+							break
+						end
+					end
+					local _, name 
+					if nextAvailableChannelIndex > 1 then 
+						_, name = JoinPermanentChannel(GBB.L["lfg_channel"])
+					else
+						_, name = JoinTemporaryChannel(GBB.L["lfg_channel"]);
+					end
+					local info = C_ChatInfo.GetChannelInfoFromIdentifier(name or "")
+					if info then
+						-- notify user that the addon has joined the channel.
+						DEFAULT_CHAT_FRAME:AddMessage(
+							GBB.MSGPREFIX..CHAT_YOU_JOINED_NOTICE:format(
+								info.localID,
+								("%d. %s"):format(info.localID, info.name)
+							), Chat_GetChannelColor(ChatTypeInfo["CHANNEL"])
+						)
+					else
+						-- notify user that the addon failed to join the channel.
+						DEFAULT_CHAT_FRAME:AddMessage(
+							GBB.MSGPREFIX..CHAT_INVALID_NAME_NOTICE..": ".. GBB.L["lfg_channel"],
+							Chat_GetChannelColor(ChatTypeInfo["CHANNEL"])
+						)
+					end
+					if generalID ~= 1 then -- prompt user to reorder chat channels
+						local link = WrapTextInColorCode(
+							addonLinkStub:format(TOCNAME, gotoSettingsArg1, linkDisplayStr), 
+							CreateColor(Chat_GetChannelColor(ChatTypeInfo["SYSTEM"])):GenerateHexColor()
+						)
+						DEFAULT_CHAT_FRAME:AddMessage(GBB.MSGPREFIX..link)
+					end
+				end
+			end
 		else
-			-- missing localization
 			GBB.LFG_Successfulljoined=true
-			--DEFAULT_CHAT_FRAME:AddMessage("Channel not definied for "..GetLocale())
 		end
 	end
 end
+hooksecurefunc("SetItemRef", function(link)
+	local linkType, addon, arg1 = strsplit(":", link)
+	if linkType == "addon" and addon == TOCNAME then
+		if arg1 == gotoSettingsArg1 then
+			ShowUIPanel(ChatConfigFrame)
+			PlaySound(SOUNDKIT.IG_MAINMENU_OPTION)
+			ChatConfigFrame.ChatTabManager:UpdateSelection(1); -- General tab
+			ChatConfigCategoryFrameButton3:Click() -- Channels category
+		end
+	end
+end)
 
 function GBB.BtnSelectChannel()
 	if UIDROPDOWNMENU_OPEN_MENU ~=  GBB.FramePullDownChannel then 
