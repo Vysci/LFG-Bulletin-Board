@@ -170,7 +170,9 @@ end
 ---if the expansion is the current game client expansion, it will also include misc filters.
 ---@param expansionID ExpansionID
 local function GenerateExpansionPanel(expansionID)
-	GBB.Options.AddPanel(EXPANSION_FILTER_NAME[expansionID], false, true)
+	local panel = GBB.Options.AddPanel(EXPANSION_FILTER_NAME[expansionID], false, true)
+	-- hack: save changes anytime the panel is hidden (issues: 200, 147, 57)
+	panel:HookScript("OnHide", GBB.Options._DoOk)
 	
 	local isCurrentXpac = expansionID == PROJECT_EXPANSION_ID[WOW_PROJECT_ID];
 	local filters = {} ---@type CheckButton[]
