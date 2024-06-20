@@ -1,5 +1,5 @@
 local TOCNAME,
-	---@class Addon_Options : Addon_Localization
+	---@class Addon_Options : Addon_Localization, Addon_CustomFilters, Addon_Dungeons, Addon_Tags, Addon_LibGPIOptions
 	GBB= ...;
 local ChannelIDs
 local ChkBox_FilterDungeon
@@ -223,8 +223,21 @@ local function GenerateExpansionPanel(expansionID)
 	-- dont include misc filters in the "select all" buttons
 	local resetLimitIdx = #filters 
 
-	-- Misc Categories (only show for current xpac)
+	-- Extra Categories (only show for current xpac)
 	if isCurrentXpac then
+		
+		-- Add any Custom user filters 
+		local customCategories = GBB.GetCustomFilterKeys()
+		if next(customCategories) then
+			GBB.Options.Indent(-10)
+			GBB.Options.AddCategory(ADDITIONAL_FILTERS)
+			GBB.Options.Indent(10)
+			for _, key in ipairs(customCategories) do
+				tinsert(filters, CheckBoxFilter(key, false))
+			end
+		end
+
+		-- Add `GBB.Misc` defined categories
 		GBB.Options.Indent(-10)
 		GBB.Options.AddCategory(OTHER)
 		GBB.Options.Indent(10)		
@@ -388,6 +401,14 @@ function GBB.OptionsInit ()
 	-- Vanilla Filters
 	GenerateExpansionPanel(GBB.Enum.Expansions.Classic)
 		
+	----------------------------------------------------------
+	-- Custom Filters/Categories
+	----------------------------------------------------------
+	local scrollChild = GBB.Options.AddPanel(ADDITIONAL_FILTERS, false, true);
+	scrollChild:SetWidth(
+		InterfaceOptionsFramePanelContainer:GetWidth() - scrollChild:GetParent().ScrollBar:GetWidth()
+	);
+	GBB.UpdateAdditionalFiltersPanel(scrollChild);
 	----------------------------------------------------------
 	-- Language Tags and Search Patterns
 	----------------------------------------------------------

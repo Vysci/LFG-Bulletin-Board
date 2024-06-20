@@ -761,8 +761,24 @@ if isClassicEra then
 	wotlkDungeonNames = {}
 end
 
-function GBB.GetDungeonSort()
-
+---@param additonalCategories (string[]|string[][])?
+function GBB.GetDungeonSort(additonalCategories)
+	if additonalCategories then
+		if additonalCategories[1]  
+		and type(additonalCategories[1]) == "table"
+		then -- flatten if 2d array provided
+			---@cast additonalCategories string[][]
+			local seen = {}
+			for _, categoryTable in ipairs(additonalCategories) do
+				for _, category in ipairs(categoryTable) do
+					seen[category] = true
+				end
+			end
+			additonalCategories = GetKeysArray(seen) --[[@as string[] ]]
+		end
+	else
+		additonalCategories = {} --[[@as string[] ]]
+	end
 	-- at some point we should probably move this to the /dungeons/cata.lua file
 	-- when i add support for the newly added holiday dungeons.
 	for eventName, eventData in pairs(GBB.Seasonal) do
@@ -775,7 +791,7 @@ function GBB.GetDungeonSort()
 
 	local dungeonOrder = { 
 		GBB.VanillaDungeonKeys, tbcDungeonNames, wotlkDungeonNames, cataDungeonKeys, 
-		pvpNames, GBB.Misc, debugNames
+		pvpNames, additonalCategories, GBB.Misc, debugNames
 	}
 
 	local vanillaDungeonSize = #GBB.VanillaDungeonKeys
