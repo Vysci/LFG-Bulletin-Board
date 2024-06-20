@@ -738,10 +738,10 @@ local dungeonTags = {
 		zhCN = nil,
 	},
 	TOFW = { -- Throne of the Four Winds
-		enGB = "totfw toftw tofw four winds tofw10 tofw25",
-		deDE = nil,
+		enGB = "totfw toftw tofw four winds tofw10 tofw25 tot4w to4w t4w",
+		deDE = "td4w t4w",
 		ruRU = nil,
-		frFR = nil,
+		frFR = "t4v t4w",
 		zhTW = nil,
 		zhCN = nil,
 	},	
