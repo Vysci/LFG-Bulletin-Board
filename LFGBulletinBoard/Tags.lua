@@ -624,7 +624,7 @@ local dungeonTags = {
 		zhTW = "波塔 波卡",
 		zhCN = "生态船",
 	},	
-	NULL = { -- The Crown Chemical Co. (Love is in the Air)
+	LOVE = { -- The Crown Chemical Co. (Love is in the Air)
 
 	},	
 	COS = { -- The Culling of Stratholme
@@ -659,7 +659,8 @@ local dungeonTags = {
 		zhTW = nil,
 		zhCN = "灵魂洪炉",
 	},	
-	NULL = { -- The Frost Lord Ahune (Midsummer)
+	SUMMER = { -- The Frost Lord Ahune (Midsummer)
+		enGB = "ahune",
 	},	
 	HOLLOW = { -- The Headless Horseman
 		enGB = "headless horseman hollow",

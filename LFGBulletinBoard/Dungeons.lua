@@ -739,19 +739,10 @@ GBB.VanillaDungeonKeys = GBB.GetSortedDungeonKeys(
 );
 
 
--- used in Tags.lua for determining which tags are safe for game version
+-- table used in Tags.lua for determining which tags are safe for game version
 GBB.Misc = {
 	(isCata and "RDF" or nil), "MISC", "TRADE", "TRAVEL",
 	(isSoD and "INCUR" or nil)
-}
-
--- used to disable holiday specific filters when not in the correct date range
--- in FixFilters of Options.lua
-GBB.Seasonal = {
-    ["BREW"] = { startDate = "09/20", endDate = "10/06"},
-	["HOLLOW"] = { startDate = "10/18", endDate = "11/01"},
-	["LOVE"] = {startDate = "02/03", endDate = "02/17"},
-	["SUMMER"] = {startDate = "06/21", endDate = "07/05"},
 }
 
 -- clear unused dungeons in classic to not generate options/checkboxes with the-
@@ -779,16 +770,6 @@ function GBB.GetDungeonSort(additonalCategories)
 	else
 		additonalCategories = {} --[[@as string[] ]]
 	end
-	-- at some point we should probably move this to the /dungeons/cata.lua file
-	-- when i add support for the newly added holiday dungeons.
-	for eventName, eventData in pairs(GBB.Seasonal) do
-        if GBB.Tool.InDateRange(eventData.startDate, eventData.endDate) then
-			table.insert(cataDungeonKeys, 1, eventName)
-		else
-			table.insert(debugNames, 1, eventName)
-		end
-    end
-
 	local dungeonOrder = { 
 		GBB.VanillaDungeonKeys, tbcDungeonNames, wotlkDungeonNames, cataDungeonKeys, 
 		pvpNames, additonalCategories, GBB.Misc, debugNames

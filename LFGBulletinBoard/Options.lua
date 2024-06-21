@@ -93,13 +93,7 @@ local function FixFilters()
 				end
 			end
 		end
-	end	
-
-	for eventName, eventData in pairs(GBB.Seasonal) do
-        if GBB.Tool.InDateRange(eventData.startDate, eventData.endDate) == false then
-			GBB.DBChar["FilterDungeon"..eventName]=false
-        end
-    end
+	end
 end
 
 local function ResetFilters()

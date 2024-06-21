@@ -1,6 +1,6 @@
 ---@diagnostic disable: duplicate-set-field
 local tocName, 
-    ---@class Addon_DungeonData
+    ---@class Addon_DungeonData : Addon_LibGPIOptions
     addon = ...;
 if WOW_PROJECT_ID ~= WOW_PROJECT_CATACLYSM_CLASSIC then return end
 assert(GetLFGDungeonInfo, tocName .. " requires the API `GetLFGDungeonInfo` for parsing dungeon info")
@@ -31,6 +31,25 @@ local DungeonType = {
 
 local cataMaxLevel = GetMaxLevelForExpansionLevel(Expansions.Cataclysm)
 local isCataLevel = UnitLevel("player") >= (cataMaxLevel - 2) -- when to show Heroic DM & SFK as part of cata.
+
+local isHolidayActive = function(key)
+	local seasonal = {
+		["BREW"] = { start = "09/20", stop = "10/06"},
+		["HOLLOW"] = { start = "10/18", stop = "11/01"},
+		["LOVE"] = {start = "02/03", stop = "02/17"},
+		["SUMMER"] = {start = "06/21", stop = "07/05"},
+	}
+	if not seasonal[key] then return false end
+	local active = addon.Tool.InDateRange(seasonal[key].start, seasonal[key].stop)
+	
+	if not active -- hack: disable filtering for any inactive holiday dungeons
+	and GroupBulletinBoardDBChar -- should only modify after savedVars is loaded
+	and GroupBulletinBoardDBChar["FilterDungeon"..key]
+	then -- previously done in `FixFilters()`
+		GroupBulletinBoardDBChar["FilterDungeon"..key] = nil
+	end
+	return active
+end
 
 -- The keys to this table need to be manually matched to the appropriate dungeonID
 -- These same keys are used for identifying the preset tags/keywords for each dungeon. 
@@ -356,6 +375,12 @@ local infoOverrides = {
 		name = DUNGEON_NAME_WITH_DIFFICULTY:format(
 			GetRealZoneText(33), DUNGEON_DIFFICULTY2)
 	} or nil,
+	-- Consider Holiday dungeons as part of latest expansion (like bgs)
+	-- Related issue: 253
+	BREW = { expansionID = Expansions.Cataclysm },
+	LOVE = { expansionID = Expansions.Cataclysm },
+	SUMMER = { expansionID = Expansions.Cataclysm },
+	HOLLOW = { expansionID = Expansions.Cataclysm },
 }
 
 ---@type {[DungeonID]: DungeonInfo}
@@ -476,7 +501,7 @@ function addon.GetSortedDungeonKeys(expansionID, typeID)
 		and (not typeID 
 			or (type(typeID) == "number" and info.typeID == typeID)
 			or (type(typeID) == "table" and tContains(typeID, info.typeID)))
-		and (not info.isHoliday) -- ignore holidays for now. 
+		and (not info.isHoliday or isHolidayActive(tagKey))
 		-- not actually dungeons
 		and (tagKey ~= "DM2" and tagKey ~= "SM2" and tagKey ~= "NULL")
 		then
