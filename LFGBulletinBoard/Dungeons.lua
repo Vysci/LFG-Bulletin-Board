@@ -111,8 +111,6 @@ function GBB.GetDungeonNames()
 		["BREW"] =  "Brewfest - Coren Direbrew",
 		["HOLLOW"] =  "Hallow's End - Headless Horseman",
     	["TRAVEL"] = "Travel services - Summons/Portals",
-		["BLOOD"] = "Bloodmoon",
-		["INCUR"] = "Incursions",
 		}
 
 	local dungeonNamesLocales={
@@ -623,7 +621,6 @@ function GBB.GetDungeonNames()
 	for _, key in ipairs(dungeonKeys) do
 		DefaultEnGB[key] = GBB.GetDungeonInfo(key).name or DefaultEnGB[key]
 	end
-	DefaultEnGB["RDF"] = LFG_TYPE_RANDOM_DUNGEON
 
 	setmetatable(dungeonNames, {__index = DefaultEnGB})
 
@@ -665,31 +662,18 @@ local tbcDungeonNames = GBB.GetSortedDungeonKeys(
 	{ GBB.Enum.DungeonType.Dungeon, GBB.Enum.DungeonType.Raid }
 );
 
-local pvpNames = GBB.GetSortedDungeonKeys(
-	-- not specificying an expansion id here-
-	-- gives **all** available dungeons **up to** current game xpac
-	nil,
-	GBB.Enum.DungeonType.Battleground
-);
+-- not specificying an expansion id gives **all** available dungeons **up to** current game xpac
+local pvpNames = GBB.GetSortedDungeonKeys(nil, GBB.Enum.DungeonType.Battleground);
 
--- hack: consider Bloodmoon event as a pvp event in config
-if isSoD then table.insert(pvpNames, "BLOOD") end
+local debugNames = {"DEBUG", "BAD", "NIL"}
 
-local debugNames = {
-	"DEBUG", "BAD", "NIL",
-}
-
-local raidNames = GBB.GetSortedDungeonKeys(
-	nil, -- all xpacs
-	GBB.Enum.DungeonType.Raid
-);
+local raidNames = GBB.GetSortedDungeonKeys(nil, GBB.Enum.DungeonType.Raid);
 
 -- Becasue theyre not actually dungeons and are not parsed by 
 -- `/data/dungeons/{version}.lua` we need to add them manually
 local miscCatergoriesLevels = {
-	["MISC"] =  {0,100}, ["TRAVEL"]={0,100}, ["INCUR"]={0,100},
-	["DEBUG"] = {0,100}, ["BAD"] =	{0,100}, ["TRADE"]=	{0,100},
-	["BLOOD"] = {0,100}, ["NIL"] = {0,100}, ["RDF"] = {0, 100},
+	["MISC"] = {0,100}, ["TRAVEL"] = {0,100}, ["DEBUG"] = {0,100},
+	["BAD"] = {0,100}, ["TRADE"] = {0,100}, ["NIL"] = {0,100},
 }
 
 -- Needed because Lua sucks, Blizzard switch to Python please
@@ -708,15 +692,6 @@ local function ConcatenateLists(Names)
 	end
 	return result, index
 end
-
-local function GetSize(list)
-	local size = 0
-	for _, _ in pairs(list) do
-		size = size + 1
-	end
-	return size
-end
-
 ----------------------------------------------
 -- Global functions/data
 ----------------------------------------------
@@ -740,10 +715,7 @@ GBB.VanillaDungeonKeys = GBB.GetSortedDungeonKeys(
 
 
 -- table used in Tags.lua for determining which tags are safe for game version
-GBB.Misc = {
-	(isCata and "RDF" or nil), "MISC", "TRADE", "TRAVEL",
-	(isSoD and "INCUR" or nil)
-}
+GBB.Misc = {"MISC", "TRADE", "TRAVEL"}
 
 -- clear unused dungeons in classic to not generate options/checkboxes with the-
 -- new data pipeline api these tables should already empty anyways when in classic client
