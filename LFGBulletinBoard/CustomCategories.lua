@@ -22,6 +22,10 @@ local CONFIRM_REMOVAL = CONFIRM_GLYPH_REMOVAL:gsub("%%s", "\"%%s\"") -- "Are you
 local FILTER_REMOVAL_WARNING = CONFIRM_REMOVAL..PERMANENT_ACTION_WARNING 
 local CHARACTER_SPECIFIC_SYMBOL = "\42" -- "*"
 
+local isClassicEra = WOW_PROJECT_ID == WOW_PROJECT_CLASSIC
+local isCataclysm = WOW_PROJECT_ID == WOW_PROJECT_CATACLYSM_CLASSIC
+local isSoD = isClassicEra and C_Seasons.GetActiveSeason() == Enum.SeasonID.SeasonOfDiscovery
+
 ---@alias Locale "enUS"|"enGB"|"deDE"|"ruRU"|"frFR"|"zhTW"|"zhCN"|"ptBR"|"esES"|"koKR"
 
 ---@class CustomFilter
@@ -29,41 +33,80 @@ local CHARACTER_SPECIFIC_SYMBOL = "\42" -- "*"
 ---@field key string
 ---@field tags table<Locale, string>
 ---@field levels {[1]: number, [2]: number}
----@field sortIdx number
----@field isHidden boolean? # `true` if the preset should be completely hidden from the user
+---@field sortIdx number # ties broken by key alphabetically. preset value is relatively arbitrary.
+---@field isHidden boolean? # `true` if the filter should be hidden from UI. (used instead of deletion for saved presets)
+---@field isDisabled boolean # `true` if the preset should be completely disabled for the current client (used by presets only)
 
 ---@type {[string]: CustomFilter}
 local presets = {
-    ["BOOSTS"] = {
+    RDF = { -- Random Dungeon Finder
+        name = LFG_TYPE_RANDOM_DUNGEON,
+        tags = {
+            enUS = "rdf random dungeons spam heroics gamma gammas",
+            -- deDE = nil,
+            -- ruRU = nil,
+            -- frFR = nil,
+            -- zhTW = nil,
+            -- zhCN = nil,
+            -- ptBR = nil,
+            -- esES = nil,
+        },
+        key = "RDF",
+        levels = CopyTable(HIDDEN_LEVEL_RANGE),
+        isDisabled = not isCataclysm,
+        sortIdx = 1,
+    },
+    BLOOD = { -- Bloodmoon Event (SoD)
+        name = "Bloodmoon",
+        tags = {
+            enUS = "blood bloodmoon bm",
+        },
+        key = "BLOOD",
+        levels = CopyTable(HIDDEN_LEVEL_RANGE),
+        isDisabled = not isSoD,
+        sortIdx = 1,
+    },
+    INCUR = { -- Incursion Event (SoD)
+        name = "Incursions",
+        tags = {
+            enUS = "inc incur incursion incursions loops",
+        },
+        key = "INCUR",
+        levels = CopyTable(HIDDEN_LEVEL_RANGE),
+        isDisabled = not isSoD,
+        sortIdx = 2,
+    },
+    BOOSTS = {
         name = "Boosting Services",
         key = "BOOSTS",
         tags = {
             enUS = "boost boosting" ,
         },
         levels = CopyTable(HIDDEN_LEVEL_RANGE),
-        isHidden = nil,
-        sortIdx = 1,
-    }
+        isDisabled = false,
+        sortIdx = 2,
+    }, 
 }
 
 
 function Addon.InitializeCustomFilters()
     assert(GroupBulletinBoardDB, "`GroupBulletinBoardDB` not found in `InitializeCustomFilters()`. Initialize *after* ADDON_LOADED event")
-    if not GroupBulletinBoardDB.CustomFilters then
-        ---@type {[string]: CustomFilter}
-        GroupBulletinBoardDB.CustomFilters = CopyTable(presets)
-    end
-    -- insert any enabled presets into the `CustomFilters` table
     for key, preset in pairs(presets) do
-        local store = GroupBulletinBoardDB.CustomFilters[key]
-        if not store and not preset.isHidden then
+        local stored = GroupBulletinBoardDB.CustomFilters[key]
+        -- hide any saved presets that are disabled for current client
+        if stored and preset.isDisabled then
+            stored.isHidden = true
+        end
+        -- insert any enabled presets into the `CustomFilters` table
+        if not stored and not preset.isDisabled then
             GroupBulletinBoardDB.CustomFilters[key] = CopyTable(preset)
+            GroupBulletinBoardDB.CustomFilters[key].isDisabled = nil
         end
     end
-    -- use this point to perform any db migrations. Like removing deprecated keys.
+    -- invalid entries
     local invalidKeys = {}
     for _, entry in pairs(GroupBulletinBoardDB.CustomFilters) do
-        -- invalid entries
+        -- remove entries with missing keys (shouldn't happen, but just in case)
         if not entry.name or entry.name == "" then
             if entry.key then entry.name = entry.key
             else tinsert(invalidKeys, entry.key) end
@@ -247,6 +290,32 @@ local removeFilterFromRequestList = function(key) ---@param key string
     end
 end
 
+local addPresetsToUserStore = function()
+    local anyAdded = false
+    for key, preset in pairs(presets) do
+        local saved = GroupBulletinBoardDB.CustomFilters[key]
+        if saved then -- careful with creating duplicates           
+            if saved.isHidden and not preset.isDisabled then
+            -- saved presets are hidden instead of deleted.
+               saved.isHidden = false -- Match addon's preset state.
+               -- hack: sorts to top (requires call to `fixSavedFiltersSorts`)
+               saved.sortIdx = 0
+               anyAdded = true
+            end
+        elseif not preset.isDisabled then
+            GroupBulletinBoardDB.CustomFilters[key] = CopyTable(preset)
+            GroupBulletinBoardDB.CustomFilters[key].sortIdx = 0
+            GroupBulletinBoardDB.CustomFilters[key].isDisabled = nil
+            anyAdded = true
+        end
+    end
+    if anyAdded then
+        fixSavedFiltersSorts()
+        updateRelatedAddonData()
+        return true
+    end
+end
+
 StaticPopupDialogs["GBB_CREATE_CATEGORY"] = {
     text = ENTER_FILTER_NAME,
     button1 = CREATE,
@@ -277,6 +346,7 @@ StaticPopupDialogs["GBB_CREATE_CATEGORY"] = {
     OnShow = function(self)
         self.button1:SetEnabled(false)
     end,
+    EditBoxOnEscapePressed = function(self) self:GetParent():Hide() end,
 	hideOnEscape = 1,
 	hasEditBox = 1,
 	maxLetters = 31
@@ -316,7 +386,14 @@ StaticPopupDialogs["GBB_RENAME_CATEGORY"] = {
 	end,
     OnShow = function(self)
         self.button1:SetEnabled(false)
+        local preset = presets[self.data.key]
+        if preset then
+            self.editBox:SetText(preset.name)
+            self.editBox:HighlightText()
+            self.editBox:SetCursorPosition(0)
+        end
     end,
+    EditBoxOnEscapePressed = function(self) self:GetParent():Hide() end,
 	hideOnEscape = true,
 	hasEditBox = 1,
 	maxLetters = 31
@@ -332,6 +409,7 @@ StaticPopupDialogs["GBB_DELETE_CATEGORY"] = {
             -- reset to base state, and disable
             saved = CopyTable(presets[data.key])
             saved.isHidden = true
+            saved.isDisabled = nil
             GroupBulletinBoardDB.CustomFilters[data.key] = saved
         else
             GroupBulletinBoardDB.CustomFilters[data.key] = nil 
@@ -607,27 +685,9 @@ local FilterSettingsPool = {
         addPresetsBtn:SetText(DEFAULTS)
         addPresetsBtn:FitToText()
         addPresetsBtn:SetScript("OnClick", function()
-            local anyAdded = false
-            for key, preset in pairs(presets) do
-                local saved = GroupBulletinBoardDB.CustomFilters[key]
-                if saved and saved.isHidden ~= preset.isHidden then
-                    -- Dont reset here, the preset could be hidden because of game type like SoD, and we dont want-
-                    -- to reset any user modifications to the preset if they hit "reset" when logged into regular era. 
-                    -- Should have been reset if it was ever deleted, see StaticPopupDialogs["GBB_DELETE_CATEGORY"].
-                    saved.isHidden = preset.isHidden
-                    -- hack: to sort to top, make sure to call `fixSavedFiltersSorts`
-                    saved.sortIdx = 0 
-                    anyAdded = true
-                elseif not preset.isHidden then
-                    GroupBulletinBoardDB.CustomFilters[key] = CopyTable(preset)
-                    GroupBulletinBoardDB.CustomFilters[key].sortIdx = 0
-                    anyAdded = true
-                end
-            end
+            local anyAdded = addPresetsToUserStore()
             if anyAdded then
                 PlaySound(SOUNDKIT.IG_MAINMENU_OPEN)
-                updateRelatedAddonData()
-                fixSavedFiltersSorts()
                 Addon.UpdateAdditionalFiltersPanel(parent)
             end
         end)
