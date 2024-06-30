@@ -136,6 +136,80 @@ local subDungeonParentLookup do
 	})
 end
 
+---Normalize and fuzzify a string based on common variations of dungeon/raid tags and punctuations.
+---@type function
+local getFuzzyNormalizedWords do
+	-- normalizes uses of apostrophes/backticks, mostly useful for frFR.
+	-- (e.g. "lf1m: zul`gurub or 2;s." => "lf1m: zul'gurub or 2's.")
+	local normalizeApostrophes = function(str) return str:gsub("[´`;]","'"):gsub("'+", "'")  end
+	-- concatenate characters separated by a `'` (keeps originals)
+	-- (e.g. "lf1m: zul'gurub 2's." => "lfm1: zul'gurub zulgurub 2's 2s.")
+	local fuzzyAroundApostrophes = function(str) return str:gsub("(%S)'(%S)", "%1%2 %1'%2") end
+	-- replace all punctuation/whitespaces/control characters with single spaces.
+	-- (e.g. "lf1m: zul'gurub zulgurub 2's 2s." => "lf1m zul gurub zulgurub 2 s 2s")
+	-- NOTE: this makes it so that tags with punctuation in Tag.lua will NEVER match to anything from `getFuzzyNormalizedWords`
+	local normalizePunctuation = function(str) return str:gsub("[%p%c]", " "):gsub("%s+", " ") end
+	-- create combinations of spacings where characters are near numbers.
+	-- (e.g. "lf1m icc25" => "lfm lf m lf1m lfm icc 25 icc25")
+	local fuzzyCharactersAroundNumbers = function(str)
+		return str
+			-- remove numbers between letters
+			-- (e.g. "lf1m zul gurub zulgurub 2 s 2s" => "lfm lf m lf1m lfm zul gurub zulgurub 2 s 2s")
+			:gsub("(%l+)(%d+)(%l+)", "%1%2%3 %1%3 %1%2 %2%3 %1 %2 %3")
+			-- add a space where numbers prefix or post-fix a possible tag. icc10 25icc => icc 10 25 icc
+			-- assuming tag is more than 1 character to avoid the common 10m 25m 10h etc.)
+			-- (e.g. "10m 25icc bwd25 10hc 9/12h" => "10m 25 icc bwd 25 10 hc 9/12h")
+			:gsub(" (%d+)(%l%l+)", " %1 %2 %1%2"):gsub("^(%d+)(%l%l+) ", "%1%2 %1 %2")
+			:gsub("(%D%l%l+)(%d+) ", "%1%2 %1 %2 "):gsub("(%D%l%l+)(%d+)$", "%1 %2 %1%2")
+	end
+	-- Splits words ending in suffixes into base+suffix combinations (e.g. "runs" -> "runs run s")
+	local fuzzySuffixes = function(str)
+		-- note: this is what catches most of the unintentional plural forms of certain tags
+		-- eg: TRAVEL only has the tag "port" and not "ports". This function allows the string-
+		-- to be split into "port s" allowing it to match TRAVEL. This happens for alot of other tags as well so we need to account for it.
+		for _, suffix in ipairs(GBB.suffixTags) do -- "arena runs" => "arena runs run s"
+			assert(suffix ~= "", "Suffixes should not be empty.")
+			str, matches = str:gsub((("(%%w%%w+)(%s)$"):format(suffix)), "%1%2 %1 %2") -- end of string suffix
+			str = str:gsub((("(%%w%%w+)(%s)%%s"):format(suffix)), "%1%2 %1 %2 ") -- end of substring suffixes
+		end
+		return str
+	end
+	local orderedMutations = {
+		string.lower,
+		normalizeApostrophes,
+		fuzzyAroundApostrophes,
+		normalizePunctuation,
+		fuzzyCharactersAroundNumbers,
+		fuzzySuffixes, -- expected to be called after normalizePunctuation
+	}
+	---Normalize and fuzzify a string based on common variations of dungeon/raid tags.
+	---@param msg string
+	---@return string[] list of words(ish) in the message
+	getFuzzyNormalizedWords = function(msg)
+		local fuzzyMessage = msg
+		for _, fn in ipairs(orderedMutations) do
+			fuzzyMessage = fn(fuzzyMessage)
+		end
+		local seen = {} ---@type table<string, boolean>
+		local words = {} ---@type string[]
+		for word in fuzzyMessage:gmatch("(%S+)") do
+			if not seen[word] then
+				seen[word] = true
+				tinsert(words, word)
+			end
+		end
+		if GBB.Tool.isUtf8String(fuzzyMessage) then
+			fuzzyMessage = GBB.Tool.stripChars(fuzzyMessage)
+			for word in fuzzyMessage:gmatch("(%S+)") do
+				if not seen[word] then
+					seen[word] = true
+					tinsert(words, word)
+				end
+			end
+		end
+		return words
+	end
+end
 --- Get the best dungeon/raid categories associated with a request message and player.
 ---@param msg string? The message to parse
 ---@param name string? Message author/sender name
@@ -192,8 +266,8 @@ local function getRequestMessageCategories(msg, name)
 		end
 		wordCount = string.len(msg)
 	else
-		local parts = GBB.GetMessageWordList(msg)
-		for _, word in pairs(parts) do
+		local wordList = getFuzzyNormalizedWords(msg)
+		for _, word in ipairs(wordList) do
 			if word == "run" or word == "runs" then hasRunTag = true end
 
 			local categoryTagKey = GBB.tagList[word]
@@ -220,7 +294,7 @@ local function getRequestMessageCategories(msg, name)
 				dungeons[categoryTagKey] = not skip
 			end
 		end
-		wordCount = #(parts)
+		wordCount = #(wordList)
 	end
 
 	if hasRunTag and runDungeonKey and hasBlacklistTag == false then
