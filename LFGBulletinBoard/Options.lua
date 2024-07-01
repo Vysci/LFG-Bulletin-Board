@@ -398,11 +398,11 @@ function GBB.OptionsInit ()
 	----------------------------------------------------------
 	-- Custom Filters/Categories
 	----------------------------------------------------------
-	local scrollChild = GBB.Options.AddPanel(ADDITIONAL_FILTERS, false, true);
-	scrollChild:SetWidth(
-		InterfaceOptionsFramePanelContainer:GetWidth() - scrollChild:GetParent().ScrollBar:GetWidth()
+	local customCategoriesFrame = GBB.Options.AddPanel(ADDITIONAL_FILTERS, false, true);
+	customCategoriesFrame:SetWidth(
+		InterfaceOptionsFramePanelContainer:GetWidth() - customCategoriesFrame:GetParent().ScrollBar:GetWidth()
 	);
-	GBB.UpdateAdditionalFiltersPanel(scrollChild);
+	-- defer Update call until after language "Tags" saved vars are initialized bellow
 	----------------------------------------------------------
 	-- Language Tags and Search Patterns
 	----------------------------------------------------------
@@ -447,6 +447,7 @@ function GBB.OptionsInit ()
 	CreateEditBoxDungeon("DEADMINES","",445,200)
 	GBB.Options.Indent(-10)
 
+	GBB.UpdateAdditionalFiltersPanel(customCategoriesFrame); -- update the custom filters panel now.
 	----------------------------------------------------------	
 	-- localization
 	----------------------------------------------------------
