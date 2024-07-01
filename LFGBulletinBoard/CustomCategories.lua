@@ -91,6 +91,7 @@ local presets = {
 
 function Addon.InitializeCustomFilters()
     assert(GroupBulletinBoardDB, "`GroupBulletinBoardDB` not found in `InitializeCustomFilters()`. Initialize *after* ADDON_LOADED event")
+    if not GroupBulletinBoardDB.CustomFilters then GroupBulletinBoardDB.CustomFilters = {} end
     for key, preset in pairs(presets) do
         local stored = GroupBulletinBoardDB.CustomFilters[key]
         -- hide any saved presets that are disabled for current client
