@@ -554,7 +554,7 @@ function GBB.Init()
 
 	-- Add tags for custom categories into `dungeonTagsLoc`. 
 	-- Must do before the call to `GBB.CreateTagList()` below
-	GBB.AddCustomFilterTags(GBB.dungeonTagsLoc);
+	GBB.SyncCustomFilterTags(GBB.dungeonTagsLoc);
 
 	-- Reset Request-List
 	GBB.RequestList={}
