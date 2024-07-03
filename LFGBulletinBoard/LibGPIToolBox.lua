@@ -1,8 +1,10 @@
 local TOCNAME,
 	---@class Addon_Tool	
 	Addon = ...;
-Addon.Tool=Addon.Tool or {}
-local Tool=Addon.Tool
+
+---@class ToolBox
+local Tool = {}
+Addon.Tool = Tool
 
 Tool.IconClassTexture="Interface\\GLUES\\CHARACTERCREATE\\UI-CHARACTERCREATE-CLASSES"
 Tool.IconClassTextureWithoutBorder="Interface\\WorldStateFrame\\ICONS-CLASSES"
