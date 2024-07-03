@@ -1,5 +1,5 @@
 local TOCNAME,
-	---@class Addon_GroupBulletinBoard : Addon_Localization, Addon_CustomFilters, Addon_Dungeons, Addon_Tags, Addon_Options
+	---@class Addon_GroupBulletinBoard : Addon_Localization, Addon_CustomFilters, Addon_Dungeons, Addon_Tags, Addon_Options, Addon_Tool
 	GBB = ...;
 
 GroupBulletinBoard_Addon=GBB
@@ -820,10 +820,9 @@ local function Event_CHAT_MSG_SYSTEM(arg1)
 		
 		if info~="" then
 			local txt
-			
 			if class and class~="" then 
 				txt="|Hplayer:"..name.."|h"
-					..(GBB.Tool.GetClassIcon(req.class) or "")
+					..(GBB.Tool.GetClassIcon(class) or "")
 					.."|c"..GBB.Tool.ClassColor[class].colorStr .. name.."|r"
 					..symbol.."|h";
 			else
