@@ -2,9 +2,10 @@ Group Bulletin Board
 3.32
  - New! Support added for user created filters. See "Additional Filters" category in the addons settings.
    - The filters for "Random Dungeon", "Incursions", and "Bloodmoon" have been moved here as editable presets.
- - Existing dungeon filter settings will now save any time the settings panel is hidden. Used to only save after pressing the "close" button.
- - Fixed a breaking issue related to seasonal Midsummer event.
- - Fixed lua error related to Friends/Guild members login notification feature.
+ - Fixed:
+   - Existing dungeon *checkbox* filters will now save any time the settings are hidden. Used to only save after pressing the "close" button.
+   - Breaking issue related to seasonal events.
+   - lua error related to Friends/Guild members login notification feature.
  - "Throne of the Four Winds" tags updates.
    - english: `to4w`, `t4w`, `tot4w`.
    - french: `t4v`, `t4w`.
