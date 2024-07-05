@@ -1,5 +1,5 @@
 local TOCNAME,
-    ---@class Addon_CustomFilters
+    ---@class Addon_CustomFilters: Addon_LibGPIOptions
     Addon = ...;
 
 -- Note on verbiage: Here im considering the "store" to be a category's entry table in the savedVars 
@@ -279,9 +279,9 @@ local dungeonPanelFilterHandles
 ---@return CheckButton?
 local getAlternateCheckbox = function(key)
     ---@cast Addon Addon_LibGPIOptions
-    assert(Addon.Options.Vars, "This function should be called after options have been initialized")
+    assert(Addon.OptionsBuilder.Vars, "This function should be called after options have been initialized")
     if not dungeonPanelFilterHandles then
-        dungeonPanelFilterHandles = tInvert(Addon.Options.Vars) 
+        dungeonPanelFilterHandles = tInvert(Addon.OptionsBuilder.Vars) 
     end
     return _G[dungeonPanelFilterHandles["FilterDungeon"..key]]
 end

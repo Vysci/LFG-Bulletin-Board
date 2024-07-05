@@ -26,14 +26,14 @@ local EXPANSION_FILTER_NAME = {
 -------------------------------------------------------------------------------------
 
 local function CheckBox (Var,Init)
-	return GBB.Options.AddCheckBox(GBB.DB,Var,Init,GBB.L["Cbox"..Var])
+	return GBB.OptionsBuilder.AddCheckBoxToCurrentPanel(GBB.DB,Var,Init,GBB.L["Cbox"..Var])
 end
 local function CheckBoxChar (Var,Init)
-	return GBB.Options.AddCheckBox(GBB.DBChar,Var,Init,GBB.L["CboxChar"..Var])
+	return GBB.OptionsBuilder.AddCheckBoxToCurrentPanel(GBB.DBChar,Var,Init,GBB.L["CboxChar"..Var])
 end
 local function CheckBoxFilter (Dungeon,Init)
 	local dungeonName = (GBB.GetDungeonInfo(Dungeon, true) or {}).name
-	return GBB.Options.AddCheckBox(
+	return GBB.OptionsBuilder.AddCheckBoxToCurrentPanel(
 		GBB.DBChar, "FilterDungeon".. Dungeon, 
 		Init, 
 		((GBB.dungeonNames[Dungeon] 
@@ -42,10 +42,10 @@ local function CheckBoxFilter (Dungeon,Init)
 	)
 end
 local function CreateEditBoxNumber (Var,Init,width,width2)
-	return GBB.Options.AddEditBox(GBB.DB,Var,Init,GBB.L["Edit"..Var],width,width2,true)
+	return GBB.OptionsBuilder.AddEditBoxToCurrentPanel(GBB.DB,Var,Init,GBB.L["Edit"..Var],width,width2,true)
 end
 local function CreateEditBox (Var,Init,width,width2)
-	return GBB.Options.AddEditBox(GBB.DB,Var,Init,GBB.L["Edit"..Var],width,width2,false)
+	return GBB.OptionsBuilder.AddEditBoxToCurrentPanel(GBB.DB,Var,Init,GBB.L["Edit"..Var],width,width2,false)
 end
 
 local function CreateEditBoxDungeon(Dungeon,Init,width,width2)
@@ -56,7 +56,7 @@ local function CreateEditBoxDungeon(Dungeon,Init,width,width2)
 	end
 	local dungeonName = (GBB.GetDungeonInfo(Dungeon, true) or {}).name
 	if GBB.dungeonNames[Dungeon] or dungeonName then
-		GBB.Options.AddEditBox(GBB.DB.Custom, Dungeon, Init, 
+		GBB.OptionsBuilder.AddEditBoxToCurrentPanel(GBB.DB.Custom, Dungeon, Init, 
 			((GBB.dungeonNames[Dungeon] or 
 				dungeonName).." "..GBB.LevelRange(Dungeon,true)
 			),
@@ -75,7 +75,7 @@ local function CreateEditBoxDungeon(Dungeon,Init,width,width2)
 			txt=GBB.Tool.Combine(GBB.heroicTagsLoc["enGB"])
 		end
 		
-		GBB.Options.AddEditBox(GBB.DB.Custom,Dungeon,Init,GBB.L["EditCustom_"..Dungeon],width,width2,false,nil,txt)
+		GBB.OptionsBuilder.AddEditBoxToCurrentPanel(GBB.DB.Custom,Dungeon,Init,GBB.L["EditCustom_"..Dungeon],width,width2,false,nil,txt)
 	end
 end
 
@@ -146,27 +146,27 @@ local DoRightClick=function(self)
 end
 	
 local function SetChatOption()
-	GBB.Options.AddCategory(GBB.L["HeaderChannel"])
-	GBB.Options.Indent(10)	
+	GBB.OptionsBuilder.AddHeaderToCurrentPanel(GBB.L["HeaderChannel"])
+	GBB.OptionsBuilder.Indent(10)	
 
 	ChannelIDs = {}
 	for i=1,10 do
-		GBB.Options.InLine()
-		ChannelIDs[i]	= GBB.Options.AddCheckBox(GBB.DBChar.channel,i,true,i..". ",125)
-		ChannelIDs[i+10]= GBB.Options.AddCheckBox(GBB.DBChar.channel,i+10,true,(i+10)..". ",125)
+		GBB.OptionsBuilder.InLine()
+		ChannelIDs[i]	= GBB.OptionsBuilder.AddCheckBoxToCurrentPanel(GBB.DBChar.channel,i,true,i..". ",125)
+		ChannelIDs[i+10]= GBB.OptionsBuilder.AddCheckBoxToCurrentPanel(GBB.DBChar.channel,i+10,true,(i+10)..". ",125)
 		
-		GBB.Options.EndInLine()
+		GBB.OptionsBuilder.EndInLine()
 	end
-	GBB.Options.Indent(-10)
+	GBB.OptionsBuilder.Indent(-10)
 end
 
 ---Generates and options panels with check box filters for the given expansion.
 ---if the expansion is the current game client expansion, it will also include misc filters.
 ---@param expansionID ExpansionID
 local function GenerateExpansionPanel(expansionID)
-	local panel = GBB.Options.AddPanel(EXPANSION_FILTER_NAME[expansionID], false, true)
+	local panel = GBB.OptionsBuilder.AddNewCategoryPanel(EXPANSION_FILTER_NAME[expansionID], false, true)
 	-- hack: save changes anytime the panel is hidden (issues: 200, 147, 57)
-	panel:HookScript("OnHide", GBB.Options._DoOk)
+	panel:HookScript("OnHide", GBB.OptionsBuilder._DoOk)
 	
 	local isCurrentXpac = expansionID == PROJECT_EXPANSION_ID[WOW_PROJECT_ID];
 	local filters = {} ---@type CheckButton[]
@@ -181,21 +181,21 @@ local function GenerateExpansionPanel(expansionID)
 	);
 	
 	-- Dungeons 		
-	GBB.Options.AddCategory(DUNGEONS)
-	GBB.Options.Indent(10)
+	GBB.OptionsBuilder.AddHeaderToCurrentPanel(DUNGEONS)
+	GBB.OptionsBuilder.Indent(10)
 	for _, key in pairs(dungeons) do
 		tinsert(filters, CheckBoxFilter(key, false))
 	end
 
 	-- different layout for classic era clients
 	if not isCurrentXpac or isClassicEra then
-		GBB.Options.SetRightSide()
+		GBB.OptionsBuilder.SetRightSide()
 	end
 
 	-- Raids
-	GBB.Options.Indent(-10)
-	GBB.Options.AddCategory(RAIDS)
-	GBB.Options.Indent(10)
+	GBB.OptionsBuilder.Indent(-10)
+	GBB.OptionsBuilder.AddHeaderToCurrentPanel(RAIDS)
+	GBB.OptionsBuilder.Indent(10)
 	for _, key in pairs(raids) do
 		tinsert(filters, CheckBoxFilter(key, false))
 	end
@@ -203,12 +203,12 @@ local function GenerateExpansionPanel(expansionID)
 	-- Battlegrounds (bg are all consider part of latest expansion atm)
 	if #bgs > 0 then
 		if isCurrentXpac and not isClassicEra then
-			GBB.Options.SetRightSide()
+			GBB.OptionsBuilder.SetRightSide()
 		end --else keep on same column as raid for classic era
 
-		GBB.Options.Indent(-10)
-		GBB.Options.AddCategory(BATTLEGROUNDS)
-		GBB.Options.Indent(10)
+		GBB.OptionsBuilder.Indent(-10)
+		GBB.OptionsBuilder.AddHeaderToCurrentPanel(BATTLEGROUNDS)
+		GBB.OptionsBuilder.Indent(10)
 		for _, key in pairs(bgs) do
 			tinsert(filters, CheckBoxFilter(key, false))
 		end
@@ -223,25 +223,25 @@ local function GenerateExpansionPanel(expansionID)
 		-- Add any Custom user filters 
 		local customCategories = GBB.GetCustomFilterKeys()
 		if next(customCategories) then
-			GBB.Options.Indent(-10)
-			GBB.Options.AddCategory(ADDITIONAL_FILTERS)
-			GBB.Options.Indent(10)
+			GBB.OptionsBuilder.Indent(-10)
+			GBB.OptionsBuilder.AddHeaderToCurrentPanel(ADDITIONAL_FILTERS)
+			GBB.OptionsBuilder.Indent(10)
 			for _, key in ipairs(customCategories) do
 				tinsert(filters, CheckBoxFilter(key, false))
 			end
 		end
 
 		-- Add `GBB.Misc` defined categories
-		GBB.Options.Indent(-10)
-		GBB.Options.AddCategory(OTHER)
-		GBB.Options.Indent(10)		
+		GBB.OptionsBuilder.Indent(-10)
+		GBB.OptionsBuilder.AddHeaderToCurrentPanel(OTHER)
+		GBB.OptionsBuilder.Indent(10)		
 		for _, key in pairs(GBB.Misc) do
 			tinsert(filters, CheckBoxFilter(key, false))
 		end
 		
 	else
 		-- add space to make up for no "other" category
-		GBB.Options.AddSpace() 
+		GBB.OptionsBuilder.AddSpacerToPanel() 
 	end
 	
 	if not isClassicEra then
@@ -252,29 +252,29 @@ local function GenerateExpansionPanel(expansionID)
 	CheckBoxChar("DontFilterOwn",false)
 
 	-- Select/Unselect All Filters Buttons
-	GBB.Options.InLine()
-	GBB.Options.AddButton(GBB.L["BtnSelectAll"],function()
+	GBB.OptionsBuilder.InLine()
+	GBB.OptionsBuilder.AddButtonToCurrentPanel(GBB.L["BtnSelectAll"],function()
 		DoSelectFilter(true, filters, 1, resetLimitIdx)
 	end)
-	GBB.Options.AddButton(GBB.L["BtnUnselectAll"],function()
+	GBB.OptionsBuilder.AddButtonToCurrentPanel(GBB.L["BtnUnselectAll"],function()
 		DoSelectFilter(false, filters,1, resetLimitIdx)
 	end)
 
 	-- Role Filters
-	GBB.Options.AddDrop(GBB.DB,"InviteRole", "DPS", {"DPS", "Tank", "Healer"})
-	GBB.Options.EndInLine()
+	GBB.OptionsBuilder.AddDropdownToCurrentPanel(GBB.DB,"InviteRole", "DPS", {"DPS", "Tank", "Healer"})
+	GBB.OptionsBuilder.EndInLine()
 	
 	-- Chat Channel Filters (only show for current xpac)
 	if isCurrentXpac then
-		GBB.Options.Indent(-10)
+		GBB.OptionsBuilder.Indent(-10)
 		SetChatOption()
 	end
 end
 
 function GBB.OptionsInit ()
-	GBB.Options.Init(
+	GBB.OptionsBuilder.Init(
 		function() -- ok button			
-			GBB.Options.DoOk() 
+			GBB.OptionsBuilder.DoOk() 
 			if GBB.DB.TimeOut< 60 then GBB.DB.TimeOut = 60 end
 			GBB.OptionsUpdate()	
 		end,
@@ -287,10 +287,10 @@ function GBB.OptionsInit ()
 					_G[ChannelIDs[i]:GetName().."Text"]:SetText((t[i] and t[i].name or ""))
 				end
 			end
-			GBB.Options.DoCancel() 
+			GBB.OptionsBuilder.DoCancel() 
 		end, 
 		function() -- default button
-			GBB.Options.DoDefault()
+			GBB.OptionsBuilder.DoDefault()
 			GBB.DB.MinimapButton.position=40			
 			GBB.ResetWindow()		
 			GBB.OptionsUpdate()	
@@ -300,87 +300,87 @@ function GBB.OptionsInit ()
 	
 	
 	
-	GBB.Options.SetScale(0.85)
+	GBB.OptionsBuilder.SetScale(0.85)
 	
 	
 	-- First panel - Settings
-	GBB.Options.AddPanel(GBB.Title,false,true)
+	GBB.OptionsBuilder.AddNewCategoryPanel(GBB.Title,false,true)
 		
-	--GBB.Options.AddVersion('|cff00c0ff' .. GBB.Version .. '|r')
+	--GBB.OptionsBuilder.AddVersion('|cff00c0ff' .. GBB.Version .. '|r')
 	
 	
-	GBB.Options.AddCategory(GBB.L["HeaderSettings"])
-	GBB.Options.Indent(10)
+	GBB.OptionsBuilder.AddHeaderToCurrentPanel(GBB.L["HeaderSettings"])
+	GBB.OptionsBuilder.Indent(10)
 	
-	GBB.Options.AddCheckBox(GBB.DB.MinimapButton,"visible",true,GBB.L["Cboxshowminimapbutton"])
-	GBB.Options.AddCheckBox(GBB.DB.MinimapButton,"lock",false,GBB.L["CboxLockMinimapButton"])
-	GBB.Options.AddCheckBox(GBB.DB.MinimapButton,"lockDistance",true,GBB.L["CboxLockMinimapButtonDistance"])
-	GBB.Options.AddSpace()
+	GBB.OptionsBuilder.AddCheckBoxToCurrentPanel(GBB.DB.MinimapButton,"visible",true,GBB.L["Cboxshowminimapbutton"])
+	GBB.OptionsBuilder.AddCheckBoxToCurrentPanel(GBB.DB.MinimapButton,"lock",false,GBB.L["CboxLockMinimapButton"])
+	GBB.OptionsBuilder.AddCheckBoxToCurrentPanel(GBB.DB.MinimapButton,"lockDistance",true,GBB.L["CboxLockMinimapButtonDistance"])
+	GBB.OptionsBuilder.AddSpacerToPanel()
 	CheckBox("ShowTotalTime",false)
 	CheckBox("OrderNewTop",true)
 	CheckBox("HeadersStartFolded",false)
-	GBB.Options.AddSpace()
-	GBB.Options.AddText(GBB.L["msgFontSize"],-20)
-	GBB.Options.AddDrop(GBB.DB,"FontSize", "GameFontNormal", {"GameFontNormalSmall", "GameFontNormal", "GameFontNormalLarge"}) 
+	GBB.OptionsBuilder.AddSpacerToPanel()
+	GBB.OptionsBuilder.AddTextToCurrentPanel(GBB.L["msgFontSize"],-20)
+	GBB.OptionsBuilder.AddDropdownToCurrentPanel(GBB.DB,"FontSize", "GameFontNormal", {"GameFontNormalSmall", "GameFontNormal", "GameFontNormalLarge"}) 
 
 	CheckBox("CombineSubDungeons",false)
 	CheckBox("IsolateTravelServices",true)
-	GBB.Options.AddSpace()
+	GBB.OptionsBuilder.AddSpacerToPanel()
 	CheckBox("NotifySound",false)
 	CheckBox("NotifyChat",false)
-	GBB.Options.Indent(20)
+	GBB.OptionsBuilder.Indent(20)
 	CheckBox("NotfiyInnone",true)
 	CheckBox("NotfiyInpvp",false)
 	CheckBox("NotfiyInparty",true)
 	CheckBox("NotfiyInraid",false)
 	CheckBox("OneLineNotification",false)
-	GBB.Options.AddColorButton(GBB.DB,"NotifyColor",{r=1,g=1,b=1,a=1},GBB.L["BtnNotifyColor"])
-	GBB.Options.Indent(-20)	
-	GBB.Options.AddSpace()
+	GBB.OptionsBuilder.AddColorSwatchToCurrentPanel(GBB.DB,"NotifyColor",{r=1,g=1,b=1,a=1},GBB.L["BtnNotifyColor"])
+	GBB.OptionsBuilder.Indent(-20)	
+	GBB.OptionsBuilder.AddSpacerToPanel()
 	CheckBox("ColorOnLevel",true)
 	CheckBox("UseAllInLFG",true)
 	CheckBox("EscapeQuit",true)
 	CheckBox("DisplayLFG",false)
-	GBB.Options.AddSpace()
-	GBB.Options.InLine()
+	GBB.OptionsBuilder.AddSpacerToPanel()
+	GBB.OptionsBuilder.InLine()
 	CheckBox("ColorByClass",true)
 	CheckBox("ShowClassIcon",true)
-	GBB.Options.EndInLine()
+	GBB.OptionsBuilder.EndInLine()
 	CheckBox("RemoveRaidSymbols",true)	
 	CheckBox("RemoveRealm",false)
 	CheckBox("ChatStyle",false)
 	CheckBox("CompactStyle",false)
 	CheckBox("DontTrunicate",false)
 	CheckBox("EnableShowOnly",false)		
-	GBB.Options.Indent(30)
+	GBB.OptionsBuilder.Indent(30)
 	CreateEditBoxNumber("ShowOnlyNb",4,50)	
-	GBB.Options.Indent(-30)
-	GBB.Options.AddColorButton(GBB.DB,"EntryColor",{r=1,g=1,b=1,a=1},GBB.L["BtnEntryColor"])
-	GBB.Options.AddColorButton(GBB.DB,"HeroicDungeonColor",{r=1,g=0,b=0,a=1},GBB.L["BtnHeroicDungeonColor"])
-	GBB.Options.AddColorButton(GBB.DB,"NormalDungeonColor",{r=0,g=1,b=0,a=1},GBB.L["BtnNormalDungeonColor"])
-	GBB.Options.AddColorButton(GBB.DB,"TimeColor",{r=1,g=1,b=1,a=1},GBB.L["BtnTimeColor"])
-	GBB.Options.AddSpace()
+	GBB.OptionsBuilder.Indent(-30)
+	GBB.OptionsBuilder.AddColorSwatchToCurrentPanel(GBB.DB,"EntryColor",{r=1,g=1,b=1,a=1},GBB.L["BtnEntryColor"])
+	GBB.OptionsBuilder.AddColorSwatchToCurrentPanel(GBB.DB,"HeroicDungeonColor",{r=1,g=0,b=0,a=1},GBB.L["BtnHeroicDungeonColor"])
+	GBB.OptionsBuilder.AddColorSwatchToCurrentPanel(GBB.DB,"NormalDungeonColor",{r=0,g=1,b=0,a=1},GBB.L["BtnNormalDungeonColor"])
+	GBB.OptionsBuilder.AddColorSwatchToCurrentPanel(GBB.DB,"TimeColor",{r=1,g=1,b=1,a=1},GBB.L["BtnTimeColor"])
+	GBB.OptionsBuilder.AddSpacerToPanel()
 	CreateEditBoxNumber("TimeOut",150,50)	
 		
-	GBB.Options.AddSpace()
+	GBB.OptionsBuilder.AddSpacerToPanel()
 	CheckBox("AdditionalInfo",false)
 	CheckBox("EnableGroup",false)
-	GBB.Options.Indent(30)
-	GBB.Options.AddColorButton(GBB.DB,"PlayerNoteColor",{r=1,g=0.8,b=0.2,a=1},GBB.L["BtnPlayerNoteColor"])
-	GBB.Options.Indent(-30)
-	GBB.Options.AddSpace()
+	GBB.OptionsBuilder.Indent(30)
+	GBB.OptionsBuilder.AddColorSwatchToCurrentPanel(GBB.DB,"PlayerNoteColor",{r=1,g=0.8,b=0.2,a=1},GBB.L["BtnPlayerNoteColor"])
+	GBB.OptionsBuilder.Indent(-30)
+	GBB.OptionsBuilder.AddSpacerToPanel()
 	
 	CheckBox("EnableGuild",false)
-	GBB.Options.Indent(30)
-	GBB.Options.AddColorButton(GBB.DB,"ColorGuild",{a=1,r=.2,g=1,b=.2},GBB.L["BtnColorGuild"])
-	GBB.Options.Indent(-30)
-	GBB.Options.AddSpace()
+	GBB.OptionsBuilder.Indent(30)
+	GBB.OptionsBuilder.AddColorSwatchToCurrentPanel(GBB.DB,"ColorGuild",{a=1,r=.2,g=1,b=.2},GBB.L["BtnColorGuild"])
+	GBB.OptionsBuilder.Indent(-30)
+	GBB.OptionsBuilder.AddSpacerToPanel()
 	CheckBox("OnDebug",false)
 
-	GBB.Options.AddSpace()
+	GBB.OptionsBuilder.AddSpacerToPanel()
 	-- a global framexml string that's pre translated by blizzard called RESET_POSITION
-	GBB.Options.AddButton(RESET_POSITION,GBB.ResetWindow)
-	GBB.Options.AddSpace()
+	GBB.OptionsBuilder.AddButtonToCurrentPanel(RESET_POSITION,GBB.ResetWindow)
+	GBB.OptionsBuilder.AddSpacerToPanel()
 	----------------------------------------------------------
 	-- Expansion specific filters
 	----------------------------------------------------------
@@ -398,7 +398,7 @@ function GBB.OptionsInit ()
 	----------------------------------------------------------
 	-- Custom Filters/Categories
 	----------------------------------------------------------
-	local customCategoriesFrame = GBB.Options.AddPanel(ADDITIONAL_FILTERS, false, true);
+	local customCategoriesFrame = GBB.OptionsBuilder.AddNewCategoryPanel(ADDITIONAL_FILTERS, false, true);
 	customCategoriesFrame:SetWidth(
 		InterfaceOptionsFramePanelContainer:GetWidth() - customCategoriesFrame:GetParent().ScrollBar:GetWidth()
 	);
@@ -406,11 +406,11 @@ function GBB.OptionsInit ()
 	----------------------------------------------------------
 	-- Language Tags and Search Patterns
 	----------------------------------------------------------
-	GBB.Options.AddPanel(GBB.L["PanelTags"],false,true)
+	GBB.OptionsBuilder.AddNewCategoryPanel(GBB.L["PanelTags"],false,true)
 	
-	GBB.Options.AddCategory(LANGUAGES_LABEL)
-	GBB.Options.Indent(10)
-	GBB.Options.InLine()
+	GBB.OptionsBuilder.AddHeaderToCurrentPanel(LANGUAGES_LABEL)
+	GBB.OptionsBuilder.Indent(10)
+	GBB.OptionsBuilder.InLine()
 	local locale = GetLocale()
 	CheckBox("TagsEnglish", locale == "enUS" or locale == "enGB")
 	CheckBox("TagsGerman", locale == "deDE")
@@ -418,42 +418,42 @@ function GBB.OptionsInit ()
 	CheckBox("TagsFrench", locale == "frFR")
 	CheckBox("TagsZhtw",locale == "zhTW")
 	CheckBox("TagsZhcn",locale == "zhCN")
-	GBB.Options.EndInLine()
-	GBB.Options.InLine()
+	GBB.OptionsBuilder.EndInLine()
+	GBB.OptionsBuilder.InLine()
 	-- hack: add ptBR, and esES/esMX checkboxes
 	CheckBox("TagsSpanish", locale == "esES" or locale == "esMX")
 	CheckBox("TagsPortuguese", locale == "ptBR")
 	CheckBox("TagsCustom",true)
-	GBB.Options.EndInLine()
-	GBB.Options.Indent(-10)
+	GBB.OptionsBuilder.EndInLine()
+	GBB.OptionsBuilder.Indent(-10)
 	
-	GBB.Options.AddCategory(GBB.L["HeaderTagsCustom"])
-	GBB.Options.Indent(10)
-	GBB.Options.AddText(GBB.L["msgCustomList"],450+200)
-	GBB.Options.AddSpace()
+	GBB.OptionsBuilder.AddHeaderToCurrentPanel(GBB.L["HeaderTagsCustom"])
+	GBB.OptionsBuilder.Indent(10)
+	GBB.OptionsBuilder.AddTextToCurrentPanel(GBB.L["msgCustomList"],450+200)
+	GBB.OptionsBuilder.AddSpacerToPanel()
 	CreateEditBoxDungeon("Search","",450,200)
 	CreateEditBoxDungeon("Bad","",450,200)
 	CreateEditBoxDungeon("Suffix","",450,200)
 	CreateEditBoxDungeon("Heroic","",450,200)
 	
 	
-	GBB.Options.AddSpace()	
+	GBB.OptionsBuilder.AddSpacerToPanel()	
 	for index=1,GBB.ENDINGDUNGEONEND do
 		CreateEditBoxDungeon(GBB.dungeonSort[index],"",445,200)
 	end
-	GBB.Options.AddSpace()
+	GBB.OptionsBuilder.AddSpacerToPanel()
 	CreateEditBoxDungeon("SM2","",445,200)
 	CreateEditBoxDungeon("DM2","",445,200)	
 	CreateEditBoxDungeon("DEADMINES","",445,200)
-	GBB.Options.Indent(-10)
+	GBB.OptionsBuilder.Indent(-10)
 
 	GBB.UpdateAdditionalFiltersPanel(customCategoriesFrame); -- update the custom filters panel now.
 	----------------------------------------------------------	
 	-- localization
 	----------------------------------------------------------
-	GBB.Options.AddPanel(GBB.L["PanelLocales"],false,true)
-	GBB.Options.AddText(GBB.L["msgLocalRestart"])
-	GBB.Options.AddSpace()
+	GBB.OptionsBuilder.AddNewCategoryPanel(GBB.L["PanelLocales"],false,true)
+	GBB.OptionsBuilder.AddTextToCurrentPanel(GBB.L["msgLocalRestart"])
+	GBB.OptionsBuilder.AddSpacerToPanel()
 	local locales= GBB.locales.enGB
 	local t={}
 	for key, _ in pairs(locales) do 
@@ -465,11 +465,11 @@ function GBB.OptionsInit ()
 		local col=GBB.L[key]~=nil and "|cffffffff" or "|cffff4040"
 		local txt=GBB.L[key.."_org"]~="["..key.."_org]" and GBB.L[key.."_org"] or GBB.L[key]
 				
-		GBB.Options.AddEditBox(GBB.DB.CustomLocales,key,"",col.."["..key.."]",450,200,false,locales[key],txt)
+		GBB.OptionsBuilder.AddEditBoxToCurrentPanel(GBB.DB.CustomLocales,key,"",col.."["..key.."]",450,200,false,locales[key],txt)
 		
 	end
 	--locales dungeons
-	GBB.Options.AddSpace()
+	GBB.OptionsBuilder.AddSpacerToPanel()
 	locales=getmetatable(GBB.dungeonNames).__index
 	for i=1,GBB.MAXDUNGEON do
 
@@ -479,7 +479,7 @@ function GBB.OptionsInit ()
 		
 		local txt=GBB.dungeonNames[key.."_org"]~=nil and GBB.dungeonNames[key.."_org"] or GBB.dungeonNames[key]
 
-		GBB.Options.AddEditBox(GBB.DB.CustomLocalesDungeon,key,"",col..locales[key],450,200,false,locales[key],txt)
+		GBB.OptionsBuilder.AddEditBoxToCurrentPanel(GBB.DB.CustomLocalesDungeon,key,"",col..locales[key],450,200,false,locales[key],txt)
 	end
 	
 	for i=GBB.TBCDUNGEONSTART,GBB.WOTLKMAXDUNGEON do
@@ -490,43 +490,43 @@ function GBB.OptionsInit ()
 		
 		local txt=GBB.dungeonNames[key.."_org"]~=nil and GBB.dungeonNames[key.."_org"] or GBB.dungeonNames[key]
 
-		GBB.Options.AddEditBox(GBB.DB.CustomLocalesDungeon,key,"",col..locales[key],450,200,false,locales[key],txt)
+		GBB.OptionsBuilder.AddEditBoxToCurrentPanel(GBB.DB.CustomLocalesDungeon,key,"",col..locales[key],450,200,false,locales[key],txt)
 	end
 	
 	----------------------------------------------------------
 	-- About
 	----------------------------------------------------------
 	local function SlashText(txt)
-		GBB.Options.AddText(txt)
+		GBB.OptionsBuilder.AddTextToCurrentPanel(txt)
 	end
 	
-	GBB.Options.AddPanel(GBB.L["PanelAbout"])
+	GBB.OptionsBuilder.AddNewCategoryPanel(GBB.L["PanelAbout"])
 
-	GBB.Options.AddCategory("|cFFFF1C1C"..GetAddOnMetadata(TOCNAME, "Title") .." ".. GetAddOnMetadata(TOCNAME, "Version") .." by "..GetAddOnMetadata(TOCNAME, "Author"))
-	GBB.Options.Indent(10)
-	GBB.Options.AddText(GetAddOnMetadata(TOCNAME, "Notes"))		
-	GBB.Options.Indent(-10)
+	GBB.OptionsBuilder.AddHeaderToCurrentPanel("|cFFFF1C1C"..GetAddOnMetadata(TOCNAME, "Title") .." ".. GetAddOnMetadata(TOCNAME, "Version") .." by "..GetAddOnMetadata(TOCNAME, "Author"))
+	GBB.OptionsBuilder.Indent(10)
+	GBB.OptionsBuilder.AddTextToCurrentPanel(GetAddOnMetadata(TOCNAME, "Notes"))		
+	GBB.OptionsBuilder.Indent(-10)
 	
-	GBB.Options.AddCategory(GBB.L["HeaderInfo"])
-	GBB.Options.Indent(10)
-	GBB.Options.AddText(GBB.L["AboutInfo"],-20)
-	GBB.Options.Indent(-10)
+	GBB.OptionsBuilder.AddHeaderToCurrentPanel(GBB.L["HeaderInfo"])
+	GBB.OptionsBuilder.Indent(10)
+	GBB.OptionsBuilder.AddTextToCurrentPanel(GBB.L["AboutInfo"],-20)
+	GBB.OptionsBuilder.Indent(-10)
 	
-	GBB.Options.AddCategory(GBB.L["HeaderUsage"])
-	GBB.Options.Indent(10)
-	GBB.Options.AddText(GBB.L["AboutUsage"],-20)
-	GBB.Options.Indent(-10)
+	GBB.OptionsBuilder.AddHeaderToCurrentPanel(GBB.L["HeaderUsage"])
+	GBB.OptionsBuilder.Indent(10)
+	GBB.OptionsBuilder.AddTextToCurrentPanel(GBB.L["AboutUsage"],-20)
+	GBB.OptionsBuilder.Indent(-10)
 	
-	GBB.Options.AddCategory(GBB.L["HeaderSlashCommand"])
-	GBB.Options.Indent(10)
-	GBB.Options.AddText(GBB.L["AboutSlashCommand"],-20)
+	GBB.OptionsBuilder.AddHeaderToCurrentPanel(GBB.L["HeaderSlashCommand"])
+	GBB.OptionsBuilder.Indent(10)
+	GBB.OptionsBuilder.AddTextToCurrentPanel(GBB.L["AboutSlashCommand"],-20)
 	GBB.Tool.PrintSlashCommand(nil,nil,SlashText)
-	GBB.Options.Indent(-10)
+	GBB.OptionsBuilder.Indent(-10)
 	
-	GBB.Options.AddCategory(GBB.L["HeaderCredits"])
-	GBB.Options.Indent(10)
-	GBB.Options.AddText(GBB.L["AboutCredits"],-20)
-	GBB.Options.Indent(-10)
+	GBB.OptionsBuilder.AddHeaderToCurrentPanel(GBB.L["HeaderCredits"])
+	GBB.OptionsBuilder.Indent(10)
+	GBB.OptionsBuilder.AddTextToCurrentPanel(GBB.L["AboutCredits"],-20)
+	GBB.OptionsBuilder.Indent(-10)
 	
 	FixFilters()
 end

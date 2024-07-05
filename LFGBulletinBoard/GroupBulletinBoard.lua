@@ -331,7 +331,7 @@ end
 
 function GBB.BtnSettings(button )
 	if button == "LeftButton" then
-		GBB.Options.Open(1)
+		GBB.OptionsBuilder.OpenCategoryPanel(1)
 	else
 		GBB.Popup_Minimap("cursor",false)
 		--GBB.Options.Open(1)
@@ -480,7 +480,7 @@ function GBB.Popup_Minimap(frame,notminimap)
 		return
 	end
 
-	GBB.PopupDynamic:AddItem(GBB.L["HeaderSettings"],false, GBB.Options.Open, 1)
+	GBB.PopupDynamic:AddItem(GBB.L["HeaderSettings"],false, GBB.OptionsBuilder.OpenCategoryPanel, 1)
 	
 	GBB.PopupDynamic:AddItem("",true)
 	GBB.PopupDynamic:AddItem(GBB.L["CboxFilterTravel"],false,GBB.DBChar,"FilterDungeonTRAVEL")
@@ -626,8 +626,8 @@ function GBB.Init()
 				GBB.ResetWindow()
 				GBB.ShowWindow()
 			end},
-		{{"config","setup","options"},GBB.L["SlashConfig"],GBB.Options.Open,1},
-		{"about",GBB.L["SlashAbout"],GBB.Options.Open,7},
+		{{"config","setup","options"},GBB.L["SlashConfig"],GBB.OptionsBuilder.OpenCategoryPanel,1},
+		{"about",GBB.L["SlashAbout"],GBB.OptionsBuilder.OpenCategoryPanel,7},
 		{"",GBB.L["SlashDefault"],GBB.ToggleWindow},
 		{"chat","",{
 			{{"organize", "clean"},GBB.L["SlashChatOrganizer"],function()
