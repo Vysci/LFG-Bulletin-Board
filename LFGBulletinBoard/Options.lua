@@ -407,10 +407,7 @@ function GBB.OptionsInit ()
 	----------------------------------------------------------
 	-- Custom Filters/Categories
 	----------------------------------------------------------
-	local customCategoriesFrame = GBB.OptionsBuilder.AddNewCategoryPanel(ADDITIONAL_FILTERS, false, true);
-	customCategoriesFrame:SetWidth(
-		InterfaceOptionsFramePanelContainer:GetWidth() - customCategoriesFrame:GetParent().ScrollBar:GetWidth()
-	);
+	local customCategoriesFrame = GBB.OptionsBuilder.AddNewCategoryPanel(ADDITIONAL_FILTERS, false, true); 
 	-- defer Update call until after language "Tags" saved vars are initialized bellow
 	----------------------------------------------------------
 	-- Languages and Custom Search Patterns

@@ -727,7 +727,7 @@ local FilterSettingsPool = {
         return legend
     end
 }
----@param scrollPanel Frame Parent panel that the category settings will be drawn onto
+---@param scrollPanel SettingsCategoryPanelScrollChild|Frame Frame that the category settings will be drawn onto
 function Addon.UpdateAdditionalFiltersPanel(scrollPanel)
     ---@cast Addon Addon_Options
 	local userFilters = GroupBulletinBoardDB.CustomFilters
@@ -745,8 +745,6 @@ function Addon.UpdateAdditionalFiltersPanel(scrollPanel)
         local spacer = FilterSettingsPool:AddSpacer(filterSettings)
         if idx == 1 then
             filterSettings:SetPoint("TOPLEFT", nextAnchor, "TOPLEFT", 0, -30)
-            scrollPanel:GetParent().ScrollBar.scrollStep 
-                = filterSettings:GetHeight() + spacer:GetHeight() + (select(5, spacer:GetPoint()) or 0);
         else
             filterSettings:SetPoint("TOPLEFT", nextAnchor, "BOTTOMLEFT", 0, -10)
         end
@@ -760,4 +758,5 @@ function Addon.UpdateAdditionalFiltersPanel(scrollPanel)
         createBtn:SetPoint("TOPLEFT", nextAnchor, "BOTTOMLEFT", 0, -25)
     end
     FilterSettingsPool:PresetsButton(scrollPanel):SetPoint("LEFT", createBtn, "RIGHT", 10, 0)
+    scrollPanel.UpdateScrollLayout(); -- update container scroll layout incase any entries deleted/created
 end
