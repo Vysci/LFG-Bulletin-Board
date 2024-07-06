@@ -124,11 +124,7 @@ local function createMenu(DungeonID,req)
 	GBB.PopupDynamic:AddItem(GBB.L["CboxNotifyChat"],false,GBB.DB,"NotifyChat")
 	GBB.PopupDynamic:AddItem(GBB.L["CboxRemoveRealm"],false,GBB.DB,"RemoveRealm")
 	GBB.PopupDynamic:AddItem("",true)
-	GBB.PopupDynamic:AddItem(GBB.L["HeaderSettings"],false, GBB.OptionsBuilder.OpenCategoryPanel, 1)
-
-	GBB.PopupDynamic:AddItem(GBB.L["PanelFilter"], false, GBB.OptionsBuilder.OpenCategoryPanel, 2)
-
-	GBB.PopupDynamic:AddItem(GBB.L["PanelAbout"], false, GBB.OptionsBuilder.OpenCategoryPanel, 3)
+	GBB.PopupDynamic:AddItem(SETTINGS, false, GBB.OptionsBuilder.OpenCategoryPanel, 1)
 	GBB.PopupDynamic:AddItem(GBB.L["BtnCancel"],false)
 	GBB.PopupDynamic:Show()
 end

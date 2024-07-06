@@ -166,7 +166,7 @@ end
 local function GenerateExpansionPanel(expansionID)
 	local panel = GBB.OptionsBuilder.AddNewCategoryPanel(EXPANSION_FILTER_NAME[expansionID], false, true)
 	-- hack: save changes anytime the panel is hidden (issues: 200, 147, 57)
-	panel:HookScript("OnHide", GBB.OptionsBuilder._DoOk)
+	panel:HookScript("OnHide", GBB.OptionsBuilder.onCommit)
 	
 	local isCurrentXpac = expansionID == PROJECT_EXPANSION_ID[WOW_PROJECT_ID];
 	local filters = {} ---@type CheckButton[]
@@ -273,12 +273,12 @@ end
 
 function GBB.OptionsInit ()
 	GBB.OptionsBuilder.Init(
-		function() -- ok button			
-			GBB.OptionsBuilder.DoOk() 
+		function(panelFrame) -- called when "close" button is pressed	
+			GBB.OptionsBuilder.DoOk() -- saves any widget states to the DB
 			if GBB.DB.TimeOut< 60 then GBB.DB.TimeOut = 60 end
 			GBB.OptionsUpdate()	
 		end,
-		function() -- Chancel/init button
+		function(panelFrame) -- called whenever the canvas view is refreshed (swapping categories, on open, etc.)
 			local t= GBB.PhraseChannelList(GetChannelList())
 			for i=1,20 do
 				if i<20 then 
@@ -287,14 +287,13 @@ function GBB.OptionsInit ()
 					_G[ChannelIDs[i]:GetName().."Text"]:SetText((t[i] and t[i].name or ""))
 				end
 			end
-			GBB.OptionsBuilder.DoCancel() 
+			GBB.OptionsBuilder.DoRefresh() -- syncs widgets to DB state
 		end, 
-		function() -- default button
-			GBB.OptionsBuilder.DoDefault()
+		function(panelFrame) -- called when the default button is pressed (not implemented for addon panels)
+			GBB.OptionsBuilder.DoDefault() -- reset widgets to default state.
 			GBB.DB.MinimapButton.position=40			
 			GBB.ResetWindow()		
 			GBB.OptionsUpdate()	
-			
 		end
 		)
 	

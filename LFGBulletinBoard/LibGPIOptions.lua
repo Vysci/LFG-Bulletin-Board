@@ -59,21 +59,40 @@ local function CheckBox_OnRightClick(checkbox, func)
 	end)
 end
 
+local categoriesByName = { } ---@type table<string, table>
+local addToBlizzardSettings = function(frame) -- alternative to the deprecated `InterfaceOptions_AddCategory`
+	-- Frames are required to have OnCommit, OnDefault, and OnRefresh functions even if their implementations are empty.
+	frame.OnCommit = Options.onCommit
+	frame.OnDefault = Options.onDefault
+	frame.OnRefresh = Options.onRefresh
+	if frame.parent then
+		local parent = Settings.GetCategory(frame.parent)
+		local subcategory = Settings.RegisterCanvasLayoutSubcategory(parent, frame, frame.name)
+		subcategory.ID = frame.name
+		Settings.RegisterAddOnCategory(subcategory)
+		categoriesByName[frame.name] = subcategory
+	else
+		local category = Settings.RegisterCanvasLayoutCategory(frame, frame.name)
+		category.ID = frame.name
+		Settings.RegisterAddOnCategory(category)
+		categoriesByName[frame.name] = category
+	end
+end
+
 --------------------------------------------------------------------------------
 -- Public/Interface
 --------------------------------------------------------------------------------
 
 ---Initializes the options builder. Clears child widget tables. Accepts, onCommit, onRefresh, and onDefault functions.
 ---they are once called for each settings category panel.
----@param doOk fun(panel:Frame) function called when the "close" button is clicked
----@param doCancel fun(panel:Frame) function to called when the settings frame will be redrawn
----@param doDefault fun(panel:Frame) function to call when settings should reset to default values
-function Options.Init(doOk,doCancel,doDefault)
-	Options.Prefix=TOCNAME.."O_"
-	Options._DoOk=doOk
-	Options._DoCancel=doCancel
-	Options._DoDefault=doDefault
-
+---@param onCommit fun(panel:SettingsCategoryPanel) function called when the "close" button is clicked
+---@param onRefresh fun(panel:SettingsCategoryPanel) function to called when the settings frame will be redrawn
+---@param onDefault fun(panel:SettingsCategoryPanel) function to call when settings should reset to default values
+function Options.Init(onCommit,onRefresh,onDefault)
+	Options.Prefix=TOCNAME.."Options"
+	Options.onCommit=onCommit
+	Options.onRefresh=onRefresh
+	Options.onDefault=onDefault
 	Options.CategoryPanels={}
 	Options.Frames={}
 	Options.CheckBoxes={}
@@ -82,13 +101,11 @@ function Options.Init(doOk,doCancel,doDefault)
 	Options.EditBoxes={}
 	Options.Vars={} -- any saved variable tables postfixed with _db
 	Options.Index={}
-	
 	Options.Frames.count=0
-
 	Options.scale=1
 end
 		
-function Options.DoOk()
+function Options.DoOk() -- Hooked to the `OnCommit` handler, called when the `close` button is pressed.
 	for name, cbox in pairs(Options.CheckBoxes) do
 		if Options.Vars[name .. "_db"]~=nil and Options.Vars[name]~=nil then
 			Options.Vars[name .. "_db"] [Options.Vars[name]] = cbox:GetChecked()
@@ -120,8 +137,11 @@ function Options.DoOk()
 		end
 	end
 end
-	
-function Options.DoCancel()
+
+-- `OnCancel` function has been deprecated by blizzard, most changes are committed immediately now.
+-- `OnRefresh` is called every time the canvas view is refreshed (swapping categories, opening, etc.)
+-- `DoRefresh` is hooked into the `OnRefresh` event in `Options.lua` setup.
+function Options.DoRefresh() 
 	for name,cbox in pairs(Options.CheckBoxes) do
 		if Options.Vars[name .. "_db"]~=nil and Options.Vars[name]~=nil then
 			cbox:SetChecked( Options.Vars[name .. "_db"] [Options.Vars[name]] )
@@ -140,7 +160,6 @@ function Options.DoCancel()
 		end
 	end
 	
-	
 	for name,edit in pairs(Options.EditBoxes) do
 		if Options.Vars[name .. "_onlynumbers"] then 
 			edit:SetNumber( Options.Vars[name .. "_db"] [Options.Vars[name]] )
@@ -151,7 +170,7 @@ function Options.DoCancel()
 	end
 end
 	
-function Options.DoDefault()
+function Options.DoDefault() -- Hooked to the `OnDefault` handler, called when the `default` button is pressed.
 	for name,cbox in pairs(Options.CheckBoxes) do
 		if Options.Vars[name .. "_db"]~=nil and Options.Vars[name]~=nil then
 			Options.Vars[name .. "_db"] [Options.Vars[name]]= Options.Vars[name .. "_init"]
@@ -172,7 +191,7 @@ function Options.DoDefault()
 	for name,edit in pairs(Options.EditBoxes) do
 		Options.Vars[name .. "_db"] [Options.Vars[name]]= Options.Vars[name .. "_init"]
 	end
-	Options:DoCancel()
+	Options:DoRefresh()
 end
 	
 function Options.SetScale(x)
@@ -183,48 +202,44 @@ end
 ---@param title string
 ---@param noHeader boolean?
 ---@param scrollable boolean?
----@return Frame
-function Options.AddNewCategoryPanel(title,noHeader,scrollable)
-	local c=#Options.CategoryPanels +1
-	local FrameName=Options.Prefix.."OptionFrame"..c
-		
-	Options.CategoryPanels[c] = CreateFrame( "Frame",FrameName , UIParent )
-	Options.CategoryPanels[c].name = title
-	if c==1 then 
-		Options.CategoryPanels[c].okay = Options._DoOk
-		Options.CategoryPanels[c].cancel = Options._DoCancel
-		Options.CategoryPanels[c].refresh = Options._DoCancel
-		Options.CategoryPanels[c].default = Options._DoDefault
-	else
-		Options.CategoryPanels[c].parent = Options.CategoryPanels[1].name
+---@return SettingsCategoryPanel|Frame
+function Options.AddNewCategoryPanel(title, noHeader, scrollable)
+	local categoryIdx = #Options.CategoryPanels + 1
+	local frameName = Options.Prefix.."Category"..categoryIdx
+	---@class SettingsCategoryPanel: Frame
+	local panelFrame = CreateFrame("Frame", frameName, UIParent)
+	Options.CategoryPanels[categoryIdx] = panelFrame
+	Options.CurrentPanel = panelFrame
+	panelFrame.name = title
+	if categoryIdx > 1 then
+		panelFrame.parent = Options.CategoryPanels[1].name
 	end
-	
-	InterfaceOptions_AddCategory(Options.CategoryPanels[c])
-	Options.CurrentPanel=Options.CategoryPanels[c]		
-	
+	addToBlizzardSettings(panelFrame)
 	if scrollable then
-		
-		Options.CategoryPanels["scroll"..c]=CreateFrame("ScrollFrame", FrameName.."Scroll", Options.CurrentPanel,"UIPanelScrollFrameTemplate")
-		Options.CategoryPanels["scroll"..c]:SetPoint("TOPLEFT",0, -10) 
-		Options.CategoryPanels["scroll"..c]:SetPoint("BOTTOMRIGHT", -30, 10) 
-		Options.CategoryPanels["scrollChild"..c] = CreateFrame("Frame",FrameName.."ScrollChild") 
-		Options.CategoryPanels["scroll"..c]:SetScrollChild(Options.CategoryPanels["scrollChild"..c])
-		
-		Options.CategoryPanels["scrollChild"..c]:SetSize(Options.CurrentPanel:GetWidth()-1,100)
-		Options.CurrentPanel=Options.CategoryPanels["scrollChild"..c]
+		-- Create the scrolling parent frame and size it to fit the settins panel
+		local scrollFrame = CreateFrame("ScrollFrame", frameName.."ScrollFrame", Options.CurrentPanel, "UIPanelScrollFrameTemplate")
+		scrollFrame:SetPoint("TOPLEFT", 4, -4) 
+		scrollFrame:SetPoint("BOTTOMRIGHT", -27, 4) 
+
+		-- Create the scrolling child frame, set its width to fit, and give it an arbitrary minimum height
+		local scrollChild = CreateFrame("Frame", frameName.."ScrollChild", scrollFrame) 
+		scrollFrame:SetScrollChild(scrollChild)
+		scrollChild:SetSize((InterfaceOptionsFramePanelContainer:GetWidth()), 100)
+
+		Options.CategoryPanels["scroll"..categoryIdx] = scrollFrame
+		Options.CategoryPanels["scrollChild"..categoryIdx] = scrollChild
+		Options.CurrentPanel = scrollChild --[[@as Frame]]
+		panelFrame.ScrollChild = scrollChild
 	end
-	
-	
-	Options.Frames["title_"..c] = Options.CurrentPanel:CreateFontString(FrameName.."_Title", "OVERLAY", "GameFontNormalLarge")
+	local panelHeader = Options.CurrentPanel:CreateFontString(frameName.."Title", "OVERLAY", "GameFontNormalLarge");
 	if noHeader==true then
-		Options.Frames["title_"..c]:SetHeight(1)
+		panelHeader:SetHeight(1)
 	else
-		Options.Frames["title_"..c]:SetText(title)
+		panelHeader:SetText(title)
 	end
-	Options.Frames["title_"..c]:SetPoint("TOPLEFT", 10, -10)
-	Options.Frames["title_"..c]:SetScale(Options.scale)
-	
-	Options.NextRelativ=FrameName.."_Title"
+	panelHeader:SetPoint("TOPLEFT", 10, -10)
+	panelHeader:SetScale(Options.scale)
+	Options.NextRelativ=frameName.."Title"
 	Options.NextRelativX=25
 	Options.NextRelativY=0
 	
@@ -249,7 +264,7 @@ end
 	
 ---@param width number? Defaults to 310. 
 function Options.SetRightSide(width)
-	Options.NextRelativ=Options.Prefix.."OptionFrame".. #Options.CategoryPanels .."_Title"
+	Options.NextRelativ=Options.Prefix.."Category".. #Options.CategoryPanels .."Title"
 	Options.NextRelativX= (width or 310) / Options.scale
 	Options.NextRelativY=0
 end
@@ -712,11 +727,13 @@ function Options.AddSpacerToPanel(factor)
 	Options.NextRelativY=Options.NextRelativY-20*(factor or 1)
 end
 
----@param panel number? defaults to panel 1 (main panel)
+---@param panel number? Unused. Defaults to panel 1 (main addons panel)
 function Options.OpenCategoryPanel(panel)
-	if panel==nil or panel > #Options.CategoryPanels then panel = 1 end
-	InterfaceOptionsFrame_OpenToCategory(Options.CategoryPanels[#Options.CategoryPanels])
-	InterfaceOptionsFrame_OpenToCategory(Options.CategoryPanels[#Options.CategoryPanels])
-	InterfaceOptionsFrame_OpenToCategory(Options.CategoryPanels[panel])
+	Settings.OpenToCategory(Options.CategoryPanels[1].name)
+	-- if panel > 1 then
+	-- 	-- there is currently no way to open to a specific subcategory without tainting the ui
+	-- 	-- see https://github.com/Stanzilla/WoWUIBugs/issues/285 for more info
+	-- 	SettingsPanel:SelectCategory(categoriesByName[Options.CategoryPanels[panel].name]) 
+	-- end
 end
 
