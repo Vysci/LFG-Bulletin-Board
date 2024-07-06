@@ -197,11 +197,44 @@ end
 	
 function Options.SetScale(x) Options.scale = x; end
 
+---UIPanelScrollFrameTemplate is deprecated in favor of WowScrollBox. 
+-- This is helper to adapt current frames to new scrollbox.
+---@param parent Frame
+---@param name string
+local CreateScrollFrames = function(parent, name)
+	local scrollBox = CreateFrame("Frame", name, parent, "WowScrollBox") --[[@as WowScrollBox]]
+	local scrollBar = CreateFrame("EventFrame", name.."ScrollBar", parent, "MinimalScrollBar")
+	local barPadding = 12
+	scrollBar:SetPoint("RIGHT", parent, "RIGHT", -barPadding, 0)
+	scrollBox:SetPoint("TOPLEFT", parent, 2, 0)
+	scrollBox:SetPoint("BOTTOM", parent, 0, 0)
+	scrollBox:SetPoint("RIGHT", scrollBar, "LEFT", -barPadding*2, 0)
+	-- For now, the scrollChild serves as an expanding canvas for the scrollBox. 
+	-- Allows the scroll frame to behave like the previously used template.
+	---@class SettingsCategoryPanelScrollChild: ResizeLayoutFrame
+	local scrollChild = CreateFrame('Frame', name..'ScrollChild', scrollBox, 'ResizeLayoutFrame')
+	scrollChild.scrollable = true
+	scrollChild:SetFixedWidth(InterfaceOptionsFramePanelContainer:GetWidth() - scrollBar:GetWidth() - 8)
+	scrollChild:SetHeight(100) -- initial arbitrary height
+	scrollChild.ScrollBox = scrollBox;
+	scrollChild.ScrollBar = scrollBar;
+	-- Updates the canvas's resizable height and the scroll parent to match.
+	scrollChild.UpdateScrollLayout = function()
+		scrollChild:Layout() -- ResizeLayoutFrame:Layout()
+		scrollBox:Update(true) -- WowScrollBox:Update()
+	end
+	local scrollView = CreateScrollBoxLinearView();
+	scrollView:SetPadding(0, 25) -- pad bottom of view with 25px
+	ScrollUtil.InitScrollBoxWithScrollBar(scrollBox, scrollBar, scrollView);
+	ScrollUtil.AddManagedScrollBarVisibilityBehavior(scrollBox, scrollBar); -- adds autohide to scrollbar
+	return scrollBox, scrollChild
+end
+
 ---Creates a new settings category and returns its display frame.
 ---@param title string
 ---@param noHeader boolean?
 ---@param scrollable boolean?
----@return SettingsCategoryPanel|Frame
+---@return SettingsCategoryPanel|SettingsCategoryPanelScrollChild|Frame
 function Options.AddNewCategoryPanel(title, noHeader, scrollable)
 	local categoryIdx = #Options.CategoryPanels + 1
 	local frameName = Options.Prefix.."Category"..categoryIdx
@@ -216,20 +249,12 @@ function Options.AddNewCategoryPanel(title, noHeader, scrollable)
 	end
 	addToBlizzardSettings(panelFrame)
 	if scrollable then
-		-- Create the scrolling parent frame and size it to fit the settins panel
-		local scrollFrame = CreateFrame("ScrollFrame", frameName.."ScrollFrame", Options.CurrentPanel, "UIPanelScrollFrameTemplate")
-		scrollFrame:SetPoint("TOPLEFT", 4, -4) 
-		scrollFrame:SetPoint("BOTTOMRIGHT", -27, 4) 
-
-		-- Create the scrolling child frame, set its width to fit, and give it an arbitrary minimum height
-		local scrollChild = CreateFrame("Frame", frameName.."ScrollChild", scrollFrame) 
-		scrollFrame:SetScrollChild(scrollChild)
-		scrollChild:SetSize((InterfaceOptionsFramePanelContainer:GetWidth()), 100)
-
+		local scrollFrame, scrollChild = CreateScrollFrames(Options.CurrentPanel, frameName)
+		panelFrame:HookScript("OnShow", scrollChild.UpdateScrollLayout)
+		panelFrame:Hide() -- hack: forces call to "OnShow" (and its hooks) when first shown to users.
 		Options.CategoryPanels["scroll"..categoryIdx] = scrollFrame
 		Options.CategoryPanels["scrollChild"..categoryIdx] = scrollChild
 		Options.CurrentPanel = scrollChild --[[@as Frame]]
-		panelFrame.ScrollChild = scrollChild
 	end
 	local panelHeader = Options.CurrentPanel:CreateFontString(frameName.."Title", "OVERLAY", "GameFontNormalLarge");
 	if noHeader==true then
