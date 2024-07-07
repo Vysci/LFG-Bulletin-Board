@@ -2,6 +2,8 @@ local TOCNAME,---@type string
 	---@class Addon_LibGPIOptions	
 	Addon = ...;
 
+---@alias savedValue string|number|boolean|table<string|number, savedValue>
+
 ---@class OptionsBuilderModule
 local Options = {}
 Addon.OptionsBuilder = Options
@@ -9,6 +11,13 @@ Addon.OptionsBuilder = Options
 --------------------------------------------------------------------------------
 -- Locals, Helpers, Privates, etc
 --------------------------------------------------------------------------------
+
+local debug = false -- dev override
+local print = function(...)
+	if (Addon.DB and Addon.DB.OnDebug) or debug then
+		_G.print(WrapTextInColorCode(("[%s]:"):format(TOCNAME), NORMAL_FONT_COLOR:GenerateHexColor()), ...);
+	end
+end
 
 local function EditBox_TooltipHide(self)
 	GameTooltip:Hide()
@@ -79,9 +88,130 @@ local addToBlizzardSettings = function(frame) -- alternative to the deprecated `
 	end
 end
 
+---@alias SavedVarHandle.updateHook fun(newValue: savedValue)
+---@class SavedVarHandle
+local handlePrototype = {
+	updateHooks = {}, ---@type {[SavedVarHandle.updateHook]: true?}
+	default = nil, ---@type savedValue?
+	SetValue = function(handle, value) ---@param value savedValue
+		local old = handle.db[handle.var]
+		if old == value then return end
+		handle.db[handle.var] = value
+		print(("Setting Updated - [\"%s\"]|n Previous: %s => Current: %s")
+			:format(handle.var, tostring(old), tostring(value)));
+		for func in pairs(handle.updateHooks) do func(value) end -- fire update hooks with new value as argument
+	end,
+	GetValue = function(handle)
+		return handle.db[handle.var]
+	end,
+	SetToDefault = function(handle, nullable)
+		if not nullable and handle.default == nil then return end
+		handle:SetValue(handle.default)
+	end,
+	---@param func SavedVarHandle.updateHook called with the updated value, **only called on value changes**
+	AddUpdateHook = function(handle, func)
+		handle.updateHooks[func] = true
+	end,
+	RemoveUpdateHook = function(handle, func)
+		handle.updateHooks[func] = nil
+	end
+}
+local SavedVarRegistry = {
+	tracked = {}, -- [db][var] = handle, how handles to the same variable are shared
+	GetHandle = function(self, db, var, default)
+		assert(db and var, "SavedVarRegistry:GetHandle(db, var, default) - db and var are required", 
+			{ db = db, var = var, default = default }
+		);
+		local handle ---@type SavedVarHandle
+		if not self.tracked[db] or not self.tracked[db][var] then
+			self.tracked[db] = self.tracked[db] or {}
+			handle = setmetatable({ db = db, var = var, updateHooks = {} }, { __index = handlePrototype })
+			self.tracked[db][var] = handle
+		elseif self.tracked[db] and self.tracked[db][var] then
+			handle = self.tracked[db][var]
+		end
+		assert(handle, "SavedVarRegistry:GetHandle() - failed to create handle", { db = db, var = var, default = default })
+		assert((handle.default == nil or default == nil) or default == handle.default, -- one default value per session
+			"SavedVarRegistry:GetHandle() - SavedVar cannot have more than one assigned default",
+			{ incoming = default, previous = handle.default }
+		)
+		if default ~= nil and handle.default == nil then
+			handle.default = default
+		end
+		if db[var] == nil and handle.default ~= nil then -- initialize first time saved vars with default.
+			handle:SetToDefault()
+		end
+		return handle
+	end,
+}
+local registeredFrameHandles = {} ---@type table<Frame, SavedVarHandle>
+
+-- This mixin provides helpers for interfacing frames with SavedVarHandles
+---@class RegisteredFrameMixin
+local RegisteredFrameMixin = {
+	---@param frame Frame
+	Init = function(self, frame)
+		self = self ---@class RegisteredFrameMixin
+		self.frame = frame
+		self.updateFunc = nil ---@type SavedVarHandle.updateHook?
+	end,
+	SetSavedValue = function(self, value)
+		local handle = registeredFrameHandles[self.frame]
+		if handle then handle:SetValue(value) end
+	end,
+	GetSavedValue = function(self)
+		local handle = registeredFrameHandles[self.frame]
+		if handle then return handle:GetValue() end
+	end,
+	SetToDefault = function(self)
+		local handle = registeredFrameHandles[self.frame]
+		if handle then handle:SetToDefault() end
+	end,
+	---Note: Atm this mixin only allows for one update hook to be registered per frame.
+	---Subsequent calls will overwrite the previous hook (including any set by the optionsBuilder methods).
+	---Use the raw handle for better control over multiple hooks.
+	---@param updateFunc SavedVarHandle.updateHook called with the updated value, **only called on value changes**
+	OnSavedVarUpdate = function(self, updateFunc)
+		if not updateFunc then return end
+		local handle = registeredFrameHandles[self.frame]
+		self:ClearUpdateHook()
+		self.updateFunc = updateFunc
+		if handle then handle:AddUpdateHook(updateFunc) end
+	end,
+	ClearUpdateHook = function(self)
+		local handle = registeredFrameHandles[self.frame]
+		if handle and self.updateFunc then handle:RemoveUpdateHook(self.updateFunc) end
+		self.updateFunc = nil
+	end
+}
+
 --------------------------------------------------------------------------------
 -- Public/Interface
 --------------------------------------------------------------------------------
+
+---Registers a frame with a user setting/saved variable. Returns the frame and its saved variable handle
+---Frames may only be registered to one saved var atm (todo expand to multiple).
+---@generic F
+---@param frame F Expects a frame, but accepts any table object.
+---@return F|RegisteredFrameMixin, SavedVarHandle
+Options.RegisterFrameWithSavedVar = function(frame, db, var, default)
+	local varHandle = SavedVarRegistry:GetHandle(db, var, default)
+	local prevHandle = registeredFrameHandles[frame]
+	if prevHandle and prevHandle ~= varHandle then ---@cast frame RegisteredFrameMixin
+		frame:ClearUpdateHook(); -- if previously registered remove any existing update hooks
+	else
+		-- CreateAndInitFromMixin calls `RegisteredFrameMixin:Init(frame)`
+		frame = Mixin(frame, CreateAndInitFromMixin(RegisteredFrameMixin, frame))
+	end
+	registeredFrameHandles[frame] = varHandle
+	return frame, varHandle
+end
+
+---Gets or creates a registry handle to a saved variable. given its table and key.
+---@type fun(db: table, var: string, default: savedValue?): SavedVarHandle
+Options.GetSavedVarHandle = function(db, var, default)
+	return SavedVarRegistry:GetHandle(db, var, default) 
+end
 
 ---Initializes the options builder. Clears child widget tables. Accepts, onCommit, onRefresh, and onDefault functions.
 ---they are once called for each settings category panel.
