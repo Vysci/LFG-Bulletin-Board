@@ -136,7 +136,11 @@ end
 
 local DoSelectFilter=function(state, ChkBox, Start, Max)
 	for index=Start,Max do ---trade -misc
-		ChkBox[index]:SetChecked(state)
+		if ChkBox[index].SetSavedValue then -- new api for managing saved vars. 
+			ChkBox[index]:SetSavedValue(state)
+		else
+			ChkBox[index]:SetChecked(state)
+		end
 	end	
 end
 	
