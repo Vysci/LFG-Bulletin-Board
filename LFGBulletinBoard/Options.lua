@@ -75,7 +75,9 @@ local function CreateEditBoxDungeon(Dungeon,Init,width,width2)
 			txt=GBB.Tool.Combine(GBB.heroicTagsLoc["enGB"])
 		end
 		
-		GBB.OptionsBuilder.AddEditBoxToCurrentPanel(GBB.DB.Custom,Dungeon,Init,GBB.L["EditCustom_"..Dungeon],width,width2,false,nil,txt)
+		local editBox = GBB.OptionsBuilder.AddEditBoxToCurrentPanel(GBB.DB.Custom,Dungeon,Init,GBB.L["EditCustom_"..Dungeon],width,width2,false,nil,txt)
+		-- updates tags whenever enter is pressed on any of these edit boxes.
+		editBox:HookScript('OnEnterPressed', GBB.CreateTagList) -- issues: #200
 	end
 end
 
@@ -432,13 +434,15 @@ function GBB.OptionsInit ()
 	
 	GBB.OptionsBuilder.AddHeaderToCurrentPanel(GBB.L["HeaderTagsCustom"])
 	GBB.OptionsBuilder.Indent(10)
-	GBB.OptionsBuilder.AddTextToCurrentPanel(GBB.L["msgCustomList"],450+200)
+	GBB.OptionsBuilder.AddTextToCurrentPanel(GBB.L['msgCustomList'], 450 + 200)
+	local saveText = GBB.OptionsBuilder.AddTextToCurrentPanel(GBB.L.SAVE_ON_ENTER, 450 + 200)
+	saveText:SetTextColor(RED_FONT_COLOR:GetRGB())
+	saveText:SetAlpha(0.75)
 	GBB.OptionsBuilder.AddSpacerToPanel()
-	CreateEditBoxDungeon("Search","",450,200)
-	CreateEditBoxDungeon("Bad","",450,200)
-	CreateEditBoxDungeon("Suffix","",450,200)
-	CreateEditBoxDungeon("Heroic","",450,200)
-	
+	CreateEditBoxDungeon('Search', '', 450, 200)
+	CreateEditBoxDungeon('Bad', '', 450, 200)
+	CreateEditBoxDungeon('Suffix', '', 450, 200)
+	CreateEditBoxDungeon('Heroic', '', 450, 200)
 	
 	GBB.OptionsBuilder.AddSpacerToPanel()	
 	for index=1,GBB.ENDINGDUNGEONEND do
@@ -451,11 +455,14 @@ function GBB.OptionsInit ()
 	GBB.OptionsBuilder.Indent(-10)
 
 	GBB.UpdateAdditionalFiltersPanel(customCategoriesFrame); -- update the custom filters panel now.
-	----------------------------------------------------------	
-	-- localization
-	----------------------------------------------------------
+	----------------------------------------------------------------------------	
+	-- Custom Localizations/User Translations
+	----------------------------------------------------------------------------
 	GBB.OptionsBuilder.AddNewCategoryPanel(GBB.L["PanelLocales"],false,true)
 	GBB.OptionsBuilder.AddTextToCurrentPanel(GBB.L["msgLocalRestart"])
+	saveText = GBB.OptionsBuilder.AddTextToCurrentPanel(GBB.L.SAVE_ON_ENTER, 450 + 200)
+	saveText:SetTextColor(RED_FONT_COLOR:GetRGB())
+	saveText:SetAlpha(0.75)
 	GBB.OptionsBuilder.AddSpacerToPanel()
 	local locales= GBB.locales.enGB
 	local t={}

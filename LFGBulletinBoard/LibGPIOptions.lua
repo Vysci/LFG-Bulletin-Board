@@ -19,47 +19,6 @@ local print = function(...)
 	end
 end
 
-local function EditBox_TooltipHide(self)
-	GameTooltip:Hide()
-end
-
-local function EditBox_OnFocusGained(self)
-	local name=self:GetName().."_suggestion"
-	if self.GPI_Options and self.GPI_Options.Vars and self.GPI_Options.Vars[name] then 
-		if self:GetText()==self.GPI_Options.Vars[name] then
-			self:SetText("")
-			self:SetTextColor(1,1,1)				
-		end
-	end	
-end
-
-local function EditBox_OnFocusLost(self)
-	local name=self:GetName().."_suggestion"
-	if self.GPI_Options and self.GPI_Options.Vars and self.GPI_Options.Vars[name] then 
-		if self:GetText()=="" then
-			self:SetTextColor(0.6,0.6,0.6)
-			self:SetText(self.GPI_Options.Vars[name])
-			self:HighlightText(0,0) 
-			self:SetCursorPosition(0)
-		end
-	end	
-end
-
-local function EditBox_OnEnterPressed(self)
-	self:ClearFocus()
-end
-
-local function EditBox_TooltipShow(self)
-	local name=self:GetName().."_tooltip"
-	if self.GPI_Options and self.GPI_Options.Vars and self.GPI_Options.Vars[name] then 
-		GameTooltip:SetOwner(self, "ANCHOR_BOTTOM", 0,0	)
-		GameTooltip:SetMinimumWidth(self:GetWidth())
-		GameTooltip:ClearLines()
-		GameTooltip:AddLine(self.GPI_Options.Vars[name],0.9,0.9,0.9,true)
-		GameTooltip:Show()
-	end		
-end
-
 local categoriesByName = { } ---@type table<string, table>
 local addToBlizzardSettings = function(frame) -- alternative to the deprecated `InterfaceOptions_AddCategory`
 	-- Frames are required to have OnCommit, OnDefault, and OnRefresh functions even if their implementations are empty.
@@ -250,21 +209,21 @@ function Options.DoOk() -- Hooked to the `OnCommit` handler, called when the `cl
 	-- 	end
 	-- end	
 	
-	for name,edit in pairs(Options.EditBoxes) do
-		if Options.Vars[name .. "_onlynumbers"] then 
-			Options.Vars[name .. "_db"][Options.Vars[name]] = edit:GetNumber()
-		else
-			if Options.Vars[name.."_suggestion"] and Options.Vars[name.."_suggestion"]~="" then
-				if edit:GetText()==Options.Vars[name.."_suggestion"] then
-					Options.Vars[name .. "_db"] [Options.Vars[name]] = ""
-				else
-					Options.Vars[name .. "_db"] [Options.Vars[name]] = edit:GetText()
-				end
-			else
-				Options.Vars[name .. "_db"] [Options.Vars[name]] = edit:GetText()
-			end
-		end
-	end
+	-- for name,edit in pairs(Options.EditBoxes) do
+	-- 	if Options.Vars[name .. "_onlynumbers"] then 
+	-- 		Options.Vars[name .. "_db"][Options.Vars[name]] = edit:GetNumber()
+	-- 	else
+	-- 		if Options.Vars[name.."_suggestion"] and Options.Vars[name.."_suggestion"]~="" then
+	-- 			if edit:GetText()==Options.Vars[name.."_suggestion"] then
+	-- 				Options.Vars[name .. "_db"] [Options.Vars[name]] = ""
+	-- 			else
+	-- 				Options.Vars[name .. "_db"] [Options.Vars[name]] = edit:GetText()
+	-- 			end
+	-- 		else
+	-- 			Options.Vars[name .. "_db"] [Options.Vars[name]] = edit:GetText()
+	-- 		end
+	-- 	end
+	-- end
 end
 
 -- `OnCancel` function has been deprecated by blizzard, most changes are committed immediately now.
@@ -289,14 +248,14 @@ function Options.DoRefresh()
 	-- 	end
 	-- end
 	
-	for name,edit in pairs(Options.EditBoxes) do
-		if Options.Vars[name .. "_onlynumbers"] then 
-			edit:SetNumber( Options.Vars[name .. "_db"] [Options.Vars[name]] )
-		else
-			edit:SetText( Options.Vars[name .. "_db"] [Options.Vars[name]] )
-			EditBox_OnFocusLost(edit)
-		end		
-	end
+	-- for name,edit in pairs(Options.EditBoxes) do
+	-- 	if Options.Vars[name .. "_onlynumbers"] then 
+	-- 		edit:SetNumber( Options.Vars[name .. "_db"] [Options.Vars[name]] )
+	-- 	else
+	-- 		edit:SetText( Options.Vars[name .. "_db"] [Options.Vars[name]] )
+	-- 		EditBox_OnFocusLost(edit)
+	-- 	end		
+	-- end
 end
 	
 -- Hooked to the `OnDefault` handler, called when the `default` button is pressed. 
@@ -317,14 +276,13 @@ function Options.DoDefault() -- note: default button does not exist for addons a
 	-- 	end
 	-- end
 	
+	-- for name,edit in pairs(Options.EditBoxes) do
+	-- 	Options.Vars[name .. "_db"] [Options.Vars[name]]= Options.Vars[name .. "_init"]
+	-- end
 	for _, savedVars in pairs(SavedVarRegistry.tracked) do -- will handle any registered saved variables
 		for _, handle in pairs(savedVars) do
 			handle:SetToDefault()
 		end
-	end
-	
-	for name,edit in pairs(Options.EditBoxes) do
-		Options.Vars[name .. "_db"] [Options.Vars[name]]= Options.Vars[name .. "_init"]
 	end
 	Options:DoRefresh()
 end
@@ -747,77 +705,81 @@ end
 ---@param labelWidth number?
 ---@param isNumeric boolean?
 ---@param tooltip string? text to display in a tooltip when the mouse hovers over the edit box
----@param instructions string? text to display in the edit box when it is empty
----@return EditBox
-function Options.AddEditBoxToCurrentPanel(dbTable,key,default,labelText,width,labelWidth,isNumeric,tooltip,instructions)
-	if width==nil then width=200 end
-	local c=Options.Frames.count+1
-	Options.Frames.count=c	
-
-	local ButtonName= Options.Prefix .."Edit_"..c.. key
-	local CatName = ButtonName.."_Text"
-			
-	Options.Frames[CatName] = Options.CurrentPanel:CreateFontString(CatName, "OVERLAY", "GameFontNormal")
-	Options.Frames[CatName]:SetText('|cffffffff' .. labelText .. '|r')
-	Options.Frames[CatName]:SetPoint("TOPLEFT",Options.NextRelativ,"BOTTOMLEFT", Options.NextRelativX, Options.NextRelativY-2)
-	Options.Frames[CatName]:SetScale(Options.scale)
-	if labelWidth==nil or labelWidth==0 then 
-		Options.Frames[CatName]:SetWidth(Options.Frames[CatName]:GetStringWidth())
+---@param sampleText string? text to display in the edit box when it is empty
+---@return EditBox|RegisteredFrameMixin
+function Options.AddEditBoxToCurrentPanel(dbTable,key,default,labelText,width,labelWidth,isNumeric,tooltip,sampleText)
+	width = width or 200
+	local frameIdx = Options.Frames.count + 1
+	local editBoxName = Options.Prefix..'EditBox'..frameIdx..key
+	local labelName = editBoxName..'Text'
+	Options.Frames.count = frameIdx
+	-- Set up the label
+	local label = Options.CurrentPanel:CreateFontString(labelName, 'OVERLAY', 'GameFontNormal')
+	label:SetText(labelText)
+	label:SetTextColor(1, 1, 1, 1)
+	label:SetPoint('TOPLEFT', Options.NextRelativ, 'BOTTOMLEFT', Options.NextRelativX, Options.NextRelativY - 2)
+	label:SetScale(Options.scale)
+	if labelWidth == nil or labelWidth == 0 then
+		label:SetWidth(label:GetStringWidth())
 	else
-		Options.Frames[CatName]:SetWidth(labelWidth)
-		Options.Frames[CatName]:SetJustifyH("LEFT")
-		Options.Frames[CatName]:SetJustifyV("TOP")
+		label:SetWidth(labelWidth)
+		label:SetJustifyH('LEFT')
+		label:SetJustifyV('TOP')
 	end
-	
-	
-	
-	Options.Vars[ButtonName]=key
-	Options.Vars[ButtonName.."_db"]=dbTable
-	Options.Vars[ButtonName.."_init"]=default
-	Options.Vars[ButtonName.."_onlynumbers"]=isNumeric
-	
-	
-	if dbTable[key] == nil then dbTable[key]=default end
-
-	Options.EditBoxes[ButtonName] = CreateFrame("EditBox", ButtonName, Options.CurrentPanel, "InputBoxTemplate")
-	Options.EditBoxes[ButtonName]:SetPoint("TOPLEFT", Options.Frames[CatName],"TOPRIGHT",5 ,5)
-	Options.EditBoxes[ButtonName]:SetScale(Options.scale)
-	Options.EditBoxes[ButtonName]:SetWidth(width)
-	Options.EditBoxes[ButtonName]:SetHeight(20)
-	
-	Options.EditBoxes[ButtonName]:SetScript("OnEnterPressed", EditBox_OnEnterPressed)
-	
-	Options.EditBoxes[ButtonName].GPI_Options=Options
-			
-	if isNumeric then
-		Options.EditBoxes[ButtonName]:SetNumeric(true)
-		Options.EditBoxes[ButtonName]:SetNumber(dbTable[key])
-	else
-		Options.EditBoxes[ButtonName]:SetText(dbTable[key])
+	---@type EditBox|{Instructions: FontString} # Create the edit box
+	local editBox = CreateFrame('EditBox', editBoxName, Options.CurrentPanel, 'InputBoxInstructionsTemplate')
+	editBox:SetPoint('TOPLEFT', label, 'TOPRIGHT', 5, 5)
+	editBox:SetScale(Options.scale)
+	editBox:SetWidth(width)
+	editBox:SetHeight(20)
+	label:SetHeight(editBox:GetHeight() - 10)
+	editBox:SetNumeric(isNumeric)
+	editBox:SetAutoFocus(false)
+	editBox:SetFontObject('ChatFontNormal') -- matches InputBoxTemplate font
+	editBox.Instructions:SetFontObject('ChatFontNormal')
+	editBox.Instructions:SetText(sampleText or '')
+	-- Register the edit box with the saved variable
+	if dbTable[key] == nil then dbTable[key] = default end
+	local cleanupText = function(text)
+		-- edge case for custom-tag editboxes; lowercase and remove extra inner spaces
+		if dbTable == GroupBulletinBoardDB.Custom then
+			text = text:lower():gsub('%s+', ' ')
+		end
+		return text:trim()
 	end
-	
-	Options.EditBoxes[ButtonName]:SetCursorPosition(0)
-	Options.EditBoxes[ButtonName]:HighlightText(0,0) 
-	Options.EditBoxes[ButtonName]:SetAutoFocus(false)
-	Options.EditBoxes[ButtonName]:ClearFocus() 
-	if tooltip and tooltip~="" then 
-		Options.EditBoxes[ButtonName]:SetScript("OnEnter", EditBox_TooltipShow)
-		Options.EditBoxes[ButtonName]:SetScript("onLeave", EditBox_TooltipHide)
-		Options.Vars[ButtonName.."_tooltip"] = tooltip
+	editBox = Options.RegisterFrameWithSavedVar(editBox, dbTable, key, default)
+	-- Better to just update the saved var OnEnterPressed only.
+	editBox:SetScript('OnEnterPressed', function()
+		local isNumeric = editBox:IsNumeric()
+		local input = not isNumeric and cleanupText(editBox:GetText()) or editBox:GetNumber();
+		assert(not isNumeric or type(input) == 'number',
+			'EditBox_OnEnterPressed() - failed to get number from edit box',
+			{input = input, isNumeric = isNumeric, text = editBox:GetText()}
+		);
+		editBox:SetSavedValue(input)
+		editBox:ClearFocus() -- utilize OnEditFocusLost to sync with saved var
+	end)
+	local syncWithSavedVar = function()
+		editBox:SetText(editBox:GetSavedValue())
 	end
-	if instructions and instructions~="" then 
-		Options.EditBoxes[ButtonName]:SetScript("OnEditFocusGained", EditBox_OnFocusGained)
-		Options.EditBoxes[ButtonName]:SetScript("OnEditFocusLost", EditBox_OnFocusLost)
-		Options.Vars[ButtonName.."_suggestion"]=instructions			
+	editBox:SetScript('OnEditFocusLost', syncWithSavedVar);
+	syncWithSavedVar();       -- run once to sync with initial value
+	editBox:SetCursorPosition(0) -- reset cursor incase saved text was added
+	-- Set tooltip if provided
+	if tooltip and tooltip ~= '' then
+		editBox:SetScript('OnEnter', function(self)
+			GameTooltip:SetOwner(self, 'ANCHOR_TOP', 0, 0)
+			GameTooltip:SetMinimumWidth(self:GetWidth())
+			GameTooltip:ClearLines()
+			GameTooltip:AddLine(tooltip, 0.9, 0.9, 0.9, true)
+			GameTooltip:Show()
+		end)
+		editBox:SetScript('OnLeave', GameTooltip_Hide)
 	end
-	
-	Options.Frames[CatName]:SetHeight(Options.EditBoxes[ButtonName]:GetHeight()-10)
-	
-	Options.NextRelativ=CatName
+	Options.NextRelativ=labelName
 	Options.NextRelativX=0
 	Options.NextRelativY=-10
-	
-	return Options.EditBoxes[ButtonName]
+	return editBox
 end
 
 ---@parm factor number? Defaults to 1. Negative values move the spacer up.
