@@ -241,14 +241,14 @@ function Options.DoOk() -- Hooked to the `OnCommit` handler, called when the `cl
 	-- 	end
 	-- end
 
-	for name,color in pairs(Options.Color) do
-		if Options.Vars[name .. "_db"]~=nil and Options.Vars[name]~=nil then
-			Options.Vars[name .. "_db"] [Options.Vars[name]].r=color.ColR
-			Options.Vars[name .. "_db"] [Options.Vars[name]].g=color.ColG
-			Options.Vars[name .. "_db"] [Options.Vars[name]].b=color.ColB
-			Options.Vars[name .. "_db"] [Options.Vars[name]].a=color.ColA
-		end
-	end	
+	-- for name,color in pairs(Options.Color) do
+	-- 	if Options.Vars[name .. "_db"]~=nil and Options.Vars[name]~=nil then
+	-- 		Options.Vars[name .. "_db"] [Options.Vars[name]].r=color.ColR
+	-- 		Options.Vars[name .. "_db"] [Options.Vars[name]].g=color.ColG
+	-- 		Options.Vars[name .. "_db"] [Options.Vars[name]].b=color.ColB
+	-- 		Options.Vars[name .. "_db"] [Options.Vars[name]].a=color.ColA
+	-- 	end
+	-- end	
 	
 	for name,edit in pairs(Options.EditBoxes) do
 		if Options.Vars[name .. "_onlynumbers"] then 
@@ -277,17 +277,17 @@ function Options.DoRefresh()
 	-- 	end
 	-- end
 	
-	for name,color in pairs(Options.Color) do
-		if Options.Vars[name .. "_db"]~=nil and Options.Vars[name]~=nil then
-			color:GetNormalTexture():SetVertexColor(
-				Options.Vars[name .. "_db"] [Options.Vars[name]].r,
-				Options.Vars[name .. "_db"] [Options.Vars[name]].g,
-				Options.Vars[name .. "_db"] [Options.Vars[name]].b,
-				Options.Vars[name .. "_db"] [Options.Vars[name]].a
-			)
-			color.ColR,color.ColG,color.ColB,color.ColA=Options.Vars[name .. "_db"] [Options.Vars[name]].r, Options.Vars[name .. "_db"] [Options.Vars[name]].g,	Options.Vars[name .. "_db"] [Options.Vars[name]].b,	Options.Vars[name .. "_db"] [Options.Vars[name]].a
-		end
-	end
+	-- for name,color in pairs(Options.Color) do
+	-- 	if Options.Vars[name .. "_db"]~=nil and Options.Vars[name]~=nil then
+	-- 		color:GetNormalTexture():SetVertexColor(
+	-- 			Options.Vars[name .. "_db"] [Options.Vars[name]].r,
+	-- 			Options.Vars[name .. "_db"] [Options.Vars[name]].g,
+	-- 			Options.Vars[name .. "_db"] [Options.Vars[name]].b,
+	-- 			Options.Vars[name .. "_db"] [Options.Vars[name]].a
+	-- 		)
+	-- 		color.ColR,color.ColG,color.ColB,color.ColA=Options.Vars[name .. "_db"] [Options.Vars[name]].r, Options.Vars[name .. "_db"] [Options.Vars[name]].g,	Options.Vars[name .. "_db"] [Options.Vars[name]].b,	Options.Vars[name .. "_db"] [Options.Vars[name]].a
+	-- 	end
+	-- end
 	
 	for name,edit in pairs(Options.EditBoxes) do
 		if Options.Vars[name .. "_onlynumbers"] then 
@@ -307,22 +307,21 @@ function Options.DoDefault() -- note: default button does not exist for addons a
 	-- 	end
 	-- end
 
+	-- for name,color in pairs(Options.Color) do
+	-- 	if Options.Vars[name .. "_db"]~=nil and Options.Vars[name]~=nil then
+	-- 		Options.Vars[name .. "_db"] [Options.Vars[name]].r = Options.Vars[name .. "_init"].r
+	-- 		Options.Vars[name .. "_db"] [Options.Vars[name]].g = Options.Vars[name .. "_init"].g
+	-- 		Options.Vars[name .. "_db"] [Options.Vars[name]].b = Options.Vars[name .. "_init"].b
+	-- 		Options.Vars[name .. "_db"] [Options.Vars[name]].a = Options.Vars[name .. "_init"].a
+
+	-- 	end
+	-- end
+	
 	for _, savedVars in pairs(SavedVarRegistry.tracked) do -- will handle any registered saved variables
 		for _, handle in pairs(savedVars) do
 			handle:SetToDefault()
 		end
 	end
-	
-	for name,color in pairs(Options.Color) do
-		if Options.Vars[name .. "_db"]~=nil and Options.Vars[name]~=nil then
-			Options.Vars[name .. "_db"] [Options.Vars[name]].r = Options.Vars[name .. "_init"].r
-			Options.Vars[name .. "_db"] [Options.Vars[name]].g = Options.Vars[name .. "_init"].g
-			Options.Vars[name .. "_db"] [Options.Vars[name]].b = Options.Vars[name .. "_init"].b
-			Options.Vars[name .. "_db"] [Options.Vars[name]].a = Options.Vars[name .. "_init"].a
-
-		end
-	end
-	
 	
 	for name,edit in pairs(Options.EditBoxes) do
 		Options.Vars[name .. "_db"] [Options.Vars[name]]= Options.Vars[name .. "_init"]
@@ -531,96 +530,69 @@ end
 ---@param default {r: number, g: number, b: number, a: number} default color values. falls-back to white.
 ---@param labelText string label text for the color button
 ---@param width number?
----@return Button
+---@return SwatchButton
 function Options.AddColorSwatchToCurrentPanel(dbTable,key,default,labelText,width)
-	local c=Options.Frames.count+1
+	local frameIdx=Options.Frames.count+1
+	Options.Frames.count=frameIdx
+	local textFrame = Options.AddTextToCurrentPanel(labelText, width, true) ---@type FontString
+	textFrame:SetTextColor(1, 1, 1)
+	local size = 16;
+	textFrame:AdjustPointsOffset(0, textFrame:GetHeight() - size) -- move text down a bit for bigger swatch buttons
+	local swatchButtonName = Options.Prefix..'ColorSwatch'..frameIdx
+	-- Initialize Button
+	local swatchButton = CreateFrame('Button', swatchButtonName, Options.CurrentPanel)
+	swatchButton:SetNormalTexture('Interface\\ChatFrame\\ChatFrameColorSwatch')
+	swatchButton.Bg = swatchButton:GetNormalTexture()
+	swatchButton:SetWidth(size)
+	swatchButton:SetHeight(size)
+	swatchButton:ClearAllPoints()
+	swatchButton:SetPoint('LEFT', Options.NextRelativ, 'RIGHT', 5, 0)
+	swatchButton:SetScale(Options.scale)
+	swatchButton.Highlight = swatchButton:CreateTexture(swatchButtonName..'Background', 'BACKGROUND')
+	swatchButton.Highlight:SetPoint('CENTER')
+	swatchButton.Highlight:SetWidth(size - 2)
+	swatchButton.Highlight:SetHeight(size - 2)
+	swatchButton.Highlight:SetColorTexture(1, 1, 1, 1)
+	swatchButton:SetScript("OnEnter", function()
+		swatchButton.Highlight:SetVertexColor(1.0, 0.82, 0.0)
+	end)
+	swatchButton:SetScript("OnLeave", function()
+		swatchButton.Highlight:SetVertexColor(1.0, 1.0, 1.0)
+	end)
+	-- note: first time initialization could also be done by `GetHandle` inside of `RegisterFrameWithSavedVar
+	default = default or {r = 1, g = 1, b = 1, a = 1}
+	if dbTable ~= nil and key ~= nil and dbTable[key] == nil
+	then dbTable[key] = CopyTable(default) end
 	
-	local textFrame=Options.AddTextToCurrentPanel(labelText,width)
-	textFrame:SetTextColor(1,1,1)
-	local h=textFrame:GetHeight()
-	
-	Options.Frames.count=c	
-	local ButtonName=Options.Prefix .."COLOR_"..c
-	
-	if default==nil then
-		default={r=1,g=1,b=1,a=1}
+	-- Register button with saved var handler
+	---@class SwatchButton:RegisteredFrameMixin, Button
+	swatchButton = Options.RegisterFrameWithSavedVar(swatchButton, dbTable, key, default)
+	local syncWithSavedVar = function()
+		local color = swatchButton:GetSavedValue() -- method from RegisterFrameWithSavedVar
+		swatchButton.Bg:SetVertexColor(color.r, color.g, color.b, color.a)
 	end
-	
-	Options.Index[c]=ButtonName	
-	
-	Options.Vars[ButtonName]=key
-	Options.Vars[ButtonName.."_init"]=default
-	Options.Vars[ButtonName.."_db"]=dbTable
-	
-	if dbTable~=nil and key~=nil then
-		if dbTable[key] == nil then 
-			dbTable[key]={}
-			dbTable[key].r=default.r 
-			dbTable[key].g=default.g 
-			dbTable[key].b=default.b 
-			dbTable[key].a=default.a 
-		end
+	swatchButton:OnSavedVarUpdate(syncWithSavedVar);
+	syncWithSavedVar() -- run once to set the initial color
+	local onSwatchColorChange = function() -- passed to ColorPickerFrame handlers.
+		local a = 1.0 - OpacitySliderFrame:GetValue()
+		local r, g, b = ColorPickerFrame:GetColorRGB()
+		swatchButton:SetSavedValue({r=r, g=g, b=b, a=a})
 	end
-	
-	Options.Color[ButtonName] = CreateFrame("Button", ButtonName, Options.CurrentPanel)
-	
-	local but=Options.Color[ButtonName]
-	
-	but:SetWidth(h)
-	but:SetHeight(h)
-	but.ColTex=but:CreateTexture(ButtonName.."Background","BACKGROUND")
-	but.ColTex:SetPoint("CENTER")
-	but.ColTex:SetWidth(h-2)
-	but.ColTex:SetHeight(h-2)
-	but.ColTex:SetColorTexture(1,1,1,1)
-	but:SetScript("OnEnter",
-		function (self)
-			_G[self:GetName() .. "Background"]:SetVertexColor(1.0, 0.82, 0.0)
+	swatchButton:SetScript("OnMouseDown", RegisteredFrame_OnShiftRightClick)
+	-- Connect to ColorPickerFrame
+	swatchButton:SetScript("OnClick", function(self)
+		local original = swatchButton:GetSavedValue()
+		ColorPickerFrame.hasOpacity, ColorPickerFrame.opacity = true, 1.0 - original.a
+		ColorPickerFrame.swatchFunc = onSwatchColorChange
+		ColorPickerFrame.opacityFunc = onSwatchColorChange
+		ColorPickerFrame.cancelFunc = function()
+			swatchButton:SetSavedValue(original)
 		end
-	)
-	but:SetScript("OnLeave",
-		function (self)
-			_G[self:GetName() .. "Background"]:SetVertexColor(1.0, 1.0, 1.0)
-		end
-	)
-	but:SetNormalTexture("Interface\\ChatFrame\\ChatFrameColorSwatch")
-	
-	
-	but:ClearAllPoints()
-	
-	but:SetPoint("TOPLEFT", Options.NextRelativ,"TOPRIGHT", 5, 0)
-	
-	but:SetScale(Options.scale)
-	
-	but:GetNormalTexture():SetVertexColor(dbTable[key].r,dbTable[key].g,dbTable[key].b,dbTable[key].a)
-	but.ColR,but.ColG,but.ColB,but.ColA=dbTable[key].r,dbTable[key].g,dbTable[key].b,dbTable[key].a
-		
-	local function callback(previousValues)
-		local newR, newG, newB, newA
-
-		if previousValues then
-			newR, newG, newB, newA = unpack(previousValues)
-		else
-			newA, newR, newG, newB = 1.0 - OpacitySliderFrame:GetValue(), ColorPickerFrame:GetColorRGB()
-		end
-		but:GetNormalTexture():SetVertexColor(newR, newG, newB, newA)
-		but.ColR,but.ColG,but.ColB,but.ColA=newR, newG, newB, newA		
-	end
-	
-	but:SetScript(
-		"OnClick",
-		function(self)
-			local r, g, b, a = but.ColR,but.ColG,but.ColB,but.ColA
-			ColorPickerFrame.hasOpacity, ColorPickerFrame.opacity = true, 1.0 - a
-			ColorPickerFrame.previousValues = {r, g, b, a}
-			ColorPickerFrame.func, ColorPickerFrame.opacityFunc, ColorPickerFrame.cancelFunc = callback, callback, callback
-			ColorPickerFrame:SetColorRGB(r, g, b)
-			ColorPickerFrame:Hide()
-			ColorPickerFrame:Show()
-		end
-	)
-	
-	return but
+		ColorPickerFrame:SetColorRGB(original.r, original.g, original.b)
+		ColorPickerFrame:Hide()
+		ColorPickerFrame:Show()
+	end)
+	return swatchButton
 end
 
 ---@param dbTable table
