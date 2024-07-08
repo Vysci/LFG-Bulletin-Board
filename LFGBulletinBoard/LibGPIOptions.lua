@@ -60,14 +60,6 @@ local function EditBox_TooltipShow(self)
 	end		
 end
 
-local function CheckBox_OnRightClick(checkbox, func)
-	checkbox:SetScript("OnMouseDown",function(button)
-		if button == "RightButton" then
-			func()
-		end
-	end)
-end
-
 local categoriesByName = { } ---@type table<string, table>
 local addToBlizzardSettings = function(frame) -- alternative to the deprecated `InterfaceOptions_AddCategory`
 	-- Frames are required to have OnCommit, OnDefault, and OnRefresh functions even if their implementations are empty.
@@ -185,6 +177,12 @@ local RegisteredFrameMixin = {
 	end
 }
 
+local function RegisteredFrame_OnShiftRightClick(frame, button)
+	if button == "RightButton" and IsShiftKeyDown() then
+		if frame.SetToDefault then frame:SetToDefault() end
+	end
+end
+
 --------------------------------------------------------------------------------
 -- Public/Interface
 --------------------------------------------------------------------------------
@@ -236,12 +234,13 @@ function Options.Init(onCommit,onRefresh,onDefault)
 end
 		
 function Options.DoOk() -- Hooked to the `OnCommit` handler, called when the `close` button is pressed.
-	for name, cbox in pairs(Options.CheckBoxes) do
-		if Options.Vars[name .. "_db"]~=nil and Options.Vars[name]~=nil then
-			Options.Vars[name .. "_db"] [Options.Vars[name]] = cbox:GetChecked()
-		end
-	end
-	
+	-- Done with RegisterFrameWithSavedVar now
+	-- for name, cbox in pairs(Options.CheckBoxes) do
+	-- 	if Options.Vars[name .. "_db"]~=nil and Options.Vars[name]~=nil then
+	-- 		Options.Vars[name .. "_db"] [Options.Vars[name]] = cbox:GetChecked()
+	-- 	end
+	-- end
+
 	for name,color in pairs(Options.Color) do
 		if Options.Vars[name .. "_db"]~=nil and Options.Vars[name]~=nil then
 			Options.Vars[name .. "_db"] [Options.Vars[name]].r=color.ColR
@@ -271,12 +270,12 @@ end
 -- `OnCancel` function has been deprecated by blizzard, most changes are committed immediately now.
 -- `OnRefresh` is called every time the canvas view is refreshed (swapping categories, opening, etc.)
 -- `DoRefresh` is hooked into the `OnRefresh` event in `Options.lua` setup.
-function Options.DoRefresh() 
-	for name,cbox in pairs(Options.CheckBoxes) do
-		if Options.Vars[name .. "_db"]~=nil and Options.Vars[name]~=nil then
-			cbox:SetChecked( Options.Vars[name .. "_db"] [Options.Vars[name]] )
-		end
-	end
+function Options.DoRefresh()
+	-- for name,cbox in pairs(Options.CheckBoxes) do 
+	-- 	if Options.Vars[name .. "_db"]~=nil and Options.Vars[name]~=nil then
+	-- 		cbox:SetChecked( Options.Vars[name .. "_db"] [Options.Vars[name]] )
+	-- 	end
+	-- end
 	
 	for name,color in pairs(Options.Color) do
 		if Options.Vars[name .. "_db"]~=nil and Options.Vars[name]~=nil then
@@ -300,10 +299,17 @@ function Options.DoRefresh()
 	end
 end
 	
-function Options.DoDefault() -- Hooked to the `OnDefault` handler, called when the `default` button is pressed.
-	for name,cbox in pairs(Options.CheckBoxes) do
-		if Options.Vars[name .. "_db"]~=nil and Options.Vars[name]~=nil then
-			Options.Vars[name .. "_db"] [Options.Vars[name]]= Options.Vars[name .. "_init"]
+-- Hooked to the `OnDefault` handler, called when the `default` button is pressed. 
+function Options.DoDefault() -- note: default button does not exist for addons anymore, has to be implemented.
+	-- for name,cbox in pairs(Options.CheckBoxes) do
+	-- 	if Options.Vars[name .. "_db"]~=nil and Options.Vars[name]~=nil then
+	-- 		Options.Vars[name .. "_db"] [Options.Vars[name]]= Options.Vars[name .. "_init"]
+	-- 	end
+	-- end
+
+	for _, savedVars in pairs(SavedVarRegistry.tracked) do -- will handle any registered saved variables
+		for _, handle in pairs(savedVars) do
+			handle:SetToDefault()
 		end
 	end
 	
@@ -468,59 +474,56 @@ end
 ---@param default boolean default db value if key is not set
 ---@param labelText string label text for the checkbox
 ---@param width number?
----@return CheckButton
+---@return CheckButton|RegisteredFrameMixin
 function Options.AddCheckBoxToCurrentPanel(dbTable,key,default,labelText,width)
-	local c=Options.Frames.count+1
-	Options.Frames.count=c	
-	local ButtonName=Options.Prefix .."CBOX_"..c
-	if default==nil then
-		default=false
+	local frameIdx=Options.Frames.count+1
+	Options.Frames.count=frameIdx	
+	local buttonName=Options.Prefix .."CheckBox"..frameIdx
+	default = not not default -- ensure init is a boolean
+
+	---@type CheckButton|{Text: FontString, func: function} -- Create checkbox frame
+	local checkButton = CreateFrame("CheckButton", buttonName, Options.CurrentPanel, "ChatConfigCheckButtonTemplate")
+	checkButton:ClearAllPoints()
+	checkButton:SetScale(Options.scale)
+	checkButton.Text:SetText(labelText)
+	if dbTable ~= nil and key ~= nil then
+		-- note: RegisterFrameWithSavedVar has been set up to also initialize first time saved vars.
+		if dbTable[key] == nil then dbTable[key] = default end
+		checkButton = Options.RegisterFrameWithSavedVar(checkButton, dbTable, key, default)
+		checkButton:SetChecked(checkButton:GetSavedValue())
+		--`.func` is called in the `OnClick` handler for the template.
+		-- see https://github.com/Gethe/wow-ui-source/blob/classic_era/Interface/FrameXML/ChatConfigFrame.xml#L177
+		checkButton.func = function(self, isChecked)
+			checkButton:SetSavedValue(isChecked)
+		end
+		checkButton:OnSavedVarUpdate(function(newValue)
+			checkButton:SetChecked(newValue)
+		end)
+		checkButton:SetScript("OnMouseDown", RegisteredFrame_OnShiftRightClick)
 	end
-	Options.Index[c]=ButtonName	
-	
-	Options.Vars[ButtonName]=key
-	Options.Vars[ButtonName.."_init"]=default
-	Options.Vars[ButtonName.."_db"]=dbTable
-	
-	if dbTable~=nil and key~=nil then
-		if dbTable[key] == nil then dbTable[key]=default end
-	end
-	
-	Options.CheckBoxes[ButtonName] = CreateFrame("CheckButton", ButtonName, Options.CurrentPanel, "ChatConfigCheckButtonTemplate")
-	_G[ButtonName .. "Text"]:SetText(labelText)
 	if width then
-		_G[ButtonName .. "Text"]:SetWidth(width)
-		_G[ButtonName .. "Text"]:SetNonSpaceWrap(false)
-		_G[ButtonName .. "Text"]:SetMaxLines(1)
-		Options.CheckBoxes[ButtonName]:SetHitRectInsets(0, -width, 0,0)
+		checkButton.Text:SetWidth(width)
+		checkButton.Text:SetNonSpaceWrap(false)
+		checkButton.Text:SetMaxLines(1)
+		checkButton:SetHitRectInsets(0, -width, 0,0)
 	else
-		Options.CheckBoxes[ButtonName]:SetHitRectInsets(0, -_G[ButtonName.."Text"]:GetStringWidth()-2, 0,0)
+		checkButton:SetHitRectInsets(0, -(checkButton.Text:GetStringWidth() - 2), 0, 0)
 	end
-	
-	Options.CheckBoxes[ButtonName]:ClearAllPoints()
-	
-	if Options.inLine~=true or Options.LineRelativ ==nil then
-		Options.CheckBoxes[ButtonName]:SetPoint("TOPLEFT", Options.NextRelativ,"BOTTOMLEFT", Options.NextRelativX, Options.NextRelativY)
-		Options.NextRelativ=ButtonName
-		Options.LineRelativ=ButtonName
-		Options.NextRelativX=0
-		Options.NextRelativY=0
+	if not Options.inLine or not Options.LineRelativ then
+		checkButton:SetPoint('TOPLEFT', Options.NextRelativ, 'BOTTOMLEFT', Options.NextRelativX, Options.NextRelativY)
+		Options.NextRelativ = buttonName
+		Options.LineRelativ = buttonName
+		Options.NextRelativX = 0
+		Options.NextRelativY = 0
 	else
-		Options.CheckBoxes[ButtonName]:SetPoint("TOP", Options.LineRelativ,"TOP", 0, 0)
-		Options.CheckBoxes[ButtonName]:SetPoint("LEFT", Options.LineRelativ.."Text","RIGHT", 10, 0)			
-		Options.LineRelativ=ButtonName
+		checkButton:SetPoint('TOP', Options.LineRelativ, 'TOP', 0, 0)
+		checkButton:SetPoint('LEFT', Options.LineRelativ..'Text', 'RIGHT', 10, 0)
+		Options.LineRelativ = buttonName
 	end
-	
-	Options.CheckBoxes[ButtonName]:SetScale(Options.scale)
-	if dbTable~=nil and key~=nil then 
-		Options.CheckBoxes[ButtonName]:SetChecked(dbTable[key])
-	else
-		Options.CheckBoxes[ButtonName]:Hide()
+	if dbTable == nil and key == nil then 
+		checkButton:Hide()
 	end
-	
-	Options.CheckBoxes[ButtonName].OnRightClick=CheckBox_OnRightClick
-	
-	return Options.CheckBoxes[ButtonName]
+	return checkButton
 end
 
 ---@param dbTable table expects either character or account SavedVars table
@@ -676,40 +679,33 @@ function Options.AddDropdownToCurrentPanel(dbTable,key,default,MenuItems)
 	end)
 end
 
----@param checkBox CheckButton|{Text: FontString}
+---@param checkBox CheckButton|{Text: FontString, func: function}
 ---@param dbTable table expects either character or account SavedVars table
 ---@param key string
 ---@param value boolean? new isChecked value
 ---@param labelText string new label text for the checkbox
 ---@param width number?
 function Options.EditCheckBox(checkBox,dbTable,key,value,labelText,width)
-	local ButtonName=checkBox:GetName()
-	if value==nil then
-		value=false
-	end
-	Options.Vars[ButtonName]=key
-	Options.Vars[ButtonName.."_init"]=value
-	Options.Vars[ButtonName.."_db"]=dbTable
-	
+	value = not not value -- cast to boolean	
 	if dbTable~=nil and key~=nil then
 		if dbTable[key] == nil then dbTable[key]=value end
+		checkBox = Options.RegisterFrameWithSavedVar(checkBox, dbTable, key, value)
+		checkBox.func = function(self, isChecked)
+			checkBox:SetSavedValue(isChecked)
+		end
+		checkBox:Show()
 	end
-	
-	_G[ButtonName .. "Text"]:SetText(labelText)
+	checkBox.Text:SetText(labelText)
 	if width then
-		_G[ButtonName .. "Text"]:SetWidth(width)
-		_G[ButtonName .. "Text"]:SetNonSpaceWrap(false)
-		_G[ButtonName .. "Text"]:SetMaxLines(1)
-		Options.CheckBoxes[ButtonName]:SetHitRectInsets(0, -width, 0,0)
+		checkBox.Text:SetWidth(width)
+		checkBox.Text:SetNonSpaceWrap(false)
+		checkBox.Text:SetMaxLines(1)
+		checkBox:SetHitRectInsets(0, -width, 0,0)
 	else
-		Options.CheckBoxes[ButtonName]:SetHitRectInsets(0, -_G[ButtonName.."Text"]:GetStringWidth()-2, 0,0)
+		checkBox:SetHitRectInsets(0, -(checkBox.Text:GetStringWidth()-2), 0,0)
 	end
-	
-	if dbTable~=nil and key~=nil then 
-		Options.CheckBoxes[ButtonName]:SetChecked(dbTable[key])
-		Options.CheckBoxes[ButtonName]:Show()
-	else
-		Options.CheckBoxes[ButtonName]:Hide()
+	if dbTable == nil and key == nil then
+		checkBox:Hide()
 	end
 end
 
