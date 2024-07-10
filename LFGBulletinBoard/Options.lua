@@ -325,7 +325,7 @@ function GBB.OptionsInit ()
 	CheckBox("OrderNewTop",true)
 	CheckBox("HeadersStartFolded",false)
 	GBB.OptionsBuilder.AddSpacerToPanel()
-	GBB.OptionsBuilder.AddTextToCurrentPanel(GBB.L["msgFontSize"],-20)
+	GBB.OptionsBuilder.AddTextToCurrentPanel(FONT_SIZE, -20)
 	GBB.OptionsBuilder.AddDropdownToCurrentPanel(GBB.DB,"FontSize", "GameFontNormal", {"GameFontNormalSmall", "GameFontNormal", "GameFontNormalLarge"}) 
 
 	CheckBox("CombineSubDungeons",false)
