@@ -555,58 +555,86 @@ end
 
 ---@param dbTable table
 ---@param key string
----@param default any 
----@param MenuItems table<any, string>
-function Options.AddDropdownToCurrentPanel(dbTable,key,default,MenuItems) 
-	local c=Options.Frames.count+1
-	Options.Frames.count=c	
-	local ButtonName=Options.Prefix .."BUTTON_"..c
-	Options.Vars[ButtonName]=key
-	Options.Vars[ButtonName.."_init"]=default
-	Options.Vars[ButtonName.."_db"]=dbTable
+---@param default string|number|boolean 
+---@param menuButtons string[]|{value: string|number|boolean, text: string?}[]
+function Options.AddDropdownToCurrentPanel(dbTable,key,default,menuButtons) 
+	local frameIdx = Options.Frames.count + 1
+	Options.Frames.count = frameIdx
+	local dropdownName = Options.Prefix..'DropDownMenu'..frameIdx
 	
-	if dbTable~=nil and key~=nil then
-		if dbTable[key] == nil then dbTable[key]=default end
-	end
-
-	Options.Buttons[ButtonName] = CreateFrame("Frame", ButtonName , Options.CurrentPanel, "UIDropDownMenuTemplate")
-	if Options.inLine~=true or Options.LineRelativ ==nil then
-		Options.Buttons[ButtonName]:SetPoint("TOPLEFT", Options.NextRelativ,"BOTTOMLEFT", Options.NextRelativX, Options.NextRelativY)
-		Options.NextRelativ=ButtonName
-		Options.LineRelativ=ButtonName
-		Options.NextRelativX=0
-		Options.NextRelativY=0
-	else
-		Options.Buttons[ButtonName]:SetPoint("TOP", Options.LineRelativ,"TOP", 0, 0)
-		Options.Buttons[ButtonName]:SetPoint("LEFT", Options.LineRelativ.."Text","RIGHT", 0, 3)
-		Options.LineRelativ=ButtonName
-	end
-
-	local dropdown_width = 0
-    local dd_title = Options.Buttons[ButtonName]:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-	for _, item in pairs(MenuItems) do -- Sets the dropdown width to the largest item string width.
-        dd_title:SetText(item)
-        local text_width = dd_title:GetStringWidth() + 20
-        if text_width > dropdown_width then
-            dropdown_width = text_width
-        end
-    end
-	UIDropDownMenu_SetWidth(Options.Buttons[ButtonName], dropdown_width)
-	UIDropDownMenu_SetText(Options.Buttons[ButtonName], dbTable[key])
-	
-	-- Create and bind the initialization function to the dropdown menu
-	UIDropDownMenu_Initialize(Options.Buttons[ButtonName], function(self, level, menuList)
-	 local info = UIDropDownMenu_CreateInfo()
-	 for k, v in pairs(MenuItems) do
-		info.text = v
-		info.func = function(b)
-			UIDropDownMenu_SetText(Options.Buttons[ButtonName], b.value)
-			dbTable[key] = b.value
-			default = b.value
-		end
-		UIDropDownMenu_AddButton(info)
-	   end
+	---@class Dropdown: UIDropDownMenu, RegisteredFrameMixin, Frame
+	local dropdownFrame = CreateFrame('Frame', dropdownName, Options.CurrentPanel, 'UIDropDownMenuTemplate')
+	--note: defaulting for uninitialized saved vars now done in RegisterFrameWithSavedVar
+	Options.RegisterFrameWithSavedVar(dropdownFrame, dbTable, key, default)
+	dropdownFrame.Button:SetScript("OnMouseDown", function(self, button)
+		RegisteredFrame_OnShiftRightClick(dropdownFrame, button) -- Default on right-click of the dropdown toggle
+		PlaySound(SOUNDKIT.IG_MAINMENU_OPTION_CHECKBOX_ON);
 	end)
+	
+	local maxWidth = 0; -- find widest button in the dropdown
+	local fontString = dropdownFrame:CreateFontString(nil, 'OVERLAY', 'GameFontNormal');
+	for _, data in pairs(menuButtons) do
+		if type(data) == 'string' then
+			fontString:SetText(data);
+		else
+			fontString:SetText(data.text or tostring(data.value));
+		end
+		maxWidth = max(maxWidth, (fontString:GetStringWidth() + 20))
+	end
+	---@type fun(button: UIDropDownMenuButton) Dropdown menu button's on click handler
+	local dropdownButtonOnClick = function(button)
+		dropdownFrame:SetSavedValue(button.value)
+		UIDropDownMenu_SetSelectedValue(dropdownFrame, button.value)
+		UIDropDownMenu_SetText(dropdownFrame, button.text or button.value)
+	end
+	-- syncs dropdown display with the text that matches the passed value (expects the current saved variable)
+	local syncDropDownWithValue = function(value)
+		for _, data in pairs(menuButtons) do
+			if type(data) == 'string' and data == value then
+				UIDropDownMenu_SetText(dropdownFrame, data)
+				break;
+			elseif type(data) == 'table' and (data.value == value) then
+				UIDropDownMenu_SetText(dropdownFrame, data.text or data.value)
+				break;
+			end
+		end
+	end
+	dropdownFrame:OnSavedVarUpdate(syncDropDownWithValue);
+	UIDropDownMenu_SetWidth(dropdownFrame, maxWidth);
+	syncDropDownWithValue(dropdownFrame:GetSavedValue()); -- set initial text
+	-- Create and bind the initialization function to the dropdown menu
+	UIDropDownMenu_Initialize(dropdownFrame, function(self, level, menuList)
+		local buttonInfo = UIDropDownMenu_CreateInfo()
+		for _, buttonData in ipairs(menuButtons) do
+			if type(buttonData) == 'string' then
+				buttonInfo.text = buttonData
+				buttonInfo.value = buttonData
+			else
+				assert(buttonData.value ~= nil, 'data.value is required for button data table', 'data=q', buttonData);
+				for key, value in pairs(buttonData) do
+					buttonInfo[key] = value
+				end
+				buttonInfo.text = buttonData.text or tostring(buttonData.value)
+			end
+			buttonInfo.checked = function(button)
+				return dropdownFrame:GetSavedValue() == button.value
+			end
+			buttonInfo.func = dropdownButtonOnClick
+			UIDropDownMenu_AddButton(buttonInfo)
+		end
+	end)
+	if not Options.inLine or not Options.LineRelativ then
+		dropdownFrame:SetPoint('TOPLEFT', Options.NextRelativ, 'BOTTOMLEFT', Options.NextRelativX, Options.NextRelativY)
+		Options.NextRelativ = dropdownName
+		Options.LineRelativ = dropdownName
+		Options.NextRelativX = 0
+		Options.NextRelativY = 0
+	else
+		dropdownFrame:SetPoint('TOP', Options.LineRelativ, 'TOP', 0, 0)
+		dropdownFrame:SetPoint('LEFT', Options.LineRelativ..'Text', 'RIGHT', 0, 3)
+		Options.LineRelativ = dropdownName
+	end
+	return dropdownFrame
 end
 
 ---@param checkBox CheckButton|{Text: FontString, func: function}
