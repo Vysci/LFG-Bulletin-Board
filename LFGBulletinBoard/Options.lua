@@ -2,10 +2,8 @@ local TOCNAME,
 	---@class Addon_Options : Addon_Localization, Addon_CustomFilters, Addon_Dungeons, Addon_Tags, Addon_LibGPIOptions
 	GBB= ...;
 local ChannelIDs
-local ChkBox_FilterDungeon
-local TbcChkBox_FilterDungeon
 local isClassicEra = WOW_PROJECT_ID == WOW_PROJECT_CLASSIC
-local isCata = WOW_PROJECT_ID == WOW_PROJECT_CATACLYSM_CLASSIC
+local isCataclysm = WOW_PROJECT_ID == WOW_PROJECT_CATACLYSM_CLASSIC
 local PROJECT_EXPANSION_ID = {
 	[WOW_PROJECT_CLASSIC] = GBB.Enum.Expansions.Classic,
 	[WOW_PROJECT_BURNING_CRUSADE_CLASSIC] = GBB.Enum.Expansions.BurningCrusade,
@@ -22,15 +20,19 @@ local EXPANSION_FILTER_NAME = {
 	[GBB.Enum.Expansions.Wrath] = SUBTITLE_FORMAT:format(FILTERS, EXPANSION_NAME2),
 	[GBB.Enum.Expansions.Cataclysm] = SUBTITLE_FORMAT:format(FILTERS, EXPANSION_NAME3),
 }
---Options
--------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
+-- Locals/helpers
+--------------------------------------------------------------------------------
 
+---@type fun(Var: string, Init: boolean): CheckButton|RegisteredFrameMixin # Create account-wide Settings checkbox
 local function CheckBox (Var,Init)
 	return GBB.OptionsBuilder.AddCheckBoxToCurrentPanel(GBB.DB,Var,Init,GBB.L["Cbox"..Var])
 end
+---@type fun(Var: string, Init: boolean): CheckButton|RegisteredFrameMixin # Create character-specific Settings checkbox
 local function CheckBoxChar (Var,Init)
 	return GBB.OptionsBuilder.AddCheckBoxToCurrentPanel(GBB.DBChar,Var,Init,GBB.L["CboxChar"..Var])
 end
+---@type fun(Dungeon: string, Init: boolean): CheckButton|RegisteredFrameMixin # Create character dungeon filter checkbox
 local function CheckBoxFilter (Dungeon,Init)
 	local dungeonName = (GBB.GetDungeonInfo(Dungeon, true) or {}).name
 	return GBB.OptionsBuilder.AddCheckBoxToCurrentPanel(
@@ -41,19 +43,16 @@ local function CheckBoxFilter (Dungeon,Init)
 		).." "..GBB.LevelRange(Dungeon,true))
 	)
 end
+--- Create account-wide numeric edit box
+---@type fun(Var: string, Init: number, width: number, width2: number?): EditBox|RegisteredFrameMixin 
 local function CreateEditBoxNumber (Var,Init,width,width2)
 	return GBB.OptionsBuilder.AddEditBoxToCurrentPanel(GBB.DB,Var,Init,GBB.L["Edit"..Var],width,width2,true)
 end
 local function CreateEditBox (Var,Init,width,width2)
 	return GBB.OptionsBuilder.AddEditBoxToCurrentPanel(GBB.DB,Var,Init,GBB.L["Edit"..Var],width,width2,false)
 end
-
+--- Create account wide editboxes for "custom locale" dungeon/search/blacklist/heroic/etc tags. 
 local function CreateEditBoxDungeon(Dungeon,Init,width,width2)
-	-- delete old settings
-	if GBB.DB["Custom_"..Dungeon] ~=nil then
-		GBB.DB.Custom[Dungeon]=GBB.DB["Custom_"..Dungeon]
-		GBB.DB["Custom_"..Dungeon]=nil
-	end
 	local dungeonName = (GBB.GetDungeonInfo(Dungeon, true) or {}).name
 	if GBB.dungeonNames[Dungeon] or dungeonName then
 		GBB.OptionsBuilder.AddEditBoxToCurrentPanel(GBB.DB.Custom, Dungeon, Init, 
@@ -74,26 +73,30 @@ local function CreateEditBoxDungeon(Dungeon,Init,width,width2)
 		elseif Dungeon=="Heroic" then
 			txt=GBB.Tool.Combine(GBB.heroicTagsLoc["enGB"])
 		end
-		
-		local editBox = GBB.OptionsBuilder.AddEditBoxToCurrentPanel(GBB.DB.Custom,Dungeon,Init,GBB.L["EditCustom_"..Dungeon],width,width2,false,nil,txt)
+				
+		local editBox = GBB.OptionsBuilder.AddEditBoxToCurrentPanel(GBB.DB.Custom, Dungeon, Init,
+			GBB.L['EditCustom_'..Dungeon], width, width2, false, nil, txt
+		);
 		-- updates tags whenever enter is pressed on any of these edit boxes.
 		editBox:HookScript('OnEnterPressed', GBB.CreateTagList) -- issues: #200
 	end
 end
-
-local function FixFilters()
-	for parentKey, secondaryKey in pairs(GBB.dungeonSecondTags) do
+--- enables/disables a parent dungeon filter based on the state of its secondary filters.
+-- allows the the tags under `SM` to apply to `SMA, SMC, SML` for example.
+local function fixSecondaryTagFilters()
+	for parentKey, secondaryKeys in pairs(GBB.dungeonSecondTags) do
 		if parentKey ~= "DEADMINES" then
 			-- assume main key is false
-			GBB.DBChar["FilterDungeon"..parentKey] = false
-			for _, altKey in pairs(secondaryKey) do
+			local setParent = false
+			for _, altKey in pairs(secondaryKeys) do
 				-- if any alt dungeon key is true, set main key to true.
-				local altTagSetting = GBB.DBChar["FilterDungeon"..altKey]
-				if altTagSetting == true then
-					GBB.DBChar["FilterDungeon"..parentKey] = true
-					break
+				local alt = GBB.OptionsBuilder.GetSavedVarHandle(GBB.DBChar, "FilterDungeon"..altKey)
+				if alt:GetValue() == true then
+					setParent = true
+					break;
 				end
 			end
+			GBB.OptionsBuilder.GetSavedVarHandle(GBB.DBChar, "FilterDungeon"..parentKey):SetValue(setParent)
 		end
 	end
 end
@@ -109,49 +112,8 @@ local function ResetFilters()
 	end
 end
 
-local isChat=false
-function GBB.OptionsUpdate()
-
-	FixFilters()
-
-	if GBB.DB.ChatStyle and GBB.DB.CompactStyle then
-		if isChat then
-			GBB.DB.ChatStyle=false
-		else
-			GBB.DB.CompactStyle=false
-		end
-	end
-
-	if GBB.DB.EnableGroup then
-		GBB.Tool.TabShow(GroupBulletinBoardFrame)
-	else
-		GBB.Tool.SelectTab(GroupBulletinBoardFrame,1)
-		GBB.Tool.TabHide(GroupBulletinBoardFrame, 3)
-	end
-	
-	GBB.CreateTagList()
-	GBB.MinimapButton.UpdatePosition()
-	GBB.ClearNeeded=true
-	
-	isChat=GBB.DB.ChatStyle 
-end
-
-local DoSelectFilter=function(state, ChkBox, Start, Max)
-	for index=Start,Max do ---trade -misc
-		if ChkBox[index].SetSavedValue then -- new api for managing saved vars. 
-			ChkBox[index]:SetSavedValue(state)
-		else
-			ChkBox[index]:SetChecked(state)
-		end
-	end	
-end
-	
-local DoRightClick=function(self) 
-	DoSelectFilter(false)
-	self:SetChecked(true)
-end
-
-local function SetChatOption()
+---Create checkbox filters to enable/disable the chat channels which the addon listens to.
+local function GenerateChannelFilters()
 	GBB.OptionsBuilder.AddHeaderToCurrentPanel(GBB.L["HeaderChannel"])
 	GBB.OptionsBuilder.Indent(10)	
 
@@ -170,10 +132,7 @@ end
 ---if the expansion is the current game client expansion, it will also include misc filters.
 ---@param expansionID ExpansionID
 local function GenerateExpansionPanel(expansionID)
-	local panel = GBB.OptionsBuilder.AddNewCategoryPanel(EXPANSION_FILTER_NAME[expansionID], false, true)
-	-- hack: save changes anytime the panel is hidden (issues: 200, 147, 57)
-	panel:HookScript("OnHide", GBB.OptionsBuilder.onCommit)
-	
+	GBB.OptionsBuilder.AddNewCategoryPanel(EXPANSION_FILTER_NAME[expansionID], false, true)
 	local isCurrentXpac = expansionID == PROJECT_EXPANSION_ID[WOW_PROJECT_ID];
 	local filters = {} ---@type CheckButton[]
 	local dungeons = GBB.GetSortedDungeonKeys(
@@ -222,6 +181,15 @@ local function GenerateExpansionPanel(expansionID)
 
 	-- dont include misc filters in the "select all" buttons
 	local resetLimitIdx = #filters 
+	local allFilterSetChecked = function(state)
+		for index = 1, resetLimitIdx do ---trade -misc
+			if filters[index].SetSavedValue then -- new api for managing saved vars.
+				filters[index]:SetSavedValue(state)
+			else
+				filters[index]:SetChecked(state)
+			end
+		end
+	end
 
 	-- Extra Categories (only show for current xpac)
 	if isCurrentXpac then
@@ -260,10 +228,10 @@ local function GenerateExpansionPanel(expansionID)
 	-- Select/Unselect All Filters Buttons
 	GBB.OptionsBuilder.InLine()
 	GBB.OptionsBuilder.AddButtonToCurrentPanel(GBB.L["BtnSelectAll"],function()
-		DoSelectFilter(true, filters, 1, resetLimitIdx)
+		allFilterSetChecked(true)
 	end)
 	GBB.OptionsBuilder.AddButtonToCurrentPanel(GBB.L["BtnUnselectAll"],function()
-		DoSelectFilter(false, filters,1, resetLimitIdx)
+		allFilterSetChecked(false)
 	end)
 
 	-- Role Filters
@@ -273,15 +241,31 @@ local function GenerateExpansionPanel(expansionID)
 	-- Chat Channel Filters (only show for current xpac)
 	if isCurrentXpac then
 		GBB.OptionsBuilder.Indent(-10)
-		SetChatOption()
+		GenerateChannelFilters()
 	end
 end
+--------------------------------------------------------------------------------
+-- Public/Interface functions
+--------------------------------------------------------------------------------
 
-function GBB.OptionsInit ()
-	local onCommit = function(panelFrame) -- called when "close" button is pressed	
-		if GBB.DB.TimeOut< 60 then GBB.DB.TimeOut = 60 end
-		GBB.OptionsUpdate()	
+--- Update the tag lists, fixes filters,and shows the appropriate bulletin board tabs based on the current settings.
+function GBB.OptionsUpdate()
+	fixSecondaryTagFilters()
+	if GBB.DB.EnableGroup then
+		GBB.Tool.TabShow(GroupBulletinBoardFrame)
+	else
+		GBB.Tool.SelectTab(GroupBulletinBoardFrame, 1)
+		GBB.Tool.TabHide(GroupBulletinBoardFrame, 3)
 	end
+	GBB.CreateTagList()
+	GBB.MinimapButton.UpdatePosition()
+	GBB.ClearNeeded = true
+end
+
+--- Setup the options panels, creating and initializing settings widgets and their saved variables.
+function GBB.OptionsInit ()
+	-- called when "close" button is pressed	
+	local onCommit = function(panelFrame) GBB.OptionsUpdate() end
 	-- called whenever the canvas view is refreshed (swapping categories, on open, etc.)
 	local onRefresh = function(panelFrame)
 		local t= GBB.PhraseChannelList(GetChannelList())
@@ -301,21 +285,17 @@ function GBB.OptionsInit ()
 		GBB.ResetWindow()		
 		GBB.OptionsUpdate()	
 	end
-	-- Initialize the options building modulue
+	-- Initialize the options building module
 	GBB.OptionsBuilder.Init(onCommit, onRefresh, onDefault);
-	
 	GBB.OptionsBuilder.SetScale(0.85)
-	
-	
-	-- First panel - Settings
+
+	----------------------------------------------------------
+	-- Main/General settings panel
+	----------------------------------------------------------
 	GBB.OptionsBuilder.AddNewCategoryPanel(GBB.Title,false,true)
-		
 	--GBB.OptionsBuilder.AddVersion('|cff00c0ff' .. GBB.Version .. '|r')
-	
-	
 	GBB.OptionsBuilder.AddHeaderToCurrentPanel(GBB.L["HeaderSettings"])
 	GBB.OptionsBuilder.Indent(10)
-	
 	GBB.OptionsBuilder.AddCheckBoxToCurrentPanel(GBB.DB.MinimapButton,"visible",true,GBB.L["Cboxshowminimapbutton"])
 	GBB.OptionsBuilder.AddCheckBoxToCurrentPanel(GBB.DB.MinimapButton,"lock",false,GBB.L["CboxLockMinimapButton"])
 	GBB.OptionsBuilder.AddCheckBoxToCurrentPanel(GBB.DB.MinimapButton,"lockDistance",true,GBB.L["CboxLockMinimapButtonDistance"])
@@ -352,8 +332,19 @@ function GBB.OptionsInit ()
 	GBB.OptionsBuilder.EndInLine()
 	CheckBox("RemoveRaidSymbols",true)	
 	CheckBox("RemoveRealm",false)
-	CheckBox("ChatStyle",false)
-	CheckBox("CompactStyle",false)
+	local chatStyleBox = CheckBox('ChatStyle', false)
+	local compactStyleBox = CheckBox('CompactStyle', false)
+	-- setup mutually exclusive updates when enabled (previously done in `GBB.OptionsInit()`)
+	local exclusiveUpdateHandler = function(updatedBox, mutualBox)
+		return function(selection)
+			if selection == true -- both options can be  toggled off at the same time, but not on.
+			and mutualBox:GetSavedValue() == true
+			then mutualBox:SetSavedValue(false) end;
+			updatedBox:SetChecked(selection)
+		end
+	end
+	chatStyleBox:OnSavedVarUpdate(exclusiveUpdateHandler(chatStyleBox, compactStyleBox))
+	compactStyleBox:OnSavedVarUpdate(exclusiveUpdateHandler(compactStyleBox, chatStyleBox))
 	CheckBox("DontTrunicate",false)
 	CheckBox("EnableShowOnly",false)		
 	GBB.OptionsBuilder.Indent(30)
@@ -364,8 +355,12 @@ function GBB.OptionsInit ()
 	GBB.OptionsBuilder.AddColorSwatchToCurrentPanel(GBB.DB,"NormalDungeonColor",{r=0,g=1,b=0,a=1},GBB.L["BtnNormalDungeonColor"])
 	GBB.OptionsBuilder.AddColorSwatchToCurrentPanel(GBB.DB,"TimeColor",{r=1,g=1,b=1,a=1},GBB.L["BtnTimeColor"])
 	GBB.OptionsBuilder.AddSpacerToPanel()
-	CreateEditBoxNumber("TimeOut",150,50)	
-		
+	--override the default `SetSavedValue` behavior to clamp the TimeOut value above 30s (previously done in `GBB.OptionsUpdate()`)
+	local timeOutSetting = CreateEditBoxNumber("TimeOut",150,50)
+	local savedVarHandle = GBB.OptionsBuilder.GetSavedVarHandle(GBB.DB, "TimeOut")
+	function timeOutSetting:SetSavedValue(value) 
+		savedVarHandle:SetValue(Clamp(value, 30, math.huge))
+	end
 	GBB.OptionsBuilder.AddSpacerToPanel()
 	CheckBox("AdditionalInfo",false)
 	CheckBox("EnableGroup",false)
@@ -408,10 +403,9 @@ function GBB.OptionsInit ()
 	);
 	-- defer Update call until after language "Tags" saved vars are initialized bellow
 	----------------------------------------------------------
-	-- Language Tags and Search Patterns
+	-- Languages and Custom Search Patterns
 	----------------------------------------------------------
 	GBB.OptionsBuilder.AddNewCategoryPanel(GBB.L["PanelTags"],false,true)
-	
 	GBB.OptionsBuilder.AddHeaderToCurrentPanel(LANGUAGES_LABEL)
 	GBB.OptionsBuilder.Indent(10)
 	GBB.OptionsBuilder.InLine()
@@ -503,17 +497,17 @@ function GBB.OptionsInit ()
 	end
 	
 	----------------------------------------------------------
-	-- About
+	-- About panel
 	----------------------------------------------------------
-	local function SlashText(txt)
-		GBB.OptionsBuilder.AddTextToCurrentPanel(txt)
-	end
-	
 	GBB.OptionsBuilder.AddNewCategoryPanel(GBB.L["PanelAbout"])
-
-	GBB.OptionsBuilder.AddHeaderToCurrentPanel("|cFFFF1C1C"..GetAddOnMetadata(TOCNAME, "Title") .." ".. GetAddOnMetadata(TOCNAME, "Version") .." by "..GetAddOnMetadata(TOCNAME, "Author"))
+	local addonMetadata = function(field) -- move from deprecated `GetAddOnMetadata`
+		return C_AddOns.GetAddOnMetadata(TOCNAME, field)
+	end
+	GBB.OptionsBuilder.AddHeaderToCurrentPanel(WrapTextInColorCode(('%s %s by %s'), 'FFFF1C1C')
+		:format(addonMetadata("Title"), addonMetadata("Version"), addonMetadata("Author"))
+	);
 	GBB.OptionsBuilder.Indent(10)
-	GBB.OptionsBuilder.AddTextToCurrentPanel(GetAddOnMetadata(TOCNAME, "Notes"))		
+	GBB.OptionsBuilder.AddTextToCurrentPanel(addonMetadata("Notes"))		
 	GBB.OptionsBuilder.Indent(-10)
 	
 	GBB.OptionsBuilder.AddHeaderToCurrentPanel(GBB.L["HeaderInfo"])
@@ -529,7 +523,7 @@ function GBB.OptionsInit ()
 	GBB.OptionsBuilder.AddHeaderToCurrentPanel(GBB.L["HeaderSlashCommand"])
 	GBB.OptionsBuilder.Indent(10)
 	GBB.OptionsBuilder.AddTextToCurrentPanel(GBB.L["AboutSlashCommand"],-20)
-	GBB.Tool.PrintSlashCommand(nil,nil,SlashText)
+	GBB.Tool.PrintSlashCommand(nil, nil, GBB.OptionsBuilder.AddTextToCurrentPanel)
 	GBB.OptionsBuilder.Indent(-10)
 	
 	GBB.OptionsBuilder.AddHeaderToCurrentPanel(GBB.L["HeaderCredits"])
@@ -537,5 +531,5 @@ function GBB.OptionsInit ()
 	GBB.OptionsBuilder.AddTextToCurrentPanel(GBB.L["AboutCredits"],-20)
 	GBB.OptionsBuilder.Indent(-10)
 	
-	FixFilters()
+	fixSecondaryTagFilters()
 end
