@@ -736,19 +736,11 @@ function GBB.Init()
 		GroupBulletinBoardFrame_LfgFrame:Hide()
 	end
 	GBB.Tool.SelectTab(GroupBulletinBoardFrame,1)
-	local enableGroupVar = GBB.OptionsBuilder.GetSavedVarHandle(GBB.DB, "EnableGroup")
-	local refreshGroupTab = function(isEnabled) -- previously done in `GBB.OptionsUpdate()`
-		if isEnabled then
-			-- Shows all active tabs.
-			GBB.Tool.TabShow(GroupBulletinBoardFrame)
-		else -- note: only the request-list tab is currently active on cata & era.
-			GBB.Tool.SelectTab(GroupBulletinBoardFrame, 1)
-			-- hide the "Remember past group members" aka "EnableGroup" tab should be the last tab
-			GBB.Tool.TabHide(GroupBulletinBoardFrame, isClassicEra and 2 or 3)
-		end
-	end
-	enableGroupVar:AddUpdateHook(refreshGroupTab)
-	refreshGroupTab(enableGroupVar:GetValue()) -- run once to match the set state.
+	-- if GBB.DB.EnableGroup then
+	-- 	GBB.Tool.TabShow(GroupBulletinBoardFrame, 3)
+	-- else		
+	-- 	GBB.Tool.TabHide(GroupBulletinBoardFrame, 3)
+	-- end
 	
 	GBB.Tool.TabOnSelect(GroupBulletinBoardFrame,3,GBB.UpdateGroupList)
 	GBB.Tool.TabOnSelect(GroupBulletinBoardFrame,2,GBB.UpdateLfgTool)
