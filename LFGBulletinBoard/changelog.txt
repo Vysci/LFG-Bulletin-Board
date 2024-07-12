@@ -1,4 +1,7 @@
 Group Bulletin Board
+3.33
+ - Added demon fall canyon and brm dailies
+
 3.32
  - New! Support added for user created filters. See "Additional Filters" category in the addons settings.
    - The filters for "Random Dungeon", "Incursions", and "Bloodmoon" have been moved here as editable presets.

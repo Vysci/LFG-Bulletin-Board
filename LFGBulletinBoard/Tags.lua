@@ -193,6 +193,14 @@ local dungeonTags = {
 		zhTW = nil,
 		zhCN = nil,
 	},
+	DFC = { -- Demon Fall Canyon
+		enGB = "demonfall dfc demon fall canyon",
+		deDE = nil,
+		ruRU = nil,
+		frFR = nil,
+		zhTW = nil,
+		zhCN = nil,
+	},
 	DM = { -- Deadmines
 		enGB = "deadmines vc vancleef dead mines mine",
 		deDE = "todesminen todesmine tm",
