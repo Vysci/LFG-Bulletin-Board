@@ -66,6 +66,16 @@ local presets = {
         isDisabled = not isSoD,
         sortIdx = 1,
     },
+    BRE = { -- Blackrock Eruption (SoD)
+        name = "Blackrock Eruption",
+        tags = {
+            enUS = "eruption bre event brm dailys dialies",
+        },
+        key = "BRE",
+        levels = CopyTable(HIDDEN_LEVEL_RANGE),
+        isDisabled = not isSoD,
+        sortIdx = 1,
+    },
     INCUR = { -- Incursion Event (SoD)
         name = "Incursions",
         tags = {

@@ -100,6 +100,7 @@ local LFGDungeonIDs = {
     ["WSG"] = 53,  -- Warsong Gulch
     ["AB"] = 55,  -- Arathi Basin
     ["AV"] = 51,  -- Alterac Valley
+    ["DFC"] = 830,  -- Demon Fall Canyon
 }
 -- Note make sure the ID's dont overlap with LFGDungeonIDs
 --see https://wago.tools/db2/GroupFinderActivity?build=1.15.2.54332
@@ -111,6 +112,7 @@ local LFGActivityIDs = {
     ["SML"] = 829,  -- Scarlet Monastery - Library
     ["SMA"] = 827,  -- Scarlet Monastery - Armory
     ["SMC"] = 828,  -- Scarlet Monastery - Cathedral
+    
 }
 --see https://wago.tools/db2/GroupFinderCategory?build=1.15.2.54332
 local activityCategoryInfo  = {
@@ -146,6 +148,12 @@ local infoOverrides = {
         minLevel = 50,
         maxLevel = 60,
         size = 20,
+    },
+    DFC = isSoD and {
+        name = "Demon Fall Canyon",
+        minLevel = 60, 
+        maxLevel = 60, 
+        typeID = DungeonType.Dungeon,
     },
     -- UBRS is colloquially considered a dungeon. (in LFGDungeon table its a raid)
     UBRS = { typeID = DungeonType.Dungeon },

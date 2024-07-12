@@ -691,9 +691,11 @@ function GBB.GetDungeons(msg,name)
 		if nameLevel>0 and nameLevel<40 then
 			dungeons["DM"]=true
 			dungeons["DM2"]=false
+			dungeons["DFC"]=false
 		else
 			dungeons["DM"]=false
 			dungeons["DM2"]=true
+			dungeons["DFC"]=true
 		end
 	end
 

@@ -150,7 +150,7 @@ local DoRightClick=function(self)
 	DoSelectFilter(false)
 	self:SetChecked(true)
 end
-
+	
 local function SetChatOption()
 	GBB.OptionsBuilder.AddHeaderToCurrentPanel(GBB.L["HeaderChannel"])
 	GBB.OptionsBuilder.Indent(10)	
@@ -278,31 +278,32 @@ local function GenerateExpansionPanel(expansionID)
 end
 
 function GBB.OptionsInit ()
-	local onCommit = function(panelFrame) -- called when "close" button is pressed	
-		if GBB.DB.TimeOut< 60 then GBB.DB.TimeOut = 60 end
-		GBB.OptionsUpdate()	
-	end
-	-- called whenever the canvas view is refreshed (swapping categories, on open, etc.)
-	local onRefresh = function(panelFrame)
-		local t= GBB.PhraseChannelList(GetChannelList())
-		for i=1,20 do
-			if i<20 then 
-				_G[ChannelIDs[i]:GetName().."Text"]:SetText(i..". "..(t[i] and t[i].name or ""))
-			else
-				_G[ChannelIDs[i]:GetName().."Text"]:SetText((t[i] and t[i].name or ""))
+	GBB.OptionsBuilder.Init(
+		function(panelFrame) -- called when "close" button is pressed	
+			GBB.OptionsBuilder.DoOk() -- saves any widget states to the DB
+			if GBB.DB.TimeOut< 60 then GBB.DB.TimeOut = 60 end
+			GBB.OptionsUpdate()	
+		end,
+		function(panelFrame) -- called whenever the canvas view is refreshed (swapping categories, on open, etc.)
+			local t= GBB.PhraseChannelList(GetChannelList())
+			for i=1,20 do
+				if i<20 then 
+					_G[ChannelIDs[i]:GetName().."Text"]:SetText(i..". "..(t[i] and t[i].name or ""))
+				else
+					_G[ChannelIDs[i]:GetName().."Text"]:SetText((t[i] and t[i].name or ""))
+				end
 			end
+			GBB.OptionsBuilder.DoRefresh() -- syncs widgets to DB state
+		end, 
+		function(panelFrame) -- called when the default button is pressed (not implemented for addon panels)
+			GBB.OptionsBuilder.DoDefault() -- reset widgets to default state.
+			GBB.DB.MinimapButton.position=40			
+			GBB.ResetWindow()		
+			GBB.OptionsUpdate()	
 		end
-	end
-	-- called when the default button is pressed
-	-- note: default button does not exist for addons panels (anymore?), has to be implemented.
-	local onDefault = function(panelFrame)
-		GBB.OptionsBuilder.DefaultRegisteredVariables() -- reset widgets to default state.
-		GBB.DB.MinimapButton.position=40			
-		GBB.ResetWindow()		
-		GBB.OptionsUpdate()	
-	end
-	-- Initialize the options building modulue
-	GBB.OptionsBuilder.Init(onCommit, onRefresh, onDefault);
+		)
+	
+	
 	
 	GBB.OptionsBuilder.SetScale(0.85)
 	
@@ -324,7 +325,7 @@ function GBB.OptionsInit ()
 	CheckBox("OrderNewTop",true)
 	CheckBox("HeadersStartFolded",false)
 	GBB.OptionsBuilder.AddSpacerToPanel()
-	GBB.OptionsBuilder.AddTextToCurrentPanel(FONT_SIZE, -20)
+	GBB.OptionsBuilder.AddTextToCurrentPanel(GBB.L["msgFontSize"],-20)
 	GBB.OptionsBuilder.AddDropdownToCurrentPanel(GBB.DB,"FontSize", "GameFontNormal", {"GameFontNormalSmall", "GameFontNormal", "GameFontNormalLarge"}) 
 
 	CheckBox("CombineSubDungeons",false)

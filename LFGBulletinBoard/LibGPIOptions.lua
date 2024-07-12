@@ -182,20 +182,114 @@ function Options.Init(onCommit,onRefresh,onDefault)
 	Options.onDefault=onDefault
 	Options.CategoryPanels={}
 	Options.Frames={}
+	Options.CheckBoxes={}
+	Options.Color={}
+	Options.Buttons={}
+	Options.EditBoxes={}
+	Options.Vars={} -- any saved variable tables postfixed with _db
+	Options.Index={}
 	Options.Frames.count=0
 	Options.scale=1
 end
+		
+function Options.DoOk() -- Hooked to the `OnCommit` handler, called when the `close` button is pressed.
+	-- Done with RegisterFrameWithSavedVar now
+	-- for name, cbox in pairs(Options.CheckBoxes) do
+	-- 	if Options.Vars[name .. "_db"]~=nil and Options.Vars[name]~=nil then
+	-- 		Options.Vars[name .. "_db"] [Options.Vars[name]] = cbox:GetChecked()
+	-- 	end
+	-- end
 
--- Sets all saved variables registered to any widgets to their default values. 
-function Options.DefaultRegisteredVariables() 
-	for _, savedVars in pairs(SavedVarRegistry.tracked) do
+	-- for name,color in pairs(Options.Color) do
+	-- 	if Options.Vars[name .. "_db"]~=nil and Options.Vars[name]~=nil then
+	-- 		Options.Vars[name .. "_db"] [Options.Vars[name]].r=color.ColR
+	-- 		Options.Vars[name .. "_db"] [Options.Vars[name]].g=color.ColG
+	-- 		Options.Vars[name .. "_db"] [Options.Vars[name]].b=color.ColB
+	-- 		Options.Vars[name .. "_db"] [Options.Vars[name]].a=color.ColA
+	-- 	end
+	-- end	
+	
+	-- for name,edit in pairs(Options.EditBoxes) do
+	-- 	if Options.Vars[name .. "_onlynumbers"] then 
+	-- 		Options.Vars[name .. "_db"][Options.Vars[name]] = edit:GetNumber()
+	-- 	else
+	-- 		if Options.Vars[name.."_suggestion"] and Options.Vars[name.."_suggestion"]~="" then
+	-- 			if edit:GetText()==Options.Vars[name.."_suggestion"] then
+	-- 				Options.Vars[name .. "_db"] [Options.Vars[name]] = ""
+	-- 			else
+	-- 				Options.Vars[name .. "_db"] [Options.Vars[name]] = edit:GetText()
+	-- 			end
+	-- 		else
+	-- 			Options.Vars[name .. "_db"] [Options.Vars[name]] = edit:GetText()
+	-- 		end
+	-- 	end
+	-- end
+end
+
+-- `OnCancel` function has been deprecated by blizzard, most changes are committed immediately now.
+-- `OnRefresh` is called every time the canvas view is refreshed (swapping categories, opening, etc.)
+-- `DoRefresh` is hooked into the `OnRefresh` event in `Options.lua` setup.
+function Options.DoRefresh()
+	-- for name,cbox in pairs(Options.CheckBoxes) do 
+	-- 	if Options.Vars[name .. "_db"]~=nil and Options.Vars[name]~=nil then
+	-- 		cbox:SetChecked( Options.Vars[name .. "_db"] [Options.Vars[name]] )
+	-- 	end
+	-- end
+	
+	-- for name,color in pairs(Options.Color) do
+	-- 	if Options.Vars[name .. "_db"]~=nil and Options.Vars[name]~=nil then
+	-- 		color:GetNormalTexture():SetVertexColor(
+	-- 			Options.Vars[name .. "_db"] [Options.Vars[name]].r,
+	-- 			Options.Vars[name .. "_db"] [Options.Vars[name]].g,
+	-- 			Options.Vars[name .. "_db"] [Options.Vars[name]].b,
+	-- 			Options.Vars[name .. "_db"] [Options.Vars[name]].a
+	-- 		)
+	-- 		color.ColR,color.ColG,color.ColB,color.ColA=Options.Vars[name .. "_db"] [Options.Vars[name]].r, Options.Vars[name .. "_db"] [Options.Vars[name]].g,	Options.Vars[name .. "_db"] [Options.Vars[name]].b,	Options.Vars[name .. "_db"] [Options.Vars[name]].a
+	-- 	end
+	-- end
+	
+	-- for name,edit in pairs(Options.EditBoxes) do
+	-- 	if Options.Vars[name .. "_onlynumbers"] then 
+	-- 		edit:SetNumber( Options.Vars[name .. "_db"] [Options.Vars[name]] )
+	-- 	else
+	-- 		edit:SetText( Options.Vars[name .. "_db"] [Options.Vars[name]] )
+	-- 		EditBox_OnFocusLost(edit)
+	-- 	end		
+	-- end
+end
+	
+-- Hooked to the `OnDefault` handler, called when the `default` button is pressed. 
+function Options.DoDefault() -- note: default button does not exist for addons anymore, has to be implemented.
+	-- for name,cbox in pairs(Options.CheckBoxes) do
+	-- 	if Options.Vars[name .. "_db"]~=nil and Options.Vars[name]~=nil then
+	-- 		Options.Vars[name .. "_db"] [Options.Vars[name]]= Options.Vars[name .. "_init"]
+	-- 	end
+	-- end
+
+	-- for name,color in pairs(Options.Color) do
+	-- 	if Options.Vars[name .. "_db"]~=nil and Options.Vars[name]~=nil then
+	-- 		Options.Vars[name .. "_db"] [Options.Vars[name]].r = Options.Vars[name .. "_init"].r
+	-- 		Options.Vars[name .. "_db"] [Options.Vars[name]].g = Options.Vars[name .. "_init"].g
+	-- 		Options.Vars[name .. "_db"] [Options.Vars[name]].b = Options.Vars[name .. "_init"].b
+	-- 		Options.Vars[name .. "_db"] [Options.Vars[name]].a = Options.Vars[name .. "_init"].a
+
+	-- 	end
+	-- end
+	
+	-- for name,edit in pairs(Options.EditBoxes) do
+	-- 	Options.Vars[name .. "_db"] [Options.Vars[name]]= Options.Vars[name .. "_init"]
+	-- end
+	for _, savedVars in pairs(SavedVarRegistry.tracked) do -- will handle any registered saved variables
 		for _, handle in pairs(savedVars) do
 			handle:SetToDefault()
 		end
 	end
+	Options:DoRefresh()
 end
 	
-function Options.SetScale(x) Options.scale = x; end
+function Options.SetScale(x)
+	Options.scale=x
+end
 
 ---Creates a new settings category and returns its display frame.
 ---@param title string
@@ -207,7 +301,6 @@ function Options.AddNewCategoryPanel(title, noHeader, scrollable)
 	local frameName = Options.Prefix.."Category"..categoryIdx
 	---@class SettingsCategoryPanel: Frame
 	local panelFrame = CreateFrame("Frame", frameName, UIParent)
-
 	Options.CategoryPanels[categoryIdx] = panelFrame
 	Options.CurrentPanel = panelFrame
 	panelFrame.name = title
@@ -251,7 +344,7 @@ function Options.Indent(width)
 	if width==nil then width=10 end
 	Options.NextRelativX = Options.NextRelativX + width
 end
-
+	
 function Options.InLine()
 	Options.inLine=true
 	Options.LineRelativ=nil
@@ -268,61 +361,69 @@ function Options.SetRightSide(width)
 	Options.NextRelativX= (width or 310) / Options.scale
 	Options.NextRelativY=0
 end
-
----@param version string	
+	
 function Options.AddVersion(version)
-	local versionText = Options.CurrentPanel:CreateFontString(Options.Prefix.."VersionText", "OVERLAY", "GameFontNormal")
-	versionText:SetText(version)
-	versionText:SetPoint("BOTTOMRIGHT", -10, 10)
-	versionText:SetFont("Fonts\\FRIZQT__.TTF", 12)
-	return versionText
+	local i="version_"..#Options.CategoryPanels
+	Options.Frames[i] = Options.CurrentPanel:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+	Options.Frames[i]:SetText(version)
+	Options.Frames[i]:SetPoint("BOTTOMRIGHT", -10, 10)
+	Options.Frames[i]:SetFont("Fonts\\FRIZQT__.TTF", 12)
+	return Options.Frames[i]
 end
 
 ---@param text string
 ---@return FontString
 function Options.AddHeaderToCurrentPanel(text)
-	local frameIdx=Options.Frames.count+1
-	Options.Frames.count=frameIdx		
-	local headerName=Options.Prefix .. "Header" .. frameIdx
-	local header = Options.CurrentPanel:CreateFontString(headerName, "OVERLAY", "GameFontNormal")
-	header:SetText(text)
-	header:SetTextColor(1,1,1,1)
-	header:SetPoint("TOPLEFT",Options.NextRelativ,"BOTTOMLEFT", Options.NextRelativX, Options.NextRelativY-10)
-	header:SetFontObject("GameFontNormalLarge")
-	header:SetScale(Options.scale)
-	Options.Frames[headerName] = header
-	Options.NextRelativ=headerName
+	local c=Options.Frames.count+1
+	Options.Frames.count=c		
+	local CatName=Options.Prefix .. "Cat" .. c
+	Options.Frames[CatName] = Options.CurrentPanel:CreateFontString(CatName, "OVERLAY", "GameFontNormal")
+	Options.Frames[CatName]:SetText('|cffffffff' .. text .. '|r')
+	Options.Frames[CatName]:SetPoint("TOPLEFT",Options.NextRelativ,"BOTTOMLEFT", Options.NextRelativX, Options.NextRelativY-10)
+	Options.Frames[CatName]:SetFontObject("GameFontNormalLarge")
+	Options.Frames[CatName]:SetScale(Options.scale)
+	Options.NextRelativ=CatName
 	Options.NextRelativX=0
 	Options.NextRelativY=0
-	return header
+	return Options.Frames[CatName]
+end
+
+---@param header FontString
+---@param text string
+function Options.EditHeaderText(header, text)
+	local c=Options.Frames.count+1
+	header:SetText('|cffffffff' .. text .. '|r')	
 end
 
 ---@param text string
 ---@param onClick fun()?
 ---@return Button
 function Options.AddButtonToCurrentPanel(text, onClick)
-	local frameIdx=Options.Frames.count+1
-	Options.Frames.count=frameIdx	
-	local buttonName=Options.Prefix .."Button"..frameIdx	
-	local button = CreateFrame("Button", buttonName, Options.CurrentPanel, "UIPanelButtonTemplate")
-	button:ClearAllPoints()
-	button:SetScale(Options.scale)
-	button:SetScript("OnClick", onClick)
-	button:SetHeight(25);
-	(button --[[@as UIPanelButtonTemplate]]):SetTextToFit(text);
-	button.fitTextWidthPadding = 20; -- part of the UIPanelButtonTemplate
-	if not Options.inLine or not Options.LineRelativ then
-		button:SetPoint("TOPLEFT", Options.NextRelativ,"BOTTOMLEFT", Options.NextRelativX, Options.NextRelativY)
-		Options.NextRelativ=buttonName
-		Options.LineRelativ=buttonName
+	local c=Options.Frames.count+1
+	Options.Frames.count=c	
+	local ButtonName=Options.Prefix .."BUTTON_"..c
+			
+	Options.Buttons[ButtonName] = CreateFrame("Button", ButtonName, Options.CurrentPanel, "UIPanelButtonTemplate")
+	Options.Buttons[ButtonName]:ClearAllPoints()
+	
+	if Options.inLine~=true or Options.LineRelativ ==nil then
+		Options.Buttons[ButtonName]:SetPoint("TOPLEFT", Options.NextRelativ,"BOTTOMLEFT", Options.NextRelativX, Options.NextRelativY)
+		Options.NextRelativ=ButtonName
+		Options.LineRelativ=ButtonName
 		Options.NextRelativX=0
 		Options.NextRelativY=0
 	else
-		button:SetPoint("TOP", Options.LineRelativ,"TOP", 0, 0)
-		button:SetPoint("LEFT", Options.LineRelativ.."Text","RIGHT", 10, 0)
-		Options.LineRelativ=buttonName
+		Options.Buttons[ButtonName]:SetPoint("TOP", Options.LineRelativ,"TOP", 0, 0)
+		Options.Buttons[ButtonName]:SetPoint("LEFT", Options.LineRelativ.."Text","RIGHT", 10, 0)
+		Options.LineRelativ=ButtonName
 	end
-	return button
+	
+	Options.Buttons[ButtonName]:SetScale(Options.scale)
+	Options.Buttons[ButtonName]:SetScript("OnClick", onClick)
+	Options.Buttons[ButtonName]:SetText(text)
+	Options.Buttons[ButtonName]:SetWidth( Options.Buttons[ButtonName]:GetTextWidth()+20 )
+	Options.Buttons[ButtonName]:SetHeight(25)
+	return Options.Buttons[ButtonName]
 end
 
 ---@param dbTable table expects either character or account SavedVars table
@@ -454,86 +555,58 @@ end
 
 ---@param dbTable table
 ---@param key string
----@param default string|number|boolean 
----@param menuButtons string[]|{value: string|number|boolean, text: string?}[]
-function Options.AddDropdownToCurrentPanel(dbTable,key,default,menuButtons) 
-	local frameIdx = Options.Frames.count + 1
-	Options.Frames.count = frameIdx
-	local dropdownName = Options.Prefix..'DropDownMenu'..frameIdx
+---@param default any 
+---@param MenuItems table<any, string>
+function Options.AddDropdownToCurrentPanel(dbTable,key,default,MenuItems) 
+	local c=Options.Frames.count+1
+	Options.Frames.count=c	
+	local ButtonName=Options.Prefix .."BUTTON_"..c
+	Options.Vars[ButtonName]=key
+	Options.Vars[ButtonName.."_init"]=default
+	Options.Vars[ButtonName.."_db"]=dbTable
 	
-	---@class Dropdown: UIDropDownMenu, RegisteredFrameMixin, Frame
-	local dropdownFrame = CreateFrame('Frame', dropdownName, Options.CurrentPanel, 'UIDropDownMenuTemplate')
-	--note: defaulting for uninitialized saved vars now done in RegisterFrameWithSavedVar
-	Options.RegisterFrameWithSavedVar(dropdownFrame, dbTable, key, default)
-	dropdownFrame.Button:SetScript("OnMouseDown", function(self, button)
-		RegisteredFrame_OnShiftRightClick(dropdownFrame, button) -- Default on right-click of the dropdown toggle
-		PlaySound(SOUNDKIT.IG_MAINMENU_OPTION_CHECKBOX_ON);
-	end)
-	
-	local maxWidth = 0; -- find widest button in the dropdown
-	local fontString = dropdownFrame:CreateFontString(nil, 'OVERLAY', 'GameFontNormal');
-	for _, data in pairs(menuButtons) do
-		if type(data) == 'string' then
-			fontString:SetText(data);
-		else
-			fontString:SetText(data.text or tostring(data.value));
-		end
-		maxWidth = max(maxWidth, (fontString:GetStringWidth() + 20))
+	if dbTable~=nil and key~=nil then
+		if dbTable[key] == nil then dbTable[key]=default end
 	end
-	---@type fun(button: UIDropDownMenuButton) Dropdown menu button's on click handler
-	local dropdownButtonOnClick = function(button)
-		dropdownFrame:SetSavedValue(button.value)
-		UIDropDownMenu_SetSelectedValue(dropdownFrame, button.value)
-		UIDropDownMenu_SetText(dropdownFrame, button.text or button.value)
-	end
-	-- syncs dropdown display with the text that matches the passed value (expects the current saved variable)
-	local syncDropDownWithValue = function(value)
-		for _, data in pairs(menuButtons) do
-			if type(data) == 'string' and data == value then
-				UIDropDownMenu_SetText(dropdownFrame, data)
-				break;
-			elseif type(data) == 'table' and (data.value == value) then
-				UIDropDownMenu_SetText(dropdownFrame, data.text or data.value)
-				break;
-			end
-		end
-	end
-	dropdownFrame:OnSavedVarUpdate(syncDropDownWithValue);
-	UIDropDownMenu_SetWidth(dropdownFrame, maxWidth);
-	syncDropDownWithValue(dropdownFrame:GetSavedValue()); -- set initial text
-	-- Create and bind the initialization function to the dropdown menu
-	UIDropDownMenu_Initialize(dropdownFrame, function(self, level, menuList)
-		local buttonInfo = UIDropDownMenu_CreateInfo()
-		for _, buttonData in ipairs(menuButtons) do
-			if type(buttonData) == 'string' then
-				buttonInfo.text = buttonData
-				buttonInfo.value = buttonData
-			else
-				assert(buttonData.value ~= nil, 'data.value is required for button data table', 'data=q', buttonData);
-				for key, value in pairs(buttonData) do
-					buttonInfo[key] = value
-				end
-				buttonInfo.text = buttonData.text or tostring(buttonData.value)
-			end
-			buttonInfo.checked = function(button)
-				return dropdownFrame:GetSavedValue() == button.value
-			end
-			buttonInfo.func = dropdownButtonOnClick
-			UIDropDownMenu_AddButton(buttonInfo)
-		end
-	end)
-	if not Options.inLine or not Options.LineRelativ then
-		dropdownFrame:SetPoint('TOPLEFT', Options.NextRelativ, 'BOTTOMLEFT', Options.NextRelativX, Options.NextRelativY)
-		Options.NextRelativ = dropdownName
-		Options.LineRelativ = dropdownName
-		Options.NextRelativX = 0
-		Options.NextRelativY = 0
+
+	Options.Buttons[ButtonName] = CreateFrame("Frame", ButtonName , Options.CurrentPanel, "UIDropDownMenuTemplate")
+	if Options.inLine~=true or Options.LineRelativ ==nil then
+		Options.Buttons[ButtonName]:SetPoint("TOPLEFT", Options.NextRelativ,"BOTTOMLEFT", Options.NextRelativX, Options.NextRelativY)
+		Options.NextRelativ=ButtonName
+		Options.LineRelativ=ButtonName
+		Options.NextRelativX=0
+		Options.NextRelativY=0
 	else
-		dropdownFrame:SetPoint('TOP', Options.LineRelativ, 'TOP', 0, 0)
-		dropdownFrame:SetPoint('LEFT', Options.LineRelativ..'Text', 'RIGHT', 0, 3)
-		Options.LineRelativ = dropdownName
+		Options.Buttons[ButtonName]:SetPoint("TOP", Options.LineRelativ,"TOP", 0, 0)
+		Options.Buttons[ButtonName]:SetPoint("LEFT", Options.LineRelativ.."Text","RIGHT", 0, 3)
+		Options.LineRelativ=ButtonName
 	end
-	return dropdownFrame
+
+	local dropdown_width = 0
+    local dd_title = Options.Buttons[ButtonName]:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+	for _, item in pairs(MenuItems) do -- Sets the dropdown width to the largest item string width.
+        dd_title:SetText(item)
+        local text_width = dd_title:GetStringWidth() + 20
+        if text_width > dropdown_width then
+            dropdown_width = text_width
+        end
+    end
+	UIDropDownMenu_SetWidth(Options.Buttons[ButtonName], dropdown_width)
+	UIDropDownMenu_SetText(Options.Buttons[ButtonName], dbTable[key])
+	
+	-- Create and bind the initialization function to the dropdown menu
+	UIDropDownMenu_Initialize(Options.Buttons[ButtonName], function(self, level, menuList)
+	 local info = UIDropDownMenu_CreateInfo()
+	 for k, v in pairs(MenuItems) do
+		info.text = v
+		info.func = function(b)
+			UIDropDownMenu_SetText(Options.Buttons[ButtonName], b.value)
+			dbTable[key] = b.value
+			default = b.value
+		end
+		UIDropDownMenu_AddButton(info)
+	   end
+	end)
 end
 
 ---@param checkBox CheckButton|{Text: FontString, func: function}
@@ -571,35 +644,34 @@ end
 ---@param center boolean? if false text topleft justified
 ---@return FontString
 function Options.AddTextToCurrentPanel(text,width,center)
-	local textFrame = Options.CurrentPanel:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-	textFrame:SetText(text)
-	textFrame:SetPoint("TOPLEFT",Options.NextRelativ,"BOTTOMLEFT", Options.NextRelativX, Options.NextRelativY-2)
-	textFrame:SetScale(Options.scale)
+	local textbox = Options.CurrentPanel:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+	textbox:SetText(text)
+	textbox:SetPoint("TOPLEFT",Options.NextRelativ,"BOTTOMLEFT", Options.NextRelativX, Options.NextRelativY-2)
+	textbox:SetScale(Options.scale)
 
 	if width==nil or width==0 then 
-		textFrame:SetWidth(textFrame:GetStringWidth())
+		textbox:SetWidth(textbox:GetStringWidth())
 	elseif width<0 then
-		if string.sub(Options.CurrentPanel:GetName(),  -11) == "ScrollChild" then
-			-- edge case for scrollable frames
-			textFrame:SetPoint("RIGHT",Options.CurrentPanel:GetParent():GetParent(),"RIGHT",width,0)
+		if string.sub(Options.CurrentPanel:GetName(),  -11)== "ScrollChild" then
+			textbox:SetPoint("RIGHT",Options.CurrentPanel:GetParent():GetParent(),"RIGHT",width,0)
 		else
-			textFrame:SetPoint("RIGHT",width,0)
+			textbox:SetPoint("RIGHT",width,0)
 		end
 		if not center then 
-			textFrame:SetJustifyH("LEFT")
-			textFrame:SetJustifyV("TOP")
+			textbox:SetJustifyH("LEFT")
+			textbox:SetJustifyV("TOP")
 		end
 	else
-		textFrame:SetWidth(width)
+		textbox:SetWidth(width)
 		if not center then 
-			textFrame:SetJustifyH("LEFT")
-			textFrame:SetJustifyV("TOP")
+			textbox:SetJustifyH("LEFT")
+			textbox:SetJustifyV("TOP")
 		end
 	end
-	Options.NextRelativ=textFrame
+	Options.NextRelativ=textbox
 	Options.NextRelativX=0
 	Options.NextRelativY=0
-	return textFrame
+	return textbox
 end
 
 ---@param textFrame FontString
@@ -608,9 +680,9 @@ end
 ---@param center boolean?
 function Options.EditText(textFrame,text,width,center)
 	textFrame:SetText(text)
-	if not width or width == 0 then 
+	if width==nil or width==0 then 
 		textFrame:SetWidth(textFrame:GetStringWidth())
-	elseif width < 0 then
+	elseif width<0 then
 		textFrame:SetPoint("RIGHT",width,0)
 		if not center then 
 			textFrame:SetJustifyH("LEFT")
