@@ -100,7 +100,7 @@ local LFGDungeonIDs = {
     ["WSG"] = 53,  -- Warsong Gulch
     ["AB"] = 55,  -- Arathi Basin
     ["AV"] = 51,  -- Alterac Valley
-    ["DFC"] = 830,  -- Demon Fall Canyon
+    ["DFC"] = isSoD and 830 or nil,  -- Demon Fall Canyon
 }
 -- Note make sure the ID's dont overlap with LFGDungeonIDs
 --see https://wago.tools/db2/GroupFinderActivity?build=1.15.2.54332
