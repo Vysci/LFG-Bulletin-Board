@@ -69,7 +69,7 @@ local presets = {
     BRE = { -- Blackrock Eruption (SoD)
         name = "Blackrock Eruption",
         tags = {
-            enUS = "eruption bre event brm dailys dialies",
+            enUS = "eruption bre brm dailys dialies dailies daily",
         },
         key = "BRE",
         levels = CopyTable(HIDDEN_LEVEL_RANGE),
