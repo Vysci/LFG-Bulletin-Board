@@ -424,13 +424,22 @@ function Tool.EnableSize(frame,border,OnStart,OnStop)
 	
 end
 
--- popup
+--------------------------------------------------------------------------------
+-- Dynamic Popup Menu
+--------------------------------------------------------------------------------
+
 local PopupDepth
 local function PopupClick(self, arg1, arg2, checked)
 	if type(self.value)=="table" then		
-		self.value[arg1]=not self.value[arg1]
-		self.checked=self.value[arg1]
+		local handle = Addon.OptionsBuilder.GetSavedVarHandle(self.value, arg1)
+		if handle then
+			handle:SetValue(not handle:GetValue())
+		else
+			self.value[arg1] = not self.value[arg1]
+			self.checked = self.value[arg1]
+		end
 		if arg2 then
+			-- passes old value of `checked`
 			arg2(self.value,arg1,checked)		
 		end
 				
@@ -439,6 +448,11 @@ local function PopupClick(self, arg1, arg2, checked)
 	end		
 end
 
+---@param text string
+---@param disabled boolean
+---@param value table|function savedVar db or onclick function
+---@param arg1 any? If value is a table, arg1 is the key, else arg1 is the 1st arg for `value`
+---@param arg2 any? If value is a function arg2 is the 2nd arg
 local function PopupAddItem(self,text,disabled,value,arg1,arg2)
 	local c=self._Frame._GPIPRIVAT_Items.count+1
 	self._Frame._GPIPRIVAT_Items.count=c
@@ -547,6 +561,7 @@ function Tool.CreatePopup(TableCallback)
 	return popup
 end	
 
+--------------------------------------------------------------------------------
 -- TAB
 
 local function SelectTab(self)
