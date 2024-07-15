@@ -149,10 +149,11 @@ local infoOverrides = {
         maxLevel = 60,
         size = 20,
     },
+    -- Demon Fall Canyon
     DFC = isSoD and {
-        name = "Demon Fall Canyon",
-        minLevel = 60, 
-        maxLevel = 60, 
+        name = GetRealZoneText(2784),
+        minLevel = 60,
+        maxLevel = 60,
         typeID = DungeonType.Dungeon,
     },
     -- UBRS is colloquially considered a dungeon. (in LFGDungeon table its a raid)
