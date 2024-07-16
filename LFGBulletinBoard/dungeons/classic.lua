@@ -149,7 +149,7 @@ local infoOverrides = {
         maxLevel = 60,
         size = 20,
     },
-    -- Demon Fall Canyon
+    -- Demon Fall Canyon (completely spoofed for SoD since its not added into the LFGDungeon db2 table)
     DFC = isSoD and {
         name = GetRealZoneText(2784),
         minLevel = 60,
