@@ -111,8 +111,7 @@ function GBB.GetDungeonNames()
 		["BREW"] =  "Brewfest - Coren Direbrew",
 		["HOLLOW"] =  "Hallow's End - Headless Horseman",
     	["TRAVEL"] = "Travel services - Summons/Portals",
-		["DFC"] = "Demon Fall Canyon",
-		}
+	}
 
 	local dungeonNamesLocales={
 		deDE ={
@@ -775,11 +774,10 @@ function GBB.GetDungeonSort(additonalCategories)
 	-- Need to do this because I don't know I am too lazy to debug the use of SM2, DM2, and DEADMINES
 	dungeonSort["SM2"] = 10.5
 	dungeonSort["DM2"] = 19.5
-	dungeonSort["DFC"] = 20.5
+
 	-- add reverse link for the SM2 and DM2 for the Combine option 
 	dungeonSort[dungeonSort["SM2"]] = "SM2"
 	dungeonSort[dungeonSort["DM2"]] = "DM2"
-	dungeonSort[dungeonSort["DFC"]] = "DFC"
 
 	-- This is set to a high index with no reverse link because-
 	-- we dont ever want to show this in the list during `UpdateList()` (might not be relevant anymore)
