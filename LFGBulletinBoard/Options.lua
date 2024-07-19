@@ -219,8 +219,18 @@ local function GenerateExpansionPanel(expansionID)
 	end
 	
 	if not isClassicEra then
-		CheckBoxChar("HeroicOnly", false)
-		CheckBoxChar("NormalOnly", false)
+		local heroicOnly = CheckBoxChar("HeroicOnly", false)
+		local normalOnly = CheckBoxChar("NormalOnly", false)
+		local exclusiveUpdateHandler = function(updatedBox, mutualBox)
+			return function(newValue) -- both options can be toggled off at the same time, but not on.
+				if newValue == true and mutualBox:GetSavedValue() == true then
+					mutualBox:SetSavedValue(false)
+				end
+				updatedBox:SetChecked(newValue)
+			end
+		end
+		heroicOnly:OnSavedVarUpdate(exclusiveUpdateHandler(heroicOnly, normalOnly))
+		normalOnly:OnSavedVarUpdate(exclusiveUpdateHandler(normalOnly, heroicOnly))
 	end
 	CheckBoxChar("FilterLevel",false)
 	CheckBoxChar("DontFilterOwn",false)
