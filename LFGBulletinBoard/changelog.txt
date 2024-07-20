@@ -1,6 +1,22 @@
 Group Bulletin Board
+
+3.35
+ - Fixed a breaking lua error related to the `DFC` dungeon on non Season of Discovery clients.
+ - Fixed issue where users were able to filter for both "Normal" and "Heroic" dungeons at the same time.
+ - Moved to modern scrollbars in the settings panel.
+ - Fixed issues with settings not saving properly.
+   - Issue fixed for checkboxes, editable text boxes, dropdowns, and color pickers.
+   - These types of settings should now save immediately after changing them unless otherwise noted.
+   - The minimap button's dropwdown menu settings are now synced with the main settings.
+   - Bulletin board's dropwdown menu settings are now synced with the main settings.
+
+3.34
+ - Fixed hc and era having issues
+
 3.33
  - Added demon fall canyon and brm dailies
+ - Added Russian tags for dungeons BWD, BOT2, and TOFW (thanks @Froke)
+  - "ткт", "сб",and "тчв" respectively
 
 3.32
  - New! Support added for user created filters. See "Additional Filters" category in the addons settings.
