@@ -261,12 +261,6 @@ end
 --- Update the tag lists, fixes filters,and shows the appropriate bulletin board tabs based on the current settings.
 function GBB.OptionsUpdate()
 	fixSecondaryTagFilters()
-	if GBB.DB.EnableGroup then
-		GBB.Tool.TabShow(GroupBulletinBoardFrame)
-	else
-		GBB.Tool.SelectTab(GroupBulletinBoardFrame, 1)
-		GBB.Tool.TabHide(GroupBulletinBoardFrame, 3)
-	end
 	GBB.CreateTagList()
 	GBB.MinimapButton.UpdatePosition()
 	GBB.ClearNeeded = true
