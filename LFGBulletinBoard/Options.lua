@@ -144,12 +144,13 @@ local function GenerateExpansionPanel(expansionID)
 	local bgs = GBB.GetSortedDungeonKeys(
 		expansionID, GBB.Enum.DungeonType.Battleground
 	);
-	
+	local enabled = isCurrentXpac
+
 	-- Dungeons 		
 	GBB.OptionsBuilder.AddHeaderToCurrentPanel(DUNGEONS)
 	GBB.OptionsBuilder.Indent(10)
 	for _, key in pairs(dungeons) do
-		tinsert(filters, CheckBoxFilter(key, true))
+		tinsert(filters, CheckBoxFilter(key, enabled))
 	end
 
 	-- different layout for classic era clients
@@ -162,7 +163,7 @@ local function GenerateExpansionPanel(expansionID)
 	GBB.OptionsBuilder.AddHeaderToCurrentPanel(RAIDS)
 	GBB.OptionsBuilder.Indent(10)
 	for _, key in pairs(raids) do
-		tinsert(filters, CheckBoxFilter(key, true))
+		tinsert(filters, CheckBoxFilter(key, enabled))
 	end
 
 	-- Battlegrounds (bg are all consider part of latest expansion atm)
