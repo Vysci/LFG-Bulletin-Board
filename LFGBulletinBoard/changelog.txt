@@ -1,5 +1,8 @@
 Group Bulletin Board
 
+3.36
+ - Added world bosses for SoD
+
 3.35
  - Fixed a breaking lua error related to the `DFC` dungeon on non Season of Discovery clients.
  - Fixed issue where users were able to filter for both "Normal" and "Heroic" dungeons at the same time.
