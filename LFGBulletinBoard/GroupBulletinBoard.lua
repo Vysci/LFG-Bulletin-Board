@@ -46,6 +46,34 @@ GBB.ShouldReset = false
 local isClassicEra = WOW_PROJECT_ID == WOW_PROJECT_CLASSIC
 -- Tools
 -------------------------------------------------------------------------------------
+local debug = false -- dev override
+local print = function(...)
+	if (GBB.DB and GBB.DB.OnDebug) or debug then
+		_G.print(WrapTextInColorCode(("[%s]:"):format(TOCNAME), NORMAL_FONT_COLOR:GenerateHexColor()), ...);
+	end
+end
+
+-- Uniquely inserts, if value is already present it is shifted to the end of the table.
+---@generic T
+---@type fun(tbl: T[], value:any): nil
+local insertUnique = function(tbl, value)
+	local last = #tbl
+	-- reorder value if found
+	for i = 1, last do
+		if tbl[i] == value and i ~= last then
+			for j = i, last do
+				if tbl[j + 1] then tbl[j] = tbl[j + 1];
+				else
+					tbl[j] = value
+					break;
+				end
+			end
+			return; -- return after reorder
+		end
+	end
+	-- simply insert if not found
+	tbl[last + 1] = value
+end
 
 function GBB.AllowInInstance()
 	local inInstance, instanceType = IsInInstance()
@@ -341,99 +369,93 @@ end
 function GBB.BtnRefresh(button)
 	GBB.UpdateLfgTool()
 end
-
-
---Tag Lists
----------------------------------------------------
-
----Sets the `GBB.tagList` table, specified by locale. 
----@param loc string The locale to create the tag list for.
-function GBB.CreateTagListLOC(loc)
-	for _,tag in pairs(GBB.badTagsLoc[loc]) do
-		if GBB.DB.OnDebug and GBB.tagList[tag]~=nil then
-			print(GBB.MSGPREFIX.."DoubleTag:"..tag.." - "..GBB.tagList[tag].." / "..GBB.TAGBAD)
-		end	
+--------------------------------------------------------------------------------
+-- Tag Lists
+--------------------------------------------------------------------------------
+local tagCollisions
+---Sets the `GBB.tagList` table with the tags specified by the given locale.
+---@param locale string The locale to create the tag list for.
+local function setTagListByLocale(locale)
+	for _,tag in pairs(GBB.badTagsLoc[locale]) do
 		GBB.tagList[tag]=GBB.TAGBAD		
 	end
-	
-	for _, tag in pairs(GBB.searchTagsLoc[loc]) do
-		if GBB.DB.OnDebug and GBB.tagList[tag]~=nil then
-			print(GBB.MSGPREFIX.."DoubleTag:"..tag.." - "..GBB.tagList[tag].." / "..GBB.TAGSEARCH)
-		end
+	for _, tag in pairs(GBB.searchTagsLoc[locale]) do
 		GBB.tagList[tag]=GBB.TAGSEARCH		
 	end
-	
-	for _, tag in pairs(GBB.suffixTagsLoc[loc]) do
-		if GBB.DB.OnDebug and tContains(GBB.suffixTags,tag) then
-			print(GBB.MSGPREFIX.."DoubleSuffix:"..tag)
-		end	
-		
-		if not tContains(GBB.suffixTags,tag) then 
-			tinsert(GBB.suffixTags,tag) 
-		end
+	for _, tag in pairs(GBB.suffixTagsLoc[locale]) do
+		insertUnique(GBB.suffixTags, tag)
 	end
-	
-	for dungeonKey, tagList in pairs(GBB.dungeonTagsLoc[loc]) do
+	for dungeonKey, tagList in pairs(GBB.dungeonTagsLoc[locale]) do
 		---@cast tagList string[]
 		---@cast dungeonKey string
 		for _, tag in pairs(tagList) do
-			if GBB.DB.OnDebug and GBB.tagList[tag]~=nil then
-				print(GBB.MSGPREFIX.."DoubleTag:"..tag.." - "..GBB.tagList[tag].." / "..dungeonKey)
+			local existingKey = GBB.tagList[tag] -- check for tag pattern collisions
+			if existingKey and existingKey ~= dungeonKey then 
+				tagCollisions[tag] = tagCollisions[tag] or { existingKey }
+				insertUnique(tagCollisions[tag], dungeonKey) -- track last prio'd key in collision
 			end
 			GBB.tagList[tag] = dungeonKey
 		end
 	end
-
-	for _, tag in pairs(GBB.heroicTagsLoc[loc]) do
+	for _, tag in pairs(GBB.heroicTagsLoc[locale]) do
 		GBB.HeroicKeywords[tag] = 1
 	end
 end
 
+--- Populates tag related tables `tagList`, `suffixTags`, and `HeroicKeywords` with tags from all enabled locales.
+-- also populates from any set custom tags.
 function GBB.CreateTagList ()
 	GBB.tagList={}
 	GBB.suffixTags={}
 	GBB.HeroicKeywords={}
+	tagCollisions = {}
 
-	if GBB.DB.TagsEnglish then
-		GBB.CreateTagListLOC("enGB")
-	end
+	if GBB.DB.TagsEnglish then setTagListByLocale("enGB") end
 	if GBB.DB.TagsGerman then
 		--German tags need english!
 		if GBB.DB.TagsEnglish==false then
-			GBB.CreateTagListLOC("enGB")
+			setTagListByLocale("enGB")
 		end	
-		GBB.CreateTagListLOC("deDE")
+		setTagListByLocale("deDE")
 	end
-	if GBB.DB.TagsRussian then
-		GBB.CreateTagListLOC("ruRU")
-	end
-	if GBB.DB.TagsFrench then
-		GBB.CreateTagListLOC("frFR")
-	end
-	if GBB.DB.TagsZhtw then
-		GBB.CreateTagListLOC("zhTW")
-	end
-	if GBB.DB.TagsZhcn then
-		GBB.CreateTagListLOC("zhCN")
-	end
-	if GBB.DB.TagsPortuguese then
-		GBB.CreateTagListLOC("ptBR")
-	end
-	if GBB.DB.TagsSpanish then
-		GBB.CreateTagListLOC("esES")
-	end
+	if GBB.DB.TagsRussian then setTagListByLocale("ruRU") end
+	if GBB.DB.TagsFrench then setTagListByLocale("frFR") end
+	if GBB.DB.TagsZhtw then setTagListByLocale("zhTW") end
+	if GBB.DB.TagsZhcn then setTagListByLocale("zhCN") end
+	if GBB.DB.TagsPortuguese then setTagListByLocale("ptBR") end
+	if GBB.DB.TagsSpanish then setTagListByLocale("esES") end
 	if GBB.DB.TagsCustom then
 		GBB.searchTagsLoc["custom"]=GBB.Split(GBB.DB.Custom.Search)
 		GBB.badTagsLoc["custom"]=GBB.Split(GBB.DB.Custom.Bad)
 		GBB.suffixTagsLoc["custom"]=GBB.Split(GBB.DB.Custom.Suffix)
 		GBB.heroicTagsLoc["custom"]=GBB.Split(GBB.DB.Custom.Heroic)
-		
+
+		local sortedDungeonKeys = GBB.GetSortedDungeonKeys( -- dungeons & raids for all expansions
+			nil, {GBB.Enum.DungeonType.Dungeon, GBB.Enum.DungeonType.Raid}
+		)
+		-- insert a "custom" locale to `dungeonTagsLoc` for custom tags (before calling `setTagListByLocale`).
 		GBB.dungeonTagsLoc["custom"]={}
-		for index=1,GBB.WOTLKMAXDUNGEON do
-			GBB.dungeonTagsLoc["custom"][GBB.dungeonSort[index]]= GBB.Split(GBB.DB.Custom[GBB.dungeonSort[index]])
+		for _, key in ipairs(sortedDungeonKeys) do
+			GBB.dungeonTagsLoc['custom'][key] = GBB.Split(GBB.DB.Custom[key])
 		end
-		
-		GBB.CreateTagListLOC("custom")
+		setTagListByLocale("custom")
+	end
+
+	if GBB.DB.OnDebug and next(tagCollisions) then
+		print("Tag pattern collisions found:")
+		for tag, collisions in pairs(tagCollisions) do
+			local numCollisions = #collisions
+			if numCollisions > 1 then -- not a collision if only one key
+				for i = 1, numCollisions do
+					collisions[i] = ("(%s) %s"):format(
+						collisions[i],
+						WrapTextInColorCode(GBB.dungeonNames[collisions[i]], 'FFFFC56D')
+					)
+				end
+				print(WrapTextInColorCode(("'%s'"):format(tag), 'FFFF1B1B'),'=>', table.concat(collisions, ' | '))
+			end
+		end
+		print("Messages with these keywords may not be categorized as expected. Priority given to the last in list.")
 	end
 end
 
