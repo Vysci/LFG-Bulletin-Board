@@ -373,6 +373,16 @@ end
 -- Tag Lists
 --------------------------------------------------------------------------------
 local tagCollisions
+local shouldUpdateTagKey = function(pattern, current, incoming)
+	assert(incoming, "shouldUpdateTagKey: incoming key is nil", pattern, current, incoming)
+	if current == incoming then return false end
+	if not current then return true end
+	incoming = GBB.GetDungeonInfo(incoming)
+	current = GBB.GetDungeonInfo(current); 
+	current = current and current.expansionID or -1
+	incoming = incoming and incoming.expansionID or -1
+	return incoming >= current
+end
 ---Sets the `GBB.tagList` table with the tags specified by the given locale.
 ---@param locale string The locale to create the tag list for.
 local function setTagListByLocale(locale)
@@ -393,8 +403,15 @@ local function setTagListByLocale(locale)
 			if existingKey and existingKey ~= dungeonKey then 
 				tagCollisions[tag] = tagCollisions[tag] or { existingKey }
 				insertUnique(tagCollisions[tag], dungeonKey) -- track last prio'd key in collision
+				if shouldUpdateTagKey(tag, existingKey, dungeonKey) then
+					GBB.tagList[tag] = dungeonKey -- update tag-key assignment
+				else
+					--hack: re-insert existingKey at end of list (for formatting priority in debug output)
+					insertUnique(tagCollisions[tag], existingKey) 
+				end
+			else
+				GBB.tagList[tag] = dungeonKey -- init tag key assignment
 			end
-			GBB.tagList[tag] = dungeonKey
 		end
 	end
 	for _, tag in pairs(GBB.heroicTagsLoc[locale]) do
