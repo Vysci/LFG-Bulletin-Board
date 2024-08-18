@@ -33,14 +33,3 @@ Slash Commands
 
  `/gbb` - open main window
 
- 
-
-## NOTE
-Between having a full time big boi job that pays for my hot tub stream addiction and playing TBC, my time is limited which might mean support of this add on may be limited
-
-## Credits
-
-I am not the creator of the add-on. All credit goes to the author of the original add-on https://www.curseforge.com/wow/addons/group-bulletin-board
-Arrogant_Dreamer, Hubbotu and kavarus for the russian translation
-
-Baudzilla for the graphics/idea of the resize-code
