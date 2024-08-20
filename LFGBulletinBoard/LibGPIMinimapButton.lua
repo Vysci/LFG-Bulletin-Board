@@ -162,12 +162,20 @@ function MinimapButton.Init(DB,Texture,DoOnClick,Tooltip)
 	if MinimapButton.db.lock==nil then MinimapButton.db.lock=false end
 	if MinimapButton.db.lockDistance==nil then MinimapButton.db.lockDistance=false end
 
-	-- sync "visible" with the LibDBIcon's "hide" (incase user switches to using LibDBIcon)
+	-- note: these callbacks will only trigger when its toggled via another handler (ie settings checkboxes or dropdowns)
+	-- Sync "visible" with the LibDBIcon's "hide" (incase user switches to using LibDBIcon)
 	assert(MinimapButton.Show and MinimapButton.Hide, "MinimapButton.Show/Hide not defined");
 	SavedVarHandle(MinimapButton.db, 'visible'):AddUpdateHook(function(visible)
 		MinimapButton.db.hide = not visible
 		MinimapButton[visible and 'Show' or 'Hide']();
 	end);
+	-- attach the button to the minimap whenever the "lockDistance" variable is toggled on.
+	SavedVarHandle(MinimapButton.db, "lockDistance"):AddUpdateHook(function(isLocked)
+		if isLocked then
+			button.Lib_GPI_MinimapButton.db.distance = 1
+			MinimapButton.UpdatePosition()
+		end
+	end)
 
 	BottomZoom(button)
 	MinimapButton.UpdatePosition()
