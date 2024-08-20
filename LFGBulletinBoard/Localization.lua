@@ -122,6 +122,7 @@ GBB.locales = {
 		["Cboxshowminimapbutton"]="Show minimap button",
 		["CboxLockMinimapButton"]="Lock minimap button position",
 		["CboxLockMinimapButtonDistance"]="Minimize minimap button distance",
+		USE_LIBDBICON = "Manage minimap button using LibDBIcon (requires /reload)",
 		["CboxShowTotalTime"]="Show total time instead last update",
 		["CboxOnDebug"]="Show debug information",
 		["CboxNotifyChat"]="On new request make a chat notification",
