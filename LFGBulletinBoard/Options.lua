@@ -1,5 +1,5 @@
 local TOCNAME,
-	---@class Addon_Options : Addon_Localization, Addon_CustomFilters, Addon_Dungeons, Addon_Tags, Addon_LibGPIOptions
+	---@class Addon_Options : Addon_Localization, Addon_CustomFilters, Addon_Dungeons, Addon_Tags, Addon_LibGPIOptions, Addon_LibMinimapButton
 	GBB= ...;
 local ChannelIDs
 local isClassicEra = WOW_PROJECT_ID == WOW_PROJECT_CLASSIC
@@ -304,6 +304,10 @@ function GBB.OptionsInit ()
 	GBB.OptionsBuilder.AddCheckBoxToCurrentPanel(GBB.DB.MinimapButton,"visible",true,GBB.L["Cboxshowminimapbutton"])
 	GBB.OptionsBuilder.AddCheckBoxToCurrentPanel(GBB.DB.MinimapButton,"lock",false,GBB.L["CboxLockMinimapButton"])
 	GBB.OptionsBuilder.AddCheckBoxToCurrentPanel(GBB.DB.MinimapButton,"lockDistance",true,GBB.L["CboxLockMinimapButtonDistance"])
+	if GBB.MinimapButton.isLibDBIconAvailable then
+		local default = GBB.DB.MinimapButton.lockDistance; -- default to the same value as the lockDistance setting
+		GBB.OptionsBuilder.AddCheckBoxToCurrentPanel(GBB.DB.MinimapButton, 'UseLibDBIcon', default, GBB.L.USE_LIBDBICON)
+	end
 	GBB.OptionsBuilder.AddSpacerToPanel()
 	CheckBox("ShowTotalTime",false)
 	CheckBox("OrderNewTop",true)
