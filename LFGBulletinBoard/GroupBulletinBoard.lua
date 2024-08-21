@@ -473,10 +473,10 @@ local function hooked_createTooltip(self)
 	end
 end
 
-function GBB.Popup_Minimap(frame,notminimap)
+function GBB.Popup_Minimap(frame,showMinimapOptions)
 	local txt="nil"
 	if type(frame)=="table" then txt=frame:GetName() or "nil" end
-	if not GBB.PopupDynamic:Wipe(txt..(notminimap and "notminimap" or "minimap")) then
+	if not GBB.PopupDynamic:Wipe(txt..(showMinimapOptions and "notminimap" or "minimap")) then
 		return
 	end
 
@@ -489,10 +489,15 @@ function GBB.Popup_Minimap(frame,notminimap)
 	GBB.PopupDynamic:AddItem(GBB.L["CboxNotifyChat"],false,GBB.DB,"NotifyChat")
 	GBB.PopupDynamic:AddItem(GBB.L["CboxNotifySound"],false,GBB.DB,"NotifySound")
 	
-	if notminimap~=false then 
+	if showMinimapOptions ~= false then
 		GBB.PopupDynamic:AddItem("",true)
 		GBB.PopupDynamic:AddItem(GBB.L["CboxLockMinimapButton"],false,GBB.DB.MinimapButton,"lock")
-		GBB.PopupDynamic:AddItem(GBB.L["CboxLockMinimapButtonDistance"],false,GBB.DB.MinimapButton,"lockDistance")
+		-- disable whenever the minimap is in LibDBIcon mode
+		if GBB.DB.MinimapButton.UseLibDBIcon then
+			GBB.PopupDynamic:AddItem(GBB.L['CboxLockMinimapButtonDistance'], true, {true}, 1);
+		else
+			GBB.PopupDynamic:AddItem(GBB.L['CboxLockMinimapButtonDistance'], false, GBB.DB.MinimapButton, 'lockDistance')
+		end
 	end
 	GBB.PopupDynamic:AddItem("",true)
 	GBB.PopupDynamic:AddItem(GBB.L["BtnCancel"],false)
