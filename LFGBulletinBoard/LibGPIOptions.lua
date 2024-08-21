@@ -142,6 +142,17 @@ local function RegisteredFrame_OnShiftRightClick(frame, button)
 	end
 end
 
+local debounced = function(func, delay)
+	local timer = nil ---@type TimerCallback?
+	return function(...)
+		local args = {...};
+		if timer then timer:Cancel() end;
+		timer = C_Timer.NewTimer(delay, function()
+			func(unpack(args));
+			timer = nil;
+		end);
+	end
+end
 --------------------------------------------------------------------------------
 -- Public/Interface
 --------------------------------------------------------------------------------
@@ -170,6 +181,11 @@ Options.GetSavedVarHandle = function(db, var, default)
 	return SavedVarRegistry:GetHandle(db, var, default) 
 end
 
+--Because the onCommit/Refresh/Default, are called once FOR EACH settings category panel whenever options is closed,
+--a debounce with a small delay is used to avoid multiple calls b2b.
+-- Note: this is a hack and should be removed and replaced with a proper solution in the future.
+local delay = 0.025 -- 25ms debounce delay
+
 ---Initializes the options builder. Clears child widget tables. Accepts, onCommit, onRefresh, and onDefault functions.
 ---they are once called for each settings category panel.
 ---@param onCommit fun(panel:SettingsCategoryPanel) function called when the "close" button is clicked
@@ -177,9 +193,9 @@ end
 ---@param onDefault fun(panel:SettingsCategoryPanel) function to call when settings should reset to default values
 function Options.Init(onCommit,onRefresh,onDefault)
 	Options.Prefix=TOCNAME.."Options"
-	Options.onCommit=onCommit
-	Options.onRefresh=onRefresh
-	Options.onDefault=onDefault
+	Options.onCommit=debounced(onCommit, delay)
+	Options.onRefresh=debounced(onRefresh, delay)
+	Options.onDefault=debounced(onDefault, delay)
 	Options.CategoryPanels={}
 	Options.Frames={}
 	Options.Frames.count=0
