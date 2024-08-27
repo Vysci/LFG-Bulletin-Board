@@ -532,7 +532,7 @@ function GBB.Popup_Minimap(frame,showMinimapOptions)
 		GBB.PopupDynamic:AddItem("",true)
 		GBB.PopupDynamic:AddItem(GBB.L["CboxLockMinimapButton"],false,GBB.DB.MinimapButton,"lock")
 		-- disable whenever the minimap is in LibDBIcon mode
-		if GBB.DB.MinimapButton.UseLibDBIcon then
+		if GBB.MinimapButton.isLibDBIconAvailable and GBB.DB.MinimapButton.UseLibDBIcon then
 			GBB.PopupDynamic:AddItem(GBB.L['CboxLockMinimapButtonDistance'], true, {true}, 1);
 		else
 			GBB.PopupDynamic:AddItem(GBB.L['CboxLockMinimapButtonDistance'], false, GBB.DB.MinimapButton, 'lockDistance')
