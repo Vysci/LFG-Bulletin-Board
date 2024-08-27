@@ -1,5 +1,13 @@
 Group Bulletin Board
 
+3.37
+ - Addon will now prioritize matching chat patterns for Dungeons and Raids from the latest expansion.
+   - This fixes an issue where "Bastion of Twilight" was not being tracked because of conflicts with "The Botanica".
+   - A debug message will be displayed for those who have them enabled alerting of other pattern conflicts.
+ - Added `LibDBIcon-1.0` support for any users who have the library installed via another addon.
+   - See LFGBulletinBoard main settings to enable/disable LibDBIcon-1.0 compatibility.
+ - Minimap button can no longer be dragged outside of the screen when "Minimize minimap button distance" is disabled.
+
 3.36
  - Added world bosses for SoD
 
