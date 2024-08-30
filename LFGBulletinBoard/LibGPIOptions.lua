@@ -230,7 +230,7 @@ local CreateScrollFrames = function(parent, name)
 	---@class SettingsCategoryPanelScrollChild: ResizeLayoutFrame
 	local scrollChild = CreateFrame('Frame', name..'ScrollChild', scrollBox, 'ResizeLayoutFrame')
 	scrollChild.scrollable = true
-	scrollChild:SetFixedWidth(InterfaceOptionsFramePanelContainer:GetWidth() - scrollBar:GetWidth() - 8)
+	scrollChild:SetFixedWidth(SettingsPanel.Container.SettingsCanvas:GetWidth() - scrollBar:GetWidth() - 8)
 	scrollChild:SetHeight(100) -- initial arbitrary height
 	scrollChild.ScrollBox = scrollBox;
 	scrollChild.ScrollBar = scrollBar;
