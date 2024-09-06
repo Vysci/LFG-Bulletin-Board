@@ -671,7 +671,7 @@ function GBB.Init()
 				GBB.ShowWindow()
 			end},
 		{{"config","setup","options"},GBB.L["SlashConfig"],GBB.OptionsBuilder.OpenCategoryPanel,1},
-		{"about",GBB.L["SlashAbout"],GBB.OptionsBuilder.OpenCategoryPanel,7},
+		{"about",GBB.L["SlashAbout"],GBB.OptionsBuilder.OpenCategoryPanel, 6},
 		{"",GBB.L["SlashDefault"],GBB.ToggleWindow},
 		{"chat","",{
 			{{"organize", "clean"},GBB.L["SlashChatOrganizer"],function()
