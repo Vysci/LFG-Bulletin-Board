@@ -1,5 +1,6 @@
 local TOCNAME,
 	---@class Addon_RequestList : Addon_Tags
+	---@field FramesEntries (RequestHeader|RequestEntry)[]
 	GBB = ...;
 
 --ScrollList / Request
@@ -187,7 +188,7 @@ local function CreateItem(scrollPos,i,scale,req,forceHeight)
 	local bottomPadding = 4; 
 	
 	if GBB.FramesEntries[i]==nil then
-		---@class requestEntry : Frame
+		---@class RequestEntry : Frame
 		entry = CreateFrame("Frame", ItemFrameName,
 			GroupBulletinBoardFrame_ScrollChildFrame, "GroupBulletinBoard_TmpRequest"
 		);
@@ -328,7 +329,7 @@ local function CreateItem(scrollPos,i,scale,req,forceHeight)
 		entry.Message:SetText("Aag ")   
 		entry.Time:SetText("Aag ")
 	end
-
+	entry.requestInfo = req
 	
 	--- Adjust child frames based on chosen layout
 	-- check for compact or Normal styling 	
@@ -428,6 +429,27 @@ local function IgnoreRequest(name)
 	end
 	GBB.ClearNeeded=true
 	C_FriendList.AddIgnore(name)
+end
+
+local function showNoFiltersMessage()
+	local idx = 1
+	CreateItem(0, idx, 1.25, nil, 30)
+	local entry = GBB.FramesEntries[idx]
+	entry.Name:SetWidth(0)
+	entry.Name:SetText("")
+	entry.Time:SetWidth(0)
+	entry.Time:SetText("")
+	entry.Message:SetText(GBB.L.NO_FILTERS_SELECTED)
+	entry.Message:SetFontObject("GameFontNormalLarge")
+	entry.Message:SetJustifyH("CENTER")
+	entry.Message:SetMaxLines(2)
+	entry.Message:SetTextColor(0.6, 0.6, 0.6, 0.6)
+	-- hack: used as an override to open the filter settings, called from `ClickRequest`
+	function entry.__custom_on_click()
+		GBB.OptionsBuilder.OpenCategoryPanel(2) -- opens to the latest xpac filters.
+		entry.__custom_on_click = nil;
+	end
+	entry:Show()
 end
 
 function GBB.Clear()
@@ -573,6 +595,9 @@ function GBB.UpdateList()
 			end
 		end
 	end
+
+	-- Show a help message when users have less than `n` filters selected and 0 requests are shown
+	if GBB.GetNumActiveFilters() < 5 and count == 0 then showNoFiltersMessage() end
 
 	-- adds a window's woth of padding to the bottom of the scroll frame
 	scrollHeight=scrollHeight+GroupBulletinBoardFrame_ScrollFrame:GetHeight()-20
@@ -1011,11 +1036,11 @@ function GBB.ClickDungeon(self,button)
 
 end
 
-function GBB.ClickRequest(self,button)
-	local id = string.match(self:GetName(), "GBB.Item_(.+)")
-	if id==nil or id==0 then return end
-
-	local req=GBB.RequestList[tonumber(id)]
+---@param entry RequestEntry
+function GBB.ClickRequest(entry, button)
+	local req = entry.requestInfo
+	if entry.__custom_on_click then entry.__custom_on_click(); return end
+	if not req then return end
 	if button=="LeftButton" then
 		if IsShiftKeyDown() then
 			WhoRequest(req.name)
