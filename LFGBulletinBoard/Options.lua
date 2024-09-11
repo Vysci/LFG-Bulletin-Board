@@ -20,6 +20,9 @@ local EXPANSION_FILTER_NAME = {
 	[GBB.Enum.Expansions.Wrath] = SUBTITLE_FORMAT:format(FILTERS, EXPANSION_NAME2),
 	[GBB.Enum.Expansions.Cataclysm] = SUBTITLE_FORMAT:format(FILTERS, EXPANSION_NAME3),
 }
+
+---@type {[number]: CheckButton[]} # Used by GetNumActiveFilters
+local filtersByExpansionID = {}
 --------------------------------------------------------------------------------
 -- Locals/helpers
 --------------------------------------------------------------------------------
@@ -135,6 +138,7 @@ local function GenerateExpansionPanel(expansionID)
 	GBB.OptionsBuilder.AddNewCategoryPanel(EXPANSION_FILTER_NAME[expansionID], false, true)
 	local isCurrentXpac = expansionID == PROJECT_EXPANSION_ID[WOW_PROJECT_ID];
 	local filters = {} ---@type CheckButton[]
+	filtersByExpansionID[expansionID] = filters
 	local dungeons = GBB.GetSortedDungeonKeys(
 		expansionID, GBB.Enum.DungeonType.Dungeon
 	);
@@ -146,7 +150,7 @@ local function GenerateExpansionPanel(expansionID)
 	);
 	local enabled = isCurrentXpac
 
-	-- Dungeons 		
+	-- Dungeons
 	GBB.OptionsBuilder.AddHeaderToCurrentPanel(DUNGEONS)
 	GBB.OptionsBuilder.Indent(10)
 	for _, key in pairs(dungeons) do
@@ -548,4 +552,15 @@ function GBB.OptionsInit ()
 	GBB.OptionsBuilder.Indent(-10)
 	
 	fixSecondaryTagFilters()
+end
+
+---@return number count
+function GBB.GetNumActiveFilters()
+	local count = 0;
+	for _, dungeons in pairs(filtersByExpansionID) do
+		for _, filter in pairs(dungeons) do
+			if filter:GetSavedValue() == true then count = count + 1 end;
+		end
+	end
+	return count;
 end

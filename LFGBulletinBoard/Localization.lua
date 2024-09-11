@@ -76,6 +76,7 @@ local preLocalizedFallbacks = {
 ---Localized addon strings, keyed by locale
 GBB.locales = {
 	enGB = {
+		NO_FILTERS_SELECTED = "No results!|nModify tracked dungeons and raids in the addon's filter settings.",
 		["lfg_channel"] = preLocalizedFallbacks["lfg_channel"], -- may as well use the client generated string
 		["world_channel"]="World", -- must be the default chat-name!
 		["GuildChannel"]="Guild Channel",
@@ -208,6 +209,7 @@ GBB.locales = {
 		["SAVE_ON_ENTER"] = ("Press \"%s\" to save changes."):format(KEY_ENTER),
 	},
 	deDE = {
+	NO_FILTERS_SELECTED = "Keine Ergebnisse!|nÄndern Sie die verfolgten Dungeons und Raids in den Filtereinstellungen des Addons.",
 	["AboutInfo"] = "GBB verschafft euch den Überblick über die endlosen Anfragen in den Chat-Channels. Es erkennt alle Anfragen zu den klassischen Instanzen, sortiert sie und stellt sie übersichtlich da. Filtermöglichkeiten reduziert die gigantische Anzahl auf genau die Instanzen, die dich interessieren. Und falls das nicht reicht, informiert GBB dich über jede neue Anfrage mittels eines Sounds oder Chat-Benachrichtigung. Und abschließend kann GBB deine persönliche Anfrage wiederholt veröffentlichen.",
 	["AboutSlashCommand"] = "<value> kann true,1,enable,false,0,disable sein. Wird <value> weggelassen, schaltet der aktuelle Status um.",
 	["AboutUsage"] = "GBB durchsucht im Hintergrund die Chat-Nachrichten nach Instanz-Anfragen. Um eine Person anzuflüstern, einfach den Eintrag mit links anklicken. Für ein '/who' genügt ein Shift + links klick. Die Instanz-Liste lässt sich in den Einstellungen filtern. Zudem kann man mit einen Linksklick auf den Instanz-Namen diesen falten.|nAlte Einträge werden nach 150 Sekunden rausgefiltert.",
@@ -321,11 +323,13 @@ GBB.locales = {
 	["SAVE_ON_ENTER"] = ("Drücken Sie \"%s\", um die Änderungen zu speichern."):format(KEY_ENTER),
 	},
 	esMX = {
+		NO_FILTERS_SELECTED = "¡No hay resultados!|nModifica las mazmorras y bandas rastreadas en la configuración de filtros del addon.",
 		-- ["lfg_channel"]="BuscarGrupo", -- uses fallback
 		["world_channel"] = "Mundo",
 		["SAVE_ON_ENTER"] = ("Pulse \"%strings\" para guardar los cambios."):format(KEY_ENTER),
 	},
 	frFR = {
+	NO_FILTERS_SELECTED = "Aucun résultat!|nModifiez les donjons et raids suivis dans les paramètres de filtre de l'addon.",
 	-- ["lfg_channel"]="RechercheGroupe", -- uses fallback
 	["world_channel"] = "Général",
 	["GuildChannel"]="Guilde",
@@ -445,6 +449,7 @@ GBB.locales = {
 	["SAVE_ON_ENTER"] =("Appuyez sur « %s » pour enregistrer les modifications."),
 	},
 	ruRU = {
+		NO_FILTERS_SELECTED = "Нет результатов!|nИзмените отслеживаемые подземелья и рейды в настройках фильтра аддона.",
 		["AboutInfo"]="GBB обеспечивает группировку нескончаемых запросов в каналах чата. Он обнаруживает все сообщения про поиск группы в классические подземелья, сортирует и удобно представляет их. Многочисленные опции фильтрации уменьшают гигантское число сообщений и оставляют только те подземелья, которые вас интересуют. А если этого недостаточно, GBB сообщит вам о любом новом запросе через звуковое или чат-уведомление. И, наконец, GBB может публиковать ваш запрос повторно.",
 		["AboutSlashCommand"]="<значение> может быть true, 1, enable, false, 0, disable. Если <значение> опущено, текущий статус будет переключен.",
 		["AboutUsage"]="GBB ищет в сообщениях чата запросы на поиск группы в подземелья в фоновом режиме. Чтобы шепнуть человеку, просто нажмите на строку ЛКМ. Для '/кто' достаточно ШИФТ + ЛКМ. Список подземелий можно отфильтровать в настройках. Вы также можете свернуть это, нажав ЛКМ по названию подземелья.|nСтарые записи отфильтровываются через 150 секунд (по-умолчанию).",
@@ -555,6 +560,7 @@ GBB.locales = {
 		["SAVE_ON_ENTER"] = ("Нажмите \"%s\", чтобы сохранить изменения."):format(KEY_ENTER),
 	},
 	zhTW = {
+		NO_FILTERS_SELECTED = "沒有結果！|n請在插件的過濾條件設定中修改追蹤的地城與團隊副本。",
 		-- ["lfg_channel"]="尋求組隊", -- uses fallback
 		["world_channel"]="綜合", -- must be the default chat-name!
 		["GuildChannel"]="公會",
@@ -685,6 +691,7 @@ GBB.locales = {
 		["SAVE_ON_ENTER"] = ("按下「%s」以儲存變更。"):format(KEY_ENTER),
 	},
 	zhCN = {
+		NO_FILTERS_SELECTED = "无结果！|n请在插件的过滤器设置中修改跟踪的地下城和团队副本。",
 		-- ["lfg_channel"]="寻求组队", -- uses fallback
 		["world_channel"]="综合", -- must be the default chat-name!
 		["GuildChannel"]="公会",
@@ -815,6 +822,7 @@ GBB.locales = {
 		["SAVE_ON_ENTER"] = ("按下\"%s\"以保存更改。"):format(KEY_ENTER),
 	},
 	ptBR = {
+		NO_FILTERS_SELECTED = "Nenhum resultado!|nModifique as masmorras e raides rastreados nas configurações de filtro do addon.",
 		SAVE_ON_ENTER = ("Pressione \"%s\" para salvar as alterações."):format(KEY_ENTER)
 	}
 }
