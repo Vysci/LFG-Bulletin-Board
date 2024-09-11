@@ -1,5 +1,10 @@
 Group Bulletin Board
 
+3.38
+ - Fix lua errors from API changes in 1.15.4/4.4.1
+ - added "Firelands" to the Cataclysm raid filter settings.
+ - Added a help message that opens to filter settings when no board results are found __and__ limited filters are selected.
+
 3.37
  - Addon will now prioritize matching chat patterns for Dungeons and Raids from the latest expansion.
    - This fixes an issue where "Bastion of Twilight" was not being tracked because of conflicts with "The Botanica".
