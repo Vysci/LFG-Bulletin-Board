@@ -262,8 +262,8 @@ local dungeonTags = {
 	NULL = { -- Fall of Deathwing
 
 	},
-	NULL = { -- Firelands
-
+	FL = { -- Firelands
+		enGB = "firelands fl ragnaros"
 	},
 	GNO = { -- Gnomeregan
 		enGB = "gnomer gno gnomeregan gnomeragan gnome gnomregan gnomragan gnom gnomergan",
