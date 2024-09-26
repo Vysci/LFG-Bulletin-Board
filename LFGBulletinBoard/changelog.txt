@@ -1,5 +1,8 @@
 Group Bulletin Board
 
+3.39
+  - Adds `thunderaan` and `thunderan` as english keywords to the SoD "World Bosses" category.
+
 3.38
  - Fix lua errors from API changes in 1.15.4/4.4.1
  - added "Firelands" to the Cataclysm raid filter settings.
