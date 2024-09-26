@@ -114,7 +114,7 @@ local dungeonTags = {
 		zhCN = "地穴",
 	},
 	WB = { -- World Bosses
-		enGB = "azu azuregos azregos world bosses wboss kazzak kaz",
+		enGB = "azu azuregos azregos world bosses wboss kazzak kaz thunderan thunderaan",
 		deDE = nil,
 		ruRU = nil,
 		frFR = nil,
