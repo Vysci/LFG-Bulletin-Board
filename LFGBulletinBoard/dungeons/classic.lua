@@ -102,6 +102,7 @@ local LFGDungeonIDs = {
     ["AV"] = 51,  -- Alterac Valley
     ["DFC"] = isSoD and 830 or nil,  -- Demon Fall Canyon
     ["WB"] = isSoD and 831 or nil,  -- World Bosses
+    ["CRY"] = isSoD and 832 or nil, -- Crystal Vale
 }
 -- Note make sure the ID's dont overlap with LFGDungeonIDs
 --see https://wago.tools/db2/GroupFinderActivity?build=1.15.2.54332
@@ -159,6 +160,12 @@ local infoOverrides = {
     },
     WB = isSoD and {
         name = "World Bosses",
+        minLevel = 60,
+        maxLevel = 60,
+        typeID = DungeonType.Raid,
+    },
+    CRY = isSoD and {
+        name = "Crystal Vale - Prince Thunderaan",
         minLevel = 60,
         maxLevel = 60,
         typeID = DungeonType.Raid,

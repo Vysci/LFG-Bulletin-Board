@@ -114,10 +114,17 @@ local dungeonTags = {
 		zhCN = "地穴",
 	},
 	WB = { -- World Bosses
-		enGB = "azu azuregos azregos world bosses wboss kazzak kaz thunderan thunderaan",
+		enGB = "azu azuregos azregos world bosses wboss kazzak kaz",
 		deDE = nil,
 		ruRU = nil,
 		frFR = nil,
+		zhTW = nil,
+		zhCN = nil,
+	},
+	CRY = { -- Crystal vale
+		enGB = "crystal vale thunderan thunderaan",
+		ruRU = nil,  
+		frFR = nil,  
 		zhTW = nil,
 		zhCN = nil,
 	},
