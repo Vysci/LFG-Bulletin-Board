@@ -75,15 +75,15 @@ local LFGDungeonIDs = {
     ["DM"] = 5,  -- Deadmines
     ["SFK"] = 7,  -- Shadowfang Keep
     ["STK"] = 11, -- Stormwind Stockades
-    ["BFD"] = 9,  -- Blackfathom Deeps
-    ["GNO"] = 13,  -- Gnomeregan
+    ["BFD"] = not isSoD and 9 or nil,  -- Blackfathom Deeps, see LFGActivityIDs table
+    ["GNO"] = not isSoD and 13 or nil,  -- Gnomeregan
     ["RFK"] = 15,  -- Razorfen Kraul
     ["SM2"] = 17,  -- Scarlet Monastery
     ["RFD"] = 19,  -- Razorfen Downs
     ["ULD"] = 21,  -- Uldaman
     ["ZF"] = 23,  -- Zul'Farrak
     ["MAR"] = 25,  -- Maraudon
-    ["ST"] = 27,  -- Sunken Temple
+    ["ST"] = not isSoD and 27 or nil,  -- Sunken Temple
     ["BRD"] = 29,  -- Blackrock Depths
     ["DM2"] = 32,  -- Dire Maul [base]
     ["DME"] = 33,  -- Dire Maul - East
@@ -100,12 +100,9 @@ local LFGDungeonIDs = {
     ["WSG"] = 53,  -- Warsong Gulch
     ["AB"] = 55,  -- Arathi Basin
     ["AV"] = 51,  -- Alterac Valley
-    ["DFC"] = isSoD and 830 or nil,  -- Demon Fall Canyon
-    ["WB"] = isSoD and 831 or nil,  -- World Bosses
-    ["CRY"] = isSoD and 832 or nil, -- Crystal Vale
 }
 -- Note make sure the ID's dont overlap with LFGDungeonIDs
---see https://wago.tools/db2/GroupFinderActivity?build=1.15.2.54332
+--see https://wago.tools/db2/GroupFinderActivity?build=1.15.5.57638
 local LFGActivityIDs = {
     ["AQ20"] = 842,  -- Ahn'Qiraj Ruins
     ["AQ40"] = 843,  -- Ahn'Qiraj Temple
@@ -114,7 +111,16 @@ local LFGActivityIDs = {
     ["SML"] = 829,  -- Scarlet Monastery - Library
     ["SMA"] = 827,  -- Scarlet Monastery - Armory
     ["SMC"] = 828,  -- Scarlet Monastery - Cathedral
-    
+    -- SoD specific instances
+    ["WB"] = isSoD and 831 or nil,  -- World Bosses (spoofed. Used to group Azuregoes/Kazzak)
+    ["BFD"] = isSoD and 1604 or nil, -- Classified as a raid in SoD
+    ["GNO"] = isSoD and 1605 or nil, -- ^^
+    ["ST"] = isSoD and 1606 or nil, -- ^^
+    ["DFC"] = isSoD and 1607 or nil, -- Demon Fall Canyon
+    -- ["AZGS"] = isSoD and 1608 or nil, -- Storm Cliffs (Azuregoes)
+    -- ["KAZK"] = isSoD and 1609 or nil, -- Tainted Scar (Kazzak)
+    ["CRY"] = isSoD and 1611 or nil, -- Crystal Vale (Thunderaan)
+    -- ["NMG"] = isSoD and 1610 or nil, -- Nightmare Grove (Emerald Dragons)
 }
 --see https://wago.tools/db2/GroupFinderCategory?build=1.15.2.54332
 local activityCategoryInfo  = {
@@ -128,36 +134,8 @@ for key, id in pairs(LFGActivityIDs) do
     idToDungeonKey[id] = key
 end
 
---- Any info that needs to be overridden for a specific dungeon should be done here.
+--- Any info that needs to be overridden/spoofed for a specific dungeon should be done here.
 local infoOverrides = {
-    -- BFD
-    BFD = isSoD and {
-        typeID = DungeonType.Raid,
-        minLevel = 25,
-        maxLevel = 40,
-        size = 10,
-    },
-    -- Gnomer
-    GNO = isSoD and {
-        typeID = DungeonType.Raid,
-        minLevel = 40,
-        maxLevel = 50,
-        size = 10,
-    },
-    -- Sunken Temple
-    ST = isSoD and {
-        typeID = DungeonType.Raid,
-        minLevel = 50,
-        maxLevel = 60,
-        size = 20,
-    },
-    -- Demon Fall Canyon (completely spoofed for SoD since its not added into the LFGDungeon db2 table)
-    DFC = isSoD and {
-        name = GetRealZoneText(2784),
-        minLevel = 60,
-        maxLevel = 60,
-        typeID = DungeonType.Dungeon,
-    },
     WB = isSoD and {
         name = "World Bosses",
         minLevel = 60,
@@ -166,9 +144,6 @@ local infoOverrides = {
     },
     CRY = isSoD and {
         name = "Crystal Vale - Prince Thunderaan",
-        minLevel = 60,
-        maxLevel = 60,
-        typeID = DungeonType.Raid,
     },
     -- UBRS is colloquially considered a dungeon. (in LFGDungeon table its a raid)
     UBRS = { typeID = DungeonType.Dungeon },
@@ -231,17 +206,17 @@ do -- begin querying game client for localized dungeon info
     end
     local function cacheActivityInfo(key, activityID)
         local cached = {}
-        local activityInfo = C_LFGList.GetActivityInfoTable(activityID)
-        local categoryInfo = activityCategoryInfo[activityInfo.categoryID]
+        local activityInfo = C_LFGList.GetActivityInfoTable(activityID) or {}
         cached = {
             name = activityInfo.shortName or activityInfo.fullName,
-            minLevel = activityInfo.minLevel,
-            maxLevel = activityInfo.maxLevel,
-			typeID = categoryInfo.typeID,
+            minLevel = activityInfo.minLevelSuggestion or activityInfo.minLevel,
+            maxLevel = activityInfo.maxLevelSuggestion or activityInfo.maxLevel,
+			typeID = activityInfo.categoryID
+                and activityCategoryInfo[activityInfo.categoryID].typeID
+                or DungeonType.Dungeon,
             tagKey = key,
 			expansionID = Expansions.Classic,
         }
-        
         local overrides = infoOverrides[key]
         if overrides then
             for k, v in pairs(overrides) do
