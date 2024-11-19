@@ -10,22 +10,8 @@
 	<Frame name="GroupBulletinBoardFrame" parent="UIParent" hidden="true" movable="true" enableMouse="true" frameStrata="HIGH" resizable="true">
 		<Size><AbsDimension x="800" y="600"/></Size>
 		<Anchors>
-			<Anchor point="CENTER"/>
-			<Offset><AbsDimension x="300" y="0"/></Offset>
+			<Anchor point="CENTER" x="300" y="0"/>
 		</Anchors>
-		
-		<Backdrop name="$parentBackdrop" bgFile="Interface\TutorialFrame\TutorialFrameBackground" edgeFile="Interface\DialogFrame\UI-DialogBox-Border" tile="true">
-			<EdgeSize>
-				<AbsValue val="16"/>
-			</EdgeSize>
-			<TileSize>
-				<AbsValue val="64"/>
-			</TileSize>
-			<BackgroundInsets>
-				<AbsInset left="5" right="5" top="5" bottom="5"/>
-			</BackgroundInsets>
-		</Backdrop>	
-		
 		<Layers>
 			<Layer level="BACKGROUND">
 				<Texture>
@@ -61,10 +47,28 @@
 				
 			</Layer>
 		</Layers>
-
-		<Frames>			
+		<Frames>
+			<Frame inherits="BackdropTemplate" name="$parentBackdrop" hidden="false">
+				<Scripts>
+					<OnLoad>
+						self.backdropInfo = {
+							bgFile = "Interface\\TutorialFrame\\TutorialFrameBackground",
+							edgeFile = "Interface\\DialogFrame\\UI-DialogBox-Border",
+							tile = true,
+							tileSize = 64,
+							edgeSize = 16,
+							insets = {
+								left = 5,
+								right = 5,
+								top = 5,
+								bottom = 5
+							}
+						}
+						self:ApplyBackdrop()
+					</OnLoad>
+				</Scripts>
+			</Frame>
 			<!-- default gui elements -->
-			
 			<Button name="$parentCloseButton" inherits="GroupBulletinBoard_MiniButton" Text="|TInterface\Buttons\UI-StopButton:0|t">
 				<Anchors>
 					<Anchor point="TOPRIGHT" relativeTo="$parent" relativePoint="TOPRIGHT">
@@ -173,11 +177,25 @@
 
 			<!--Scrollframe -->
 			<ScrollFrame name="GroupBulletinBoardFrame_ScrollFrame" inherits="UIPanelScrollFrameTemplate">
-				<Backdrop name="$parentBackdrop" bgFile="Interface\TutorialFrame\TutorialFrameBackground" tile="true">
-					<BackgroundInsets>
-						<AbsInset left="-3" right="-23" top="-3" bottom="-3"/>
-					</BackgroundInsets>
-				</Backdrop>	
+				<Frames>
+					<Frame name="$parentBackdrop" inherits="BackdropTemplate">
+						<Scripts>
+							<OnLoad>
+								self.backdropInfo = {
+									bgFile = "Interface\\TutorialFrame\\TutorialFrameBackground",
+									tile = true,
+									insets = {
+										left = -3,
+										right = -23,
+										top = -3,
+										bottom = -3
+									}
+								}
+								self:ApplyBackdrop()
+							</OnLoad>
+						</Scripts>
+					</Frame>
+				</Frames>
 				<Anchors>
 					<Anchor point="TOPLEFT">
 						<Offset>
@@ -201,11 +219,25 @@
 			<!-- lfgframe -->
 			
 			<ScrollFrame name="GroupBulletinBoardFrame_LfgFrame" inherits="UIPanelScrollFrameTemplate">
-				<Backdrop name="$parentBackdrop" bgFile="Interface\TutorialFrame\TutorialFrameBackground" tile="true">
-					<BackgroundInsets>
-						<AbsInset left="-3" right="-23" top="-3" bottom="-3"/>
-					</BackgroundInsets>
-				</Backdrop>	
+				<Frames>
+					<Frame name="$parentBackdrop" inherits="BackdropTemplate">
+						<Scripts>
+							<OnLoad>
+								self.backdropInfo = {
+									bgFile = "Interface\\TutorialFrame\\TutorialFrameBackground",
+									tile = true,
+									insets = {
+										left = -3,
+										right = -23,
+										top = -3,
+										bottom = -3
+									}
+								}
+								self:ApplyBackdrop()
+							</OnLoad>
+						</Scripts>
+					</Frame>
+				</Frames>
 				<Anchors>
 					<Anchor point="TOPLEFT">
 						<Offset>
@@ -227,7 +259,7 @@
 
 			<!-- groupframe -->
 			
-			<ScrollingMessageFrame enableMouseWheel="true" name="GroupBulletinBoardFrame_GroupFrame"  parentKey="MessageFrame" enableMouseClicks="true" >
+			<ScrollingMessageFrame enableMouse="true" name="GroupBulletinBoardFrame_GroupFrame"  parentKey="MessageFrame" enableMouseClicks="true" >
 				<Anchors>
 					<Anchor point="TOPLEFT">
 						<Offset>
