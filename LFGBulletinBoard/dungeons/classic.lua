@@ -1,7 +1,7 @@
-local tocName, 
+local tocName,
     ---@class Addon_DungeonData
     addon = ...;
-    
+
 if WOW_PROJECT_ID ~= WOW_PROJECT_CLASSIC then return end
 ---@alias DungeonID number
 ---@alias ActivityID number
@@ -16,14 +16,12 @@ if WOW_PROJECT_ID ~= WOW_PROJECT_CLASSIC then return end
 ---@field size number? # The size of the dungeon, only used for raids and battlegrounds
 ---@field isHoliday boolean? # If the dungeon is a holiday event
 
--- Required APIs. Exist in classic even though no Dungeon Finder.
-assert(GetLFGDungeonInfo, tocName .. " requires the API `GetLFGDungeonInfo` for parsing dungeon info")
+-- Required APIs.
 assert(C_LFGList.GetActivityInfoTable, tocName .. " requires the API `C_LFGList.GetActivityInfoTable` for parsing dungeon info")
 
 -- initialize here for now, this should be moved to a file thats always guarantied to load first.
 ---@class AddonEnum
-addon.Enum = {} 
-
+addon.Enum = {}
 
 ---@enum DungeonTypeID # note that the actual value of the enum maybe be different depending on the client version.
 local DungeonType = {
@@ -46,76 +44,51 @@ local isSoD = C_Seasons and (C_Seasons.GetActiveSeason() == Enum.SeasonID.Season
 local debug = false
 local print = function(...) if debug then print(tocName, ...) end end
 
--- hacky solution to manually tack on the dungeon size.
--- this is only used for the classic era client. since its small enough to hardcode.
--- `nil` is assumed to be 5
-local dungeonSizes = {
-    -- BGs
-    [53] = 10,  -- WSG
-    [55] = 15,  -- AB
-    [51] = 40,  -- AV
-    -- Dungeons
-    [31] = 10,  -- LBRS
-    [43] = 10,  -- UBRS
-    -- Raids
-    [41] = 20,  -- ZG
-    [160] = 20, -- AQ20
-    [47] = 40,  -- MC
-    [45] = 40,  -- Ony
-    [49] = 40,  -- BWL
-    [161] = 40, -- AQ40
-    [159] = 40, -- Naxx
-}
-
--- manually associate keys in Tags.lua
---see https://wago.tools/db2/LFGDungeons?build=1.15.2.54332
-local LFGDungeonIDs = {
-    ["RFC"] = 3,  -- Ragefire Chasm
-    ["WC"] = 1,  -- Wailing Caverns
-    ["DM"] = 5,  -- Deadmines
-    ["SFK"] = 7,  -- Shadowfang Keep
-    ["STK"] = 11, -- Stormwind Stockades
-    ["BFD"] = not isSoD and 9 or nil,  -- Blackfathom Deeps, see LFGActivityIDs table
-    ["GNO"] = not isSoD and 13 or nil,  -- Gnomeregan
-    ["RFK"] = 15,  -- Razorfen Kraul
-    ["SM2"] = 17,  -- Scarlet Monastery
-    ["RFD"] = 19,  -- Razorfen Downs
-    ["ULD"] = 21,  -- Uldaman
-    ["ZF"] = 23,  -- Zul'Farrak
-    ["MAR"] = 25,  -- Maraudon
-    ["ST"] = not isSoD and 27 or nil,  -- Sunken Temple
-    ["BRD"] = 29,  -- Blackrock Depths
-    ["DM2"] = 32,  -- Dire Maul [base]
-    ["DME"] = 33,  -- Dire Maul - East
-    ["DMN"] = 37,  -- Dire Maul - North
-    ["DMW"] = 35,  -- Dire Maul - West
-    ["STR"] = 39,  -- Stratholme
-    ["SCH"] = 2,  -- Scholomance
-    ["LBRS"] = 31,  -- Lower Blackrock Spire
-    ["UBRS"] = 43,  -- Upper Blackrock Spire
-    ["ZG"] = 41,  -- Zul'Gurub
-    ["ONY"] = 45,  -- Onyxia
-    ["MC"] = 47,  -- Molten Core
-    ["BWL"] = 49,  -- Blackwing Lair
-    ["WSG"] = 53,  -- Warsong Gulch
-    ["AB"] = 55,  -- Arathi Basin
-    ["AV"] = 51,  -- Alterac Valley
-}
--- Note make sure the ID's dont overlap with LFGDungeonIDs
+-- Each key should have corresponding entry in one of the tables in `Tags.lua`
 --see https://wago.tools/db2/GroupFinderActivity?build=1.15.5.57638
 local LFGActivityIDs = {
-    ["AQ20"] = 842,  -- Ahn'Qiraj Ruins
-    ["AQ40"] = 843,  -- Ahn'Qiraj Temple
-    ["NAXX"] = 841,  -- Naxxramas
+    -- Dungeons
+    ["RFC"] = 798,  -- Ragefire Chasm
+    ["WC"] = 796,  -- Wailing Caverns
+    ["DM"] = 799,  -- Deadmines
+    ["SFK"] = 800,  -- Shadowfang Keep
+    ["BFD"] = not isSoD and 801 or 1604,  -- Blackfathom Deeps
+    ["STK"] = 802, -- Stormwind Stockades
+    ["GNO"] = not isSoD and 803 or 1605,  -- Gnomeregan
+    ["RFK"] = 804,  -- Razorfen Kraul
+    ["SM2"] = 5555,  -- Scarlet Monastery (used for the combine dungeons option) *spoofed*
     ["SMG"] = 805,  -- Scarlet Monastery - Graveyard
     ["SML"] = 829,  -- Scarlet Monastery - Library
     ["SMA"] = 827,  -- Scarlet Monastery - Armory
     ["SMC"] = 828,  -- Scarlet Monastery - Cathedral
-    -- SoD specific instances
-    ["WB"] = isSoD and 831 or nil,  -- World Bosses (spoofed. Used to group Azuregoes/Kazzak)
-    ["BFD"] = isSoD and 1604 or nil, -- Classified as a raid in SoD
-    ["GNO"] = isSoD and 1605 or nil, -- ^^
-    ["ST"] = isSoD and 1606 or nil, -- ^^
+    ["RFD"] = 806,  -- Razorfen Downs
+    ["ULD"] = 807,  -- Uldaman
+    ["ZF"] = 808,  -- Zul'Farrak
+    ["MAR"] = 809,  -- Maraudon
+    ["ST"] = not isSoD and 810 or 1606,  -- Sunken Temple
+    ["BRD"] = 811,  -- Blackrock Depths
+    ["DM2"] = 6666,  -- Dire Maul (used for the combine dungeons option) *spoofed*
+    ["DME"] = 813,  -- Dire Maul - East
+    ["DMW"] = 814,  -- Dire Maul - West
+    ["DMN"] = 815,  -- Dire Maul - North
+    ["STR"] = 816,  -- Stratholme [816|1603]
+    ["SCH"] = 797,  -- Scholomance
+    ["LBRS"] = 812,  -- Lower Blackrock Spire
+    ["UBRS"] = 837,  -- Upper Blackrock Spire
+    -- Raids
+    ["ONY"] = 838,  -- Onyxia
+    ["ZG"] = 836,  -- Zul'Gurub
+    ["MC"] = 839,  -- Molten Core
+    ["BWL"] = 840,  -- Blackwing Lair
+    ["AQ20"] = 842,  -- Ahn'Qiraj Ruins
+    ["AQ40"] = 843,  -- Ahn'Qiraj Temple
+    ["NAXX"] = 841,  -- Naxxramas
+    -- Battlegrounds
+    ["WSG"] = 924, -- Warsong Gulch [919-924]
+    ["AB"] = 930,  -- Arathi Basin [926-930]
+    ["AV"] = 932,  -- Alterac Valley
+    -- SoD Specific
+    ["WB"] = isSoD and 6969 or nil,  -- World Bosses (Used to group Azuregoes/Kazzak) *spoofed*
     ["DFC"] = isSoD and 1607 or nil, -- Demon Fall Canyon
     -- ["AZGS"] = isSoD and 1608 or nil, -- Storm Cliffs (Azuregoes)
     -- ["KAZK"] = isSoD and 1609 or nil, -- Tainted Scar (Kazzak)
@@ -123,127 +96,86 @@ local LFGActivityIDs = {
     -- ["NMG"] = isSoD and 1610 or nil, -- Nightmare Grove (Emerald Dragons)
 }
 --see https://wago.tools/db2/GroupFinderCategory?build=1.15.2.54332
-local activityCategoryInfo  = {
-    [2] = { typeID = DungeonType.Dungeon },
-    [114] = { typeID = DungeonType.Raid },
-    [118] = { typeID = DungeonType.Battleground },
+local activityCategoryTypeID  = {
+    [2] = DungeonType.Dungeon ,
+    [114] = DungeonType.Raid,
+    [118] = DungeonType.Battleground,
 }
+local idToDungeonKey = tInvert(LFGActivityIDs)
 
-local idToDungeonKey = tInvert(LFGDungeonIDs)
-for key, id in pairs(LFGActivityIDs) do
-    idToDungeonKey[id] = key
-end
-
---- Any info that needs to be overridden/spoofed for a specific dungeon should be done here.
+--- Any info that needs to be overridden/spoofed for a specific instances should be done here.
 local infoOverrides = {
+    -- todo: add the localized boss name, to the parsed dungeon name for the SoD instanced world bosses.
+    -- ex: https://wago.tools/db2/DungeonEncounter?build=1.15.5.57638&sort[Name_lang]=asc&filter[ID]=3079
+    CRY = isSoD and {
+        name = "Crystal Vale - Prince Thunderaan",
+    },
+    -- Strat is split into "Main"/"Service" Gates between 2 IDs. We use just the plain zone name.
+    STR = { name = GetRealZoneText(329) },
+    -- GetActivityInfoTable has unique entries for each BG level bracket. We however use a single entry.
+    WSG = { minLevel = 10, maxLevel = 60 },
+    AB = { minLevel = 20, maxLevel = 60 },
+    -- Note: Following entries for are completely spoofed. hardcoded info here.
     WB = isSoD and {
         name = "World Bosses",
         minLevel = 60,
         maxLevel = 60,
         typeID = DungeonType.Raid,
     },
-    CRY = isSoD and {
-        name = "Crystal Vale - Prince Thunderaan",
-    },
-    -- UBRS is colloquially considered a dungeon. (in LFGDungeon table its a raid)
-    UBRS = { typeID = DungeonType.Dungeon },
-    
-    -- For the spoofed LFGDungeonID for "Dire Maul"
-    -- note: 32 is not a real entry in the LFGDungeon table for 1.15.xx.
-    DM2 = { 
-        name = GetRealZoneText(429),
-        minLevel = 54, 
-        maxLevel = 61, 
+    SM2 = {
+        name = GetRealZoneText(189),
+        minLevel = 30, -- SMG min
+        maxLevel = 46, -- SMC max
         typeID = DungeonType.Dungeon
     },
-
-    -- Since GetActivityInfoTable returns 0 for these values, set them manually.
-    AQ20 = { minLevel = 60, maxLevel = 60, typeID = DungeonType.Raid },
-    AQ40 = { minLevel = 60, maxLevel = 60, typeID = DungeonType.Raid },
-    NAXX = { minLevel = 60, maxLevel = 60, typeID = DungeonType.Raid },
-    SMG = { minLevel = 29, maxLevel = 37, typeID = DungeonType.Dungeon },
-    SML = { minLevel = 32, maxLevel = 38, typeID = DungeonType.Dungeon },
-    SMA = { minLevel = 36, maxLevel = 40, typeID = DungeonType.Dungeon },
-    SMC = { minLevel = 39, maxLevel = 45, typeID = DungeonType.Dungeon },
+    DM2 = {
+        name = GetRealZoneText(429),
+        minLevel = 54, -- DME min
+        maxLevel = 60, -- DMN max
+        typeID = DungeonType.Dungeon
+    },
 }
-
 
 ---@type {[DungeonID]: DungeonInfo}
 local dungeonInfoCache = {}
 ---@type {[string]: DungeonInfo}
 local infoByTagKey = {}
 local numDungeons = 0
-do -- begin querying game client for localized dungeon info
-    local function cacheDungeonInfo(key, dungeonID)
-        local cached = {}
-        do
-            local name, typeID, _, minLevel, maxLevel = GetLFGDungeonInfo(dungeonID);
-            cached = {
-                name = name,
-                minLevel = minLevel,
-                maxLevel = maxLevel,
-                typeID = typeID,
-                tagKey = key,
-                expansionID = Expansions.Classic,
-            }
+-- begin querying game client for localized dungeon info
+local function cacheActivityInfo(key, activityID)
+    local cached = {}
+    local activityInfo = C_LFGList.GetActivityInfoTable(activityID) or {categoryID = 0}
+    cached = {
+        name = activityInfo.shortName or activityInfo.fullName,
+        minLevel = activityInfo.minLevelSuggestion or activityInfo.minLevel,
+        maxLevel = activityInfo.maxLevelSuggestion or activityInfo.maxLevel,
+        typeID = activityCategoryTypeID[activityInfo.categoryID],
+        tagKey = key,
+        expansionID = Expansions.Classic,
+    }
+
+    local overrides = infoOverrides[key]
+    if overrides then
+        for k, v in pairs(overrides) do
+            cached[k] = v
         end
-
-        local overrides = infoOverrides[key]
-        if overrides then
-            for k, v in pairs(overrides) do
-                cached[k] = v
-            end
-        end
-
-        -- please add any missing data to info overrides
-        assert(cached.name, "Missing name for dungeonID: " .. dungeonID)
-        assert(cached.typeID, "Missing typeID for dungeonID: " .. dungeonID)
-        assert(cached.minLevel and cached.maxLevel, "Missing level range for dungeonID: " .. dungeonID)
-        
-        dungeonInfoCache[dungeonID] = cached
-        infoByTagKey[cached.tagKey] = cached
-        numDungeons = numDungeons + 1
     end
-    local function cacheActivityInfo(key, activityID)
-        local cached = {}
-        local activityInfo = C_LFGList.GetActivityInfoTable(activityID) or {}
-        cached = {
-            name = activityInfo.shortName or activityInfo.fullName,
-            minLevel = activityInfo.minLevelSuggestion or activityInfo.minLevel,
-            maxLevel = activityInfo.maxLevelSuggestion or activityInfo.maxLevel,
-			typeID = activityInfo.categoryID
-                and activityCategoryInfo[activityInfo.categoryID].typeID
-                or DungeonType.Dungeon,
-            tagKey = key,
-			expansionID = Expansions.Classic,
-        }
-        local overrides = infoOverrides[key]
-        if overrides then
-            for k, v in pairs(overrides) do
-                cached[k] = v
-            end
-        end
+    -- Required fields. If asserts failing, please add any missing data to `infoOverrides`.
+    assert(cached.name, "Missing name for activityID: " .. activityID)
+    assert(cached.typeID, "Missing typeID for activityID: " .. activityID)
+    assert(cached.minLevel and cached.maxLevel, "Missing level range for activityID: " .. activityID)
 
-        -- please add any missing data to info overrides
-        assert(cached.name, "Missing name for activityID: " .. activityID)
-        assert(cached.typeID, "Missing typeID for activityID: " .. activityID)
-        assert(cached.minLevel and cached.maxLevel, "Missing level range for activityID: " .. activityID)
-
-        dungeonInfoCache[activityID] = cached
-        infoByTagKey[cached.tagKey] = cached
-        numDungeons = numDungeons + 1
-    end
-    for key, dungeonID in pairs(LFGDungeonIDs) do
-        cacheDungeonInfo(key, dungeonID)
-    end
-    for key, activityID in pairs(LFGActivityIDs) do
-        cacheActivityInfo(key, activityID)
-    end
+    dungeonInfoCache[activityID] = cached
+    infoByTagKey[cached.tagKey] = cached
+    numDungeons = numDungeons + 1
+end
+for key, activityID in pairs(LFGActivityIDs) do
+    cacheActivityInfo(key, activityID)
 end
 
 ---Returns info table for the specified dungeon key or `nil` if it doesn't exist.
 ---@param dungeonKey string
----@return (DungeonInfo|table<DungeonID, DungeonInfo>)? 
+---@return (DungeonInfo|table<DungeonID, DungeonInfo>)?
 function addon.GetDungeonInfo(dungeonKey, useRef)
     if dungeonKey then
         local info = infoByTagKey[dungeonKey]
@@ -264,10 +196,10 @@ function addon.GetSortedDungeonKeys(expansionID, typeID)
 	local keys = {}
 	for dungeonID, info in pairs(dungeonInfoCache) do
         local tagKey = idToDungeonKey[dungeonID]
-		if (not expansionID or info.expansionID == expansionID) 
+		if (not expansionID or info.expansionID == expansionID)
 		and (not typeID -- only include set typeIDs
 			or (type(typeID) == "number" and info.typeID == typeID)
-			or (type(typeID) == "table" and tContains(typeID, info.typeID)))  
+			or (type(typeID) == "table" and tContains(typeID, info.typeID)))
         and (tagKey ~= "DM2" and tagKey ~= "SM2") -- not actually dungeons
 		then
 			tinsert(keys, tagKey)
