@@ -1,7 +1,7 @@
-## Interface: 11504, 40401
+## Interface: 11505, 40401
 ## Title: LFG Bulletin Board
 ## Notes: Sort LFG/LFM Messages
-## Version: 3.39
+## Version: 3.40
 ## Author: Vyscî-Whitemane
 ## DefaultState: enabled
 ## SavedVariables: GroupBulletinBoardDB

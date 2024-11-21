@@ -1,5 +1,8 @@
 Group Bulletin Board
 
+3.40
+  - Remove deprecated xml elements and API calls causing errors in 1.15.5
+
 3.39
   - Fix lua errors from API changes in 4.4.1
   - Added "Firelands" to the Cataclysm raid filter settings (done in 3.38).
