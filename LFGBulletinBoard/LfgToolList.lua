@@ -4,7 +4,7 @@ local 	TOCNAME,GBB=...
 local MAXGROUP=500
 local LastUpdateTime = time()
 local requestNil={dungeon="NIL",start=0,last=0,name=""}
-
+local isCata = WOW_PROJECT_ID == WOW_PROJECT_CATACLYSM_CLASSIC
 local function requestSort_TOP_TOTAL (a,b)
 	if GBB.dungeonSort[a.dungeon] < GBB.dungeonSort[b.dungeon] then
 		return true
@@ -205,34 +205,40 @@ function GBB.GetLfgList()
 end
 
 function GBB.UpdateLfgTool()
-    if LFGListFrame and LFGListFrame.CategorySelection.selectedCategory == 120 then return end
-    if  LFGListFrame and LFGListFrame.CategorySelection.selectedCategory == nil then  
-        LFGListFrame.CategorySelection.selectedCategory = 2
-    end
+	-- named differently on cata/era
+	local LFGListFrame = isCata and _G.LFGListFrame or _G.LFGListingFrame
+	if isCata then
+		if LFGListFrame and LFGListFrame.CategorySelection.selectedCategory == 120 then return end
+		if  LFGListFrame and LFGListFrame.CategorySelection.selectedCategory == nil then
+			LFGListFrame.CategorySelection.selectedCategory = 2
+		end
 
-    LastUpdateTime = time()
-    GBB.LfgRequestList = {}
-    
-    local category = 2
-    if LFGListFrame and LFGListFrame.CategorySelection.selectedCategory ~= nil then 
-        category = LFGListFrame.CategorySelection.selectedCategory
-    end
+		LastUpdateTime = time()
+		GBB.LfgRequestList = {}
 
-	local activities = C_LFGList.GetAvailableActivities(category)
-	--C_LFGList.Search(category, activities)
-    if LFGListFrame and LFGListFrame.searching then return end
+		local category = 2
+		if LFGListFrame and LFGListFrame.CategorySelection.selectedCategory ~= nil then
+			category = LFGListFrame.CategorySelection.selectedCategory
+		end
 
-	GBB.GetLfgList()
-    GBB.LfgUpdateList()
+		local activities = C_LFGList.GetAvailableActivities(category)
+		--C_LFGList.Search(category, activities)
+		if LFGListFrame and LFGListFrame.searching then return end
+	end
+
+		GBB.GetLfgList()
+		GBB.LfgUpdateList()
 end
 
 function GBB.UpdateLfgToolNoSearch()
-    if LFGListFrame.CategorySelection.selectedCategory == 120 then return end
-    if  LFGListFrame.CategorySelection.selectedCategory == nil then  
-        LFGListFrame.CategorySelection.selectedCategory = 2
-    end
+	if isCata then
+		if LFGListFrame.CategorySelection.selectedCategory == 120 then return end
+		if  LFGListFrame.CategorySelection.selectedCategory == nil then
+			LFGListFrame.CategorySelection.selectedCategory = 2
+		end
+	end
 
-if LFGListFrame and LFGListFrame.searching then return end
+	if LFGListFrame and LFGListFrame.searching then return end
 
     GBB.LfgRequestList = {}
     GBB.GetLfgList()
