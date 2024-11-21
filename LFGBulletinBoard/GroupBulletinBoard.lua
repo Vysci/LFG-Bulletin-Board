@@ -710,6 +710,7 @@ function GBB.Init()
 	
 	---@type EditBox # making this local isnt required, just here for the luals linter
 	local GroupBulletinBoardFrameResultsFilter = _G["GroupBulletinBoardFrameResultsFilter"];
+	GroupBulletinBoardFrameResultsFilter:SetParent(GroupBulletinBoardFrame_ScrollFrame)
 	GroupBulletinBoardFrameResultsFilter.filterPatterns = { };
 	GroupBulletinBoardFrameResultsFilter:SetFontObject(GBB.DB.FontSize);
 	GroupBulletinBoardFrameResultsFilter:SetTextColor(1, 1, 1, 1);
@@ -760,35 +761,41 @@ function GBB.Init()
 	GBB.PopupDynamic=GBB.Tool.CreatePopup(GBB.OptionsUpdate)
 	GBB.InitGroupList()
 
-	if isClassicEra then
+	if isClassicEra then -- setup tabs
+		-- Normal requests tab
 		GBB.Tool.AddTab(GroupBulletinBoardFrame, GBB.L.TabRequest, GroupBulletinBoardFrame_ScrollFrame);
-		
+
+		-- LFG Tool tab. Note: currently only active in anniversary(fresh) servers and SoD
+		local serverType = C_Seasons.GetActiveSeason()
+		if (serverType == Enum.SeasonID.SeasonOfDiscovery)
+		or (serverType == Enum.SeasonID.Fresh)
+		or (serverType == Enum.SeasonID.FreshHardcore)
+		then GBB.Tool.AddTab(GroupBulletinBoardFrame, GBB.L.TabLfg, GroupBulletinBoardFrame_LfgFrame);
+		else GroupBulletinBoardFrame_LfgFrame:Hide() end;
+
+		-- Past group members tab. (Inactive and broken)
 		-- GBB.Tool.AddTab(GroupBulletinBoardFrame, GBB.L.TabGroup, GroupBulletinBoardFrame_GroupFrame);
 		GroupBulletinBoardFrame_GroupFrame:Hide()
-		
-		-- Group Finder doesnt exist in classic era
-		GroupBulletinBoardFrame_LfgFrame:Hide()
-	else -- cata client
-		-- Hide all tabs except requests for the time being
-		
+	else
+		-- cata client for Hide all tabs except requests for the time being
 		GBB.Tool.AddTab(GroupBulletinBoardFrame, GBB.L.TabRequest, GroupBulletinBoardFrame_ScrollFrame);
+
+		-- GBB.Tool.AddTab(GroupBulletinBoardFrame, GBB.L.TabLfg, GroupBulletinBoardFrame_LfgFrame);
+		GroupBulletinBoardFrame_LfgFrame:Hide()
 
 		-- GBB.Tool.AddTab(GroupBulletinBoardFrame, GBB.L.TabGroup, GroupBulletinBoardFrame_GroupFrame);
 		GroupBulletinBoardFrame_GroupFrame:Hide()
-		
-		-- GBB.Tool.AddTab(GroupBulletinBoardFrame, GBB.L.TabLfg, GroupBulletinBoardFrame_LfgFrame);
-		GroupBulletinBoardFrame_LfgFrame:Hide()
+
 	end
-	GBB.Tool.SelectTab(GroupBulletinBoardFrame,1)
+	GBB.Tool.SelectTab(GroupBulletinBoardFrame, 1) -- default to requests tab
 	local enableGroupVar = GBB.OptionsBuilder.GetSavedVarHandle(GBB.DB, "EnableGroup")
 	local refreshGroupTab = function(isEnabled) -- previously done in `GBB.OptionsUpdate()`
 		if isEnabled then
 			-- Shows all active tabs.
 			GBB.Tool.TabShow(GroupBulletinBoardFrame)
-		else -- note: only the request-list tab is currently active on cata & era.
-			GBB.Tool.SelectTab(GroupBulletinBoardFrame, 1)
+		else
 			-- hide the "Remember past group members" aka "EnableGroup" tab should be the last tab
-			GBB.Tool.TabHide(GroupBulletinBoardFrame, isClassicEra and 2 or 3)
+			GBB.Tool.TabHide(GroupBulletinBoardFrame, isClassicEra and 3 or 2)
 		end
 	end
 	enableGroupVar:AddUpdateHook(refreshGroupTab)
