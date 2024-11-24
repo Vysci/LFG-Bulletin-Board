@@ -478,18 +478,20 @@ function GBB.OptionsInit ()
 	saveText:SetAlpha(0.75)
 	GBB.OptionsBuilder.AddSpacerToPanel()
 	local locales= GBB.locales.enGB
-	local t={}
-	for key, _ in pairs(locales) do 
-		table.insert(t,key)
+	local displayStrKeys = {}
+	for key, _ in pairs(locales) do
+		table.insert(displayStrKeys, key)
 	end
-	table.sort(t)
-	for _,key in ipairs(t) do 
-		
-		local col=GBB.L[key]~=nil and "|cffffffff" or "|cffff4040"
-		local txt=GBB.L[key.."_org"]~="["..key.."_org]" and GBB.L[key.."_org"] or GBB.L[key]
-				
-		GBB.OptionsBuilder.AddEditBoxToCurrentPanel(GBB.DB.CustomLocales,key,"",col.."["..key.."]",450,200,false,locales[key],txt)
-		
+	table.sort(displayStrKeys)
+	for _,key in ipairs(displayStrKeys) do
+		-- _org suffix is used for saving the original value if changed by user.
+		if not key:find("_org") then
+			local labelTxt = WrapTextInColorCode(('[%s]'):format(key), GBB.L[key]~=nil and "ffffffff" or "ffff4040")
+			local sampleTxt = (GBB.L[key] and GBB.L[key]~="") and GBB.L[key] or GBB.L[key.."_org"]
+			GBB.OptionsBuilder.AddEditBoxToCurrentPanel(GBB.DB.CustomLocales, key,
+				"", labelTxt, 450, 200, false,locales[key], sampleTxt
+			)
+		end
 	end
 	--locales dungeons
 	GBB.OptionsBuilder.AddSpacerToPanel()
