@@ -100,8 +100,7 @@ GBB.locales = {
 		["normalAbr"]="N",
 		["raidAbr"]="R",
 		["msgFontSize"] = "Font Size (Requires /reload)",
-		["msgLeaderOutbound"]="Please invite for %s, I am a %s.",
-
+		["JOIN_REQUEST_MESSAGE"]="Please invite for %dungeon. Level %level %class %role.",
 		-- option panel
 
 		["HeaderSettings"]="Settings",
@@ -352,7 +351,7 @@ GBB.locales = {
 	["normalAbr"]="N",
 	["raidAbr"]="R",
 	["msgFontSize"] = "Taille de fonte (nécéssite un /reload)",
-	["msgLeaderOutbound"]="Je cherche un groupe pour %s, Je suis %s.",
+	["JOIN_REQUEST_MESSAGE"]="Je cherche un groupe pour %dungeon, Je suis %role.",
 	["HeaderSettings"]="Réglages",
 	["PanelFilter"]="Filtres Vanilla",
 	["TBCPanelFilter"]="Filtres BC",

@@ -83,7 +83,7 @@ local function InviteRequestWithRole(gbbName,gbbDungeon,gbbHeroic,gbbRaid)
 		gbbDungeonPrefix = ""
 	end
 
-	SendChatMessage(string.format(GBB.L["msgLeaderOutbound"], gbbDungeonPrefix .. GBB.dungeonNames[gbbDungeon], GBB.DB.InviteRole), "WHISPER", nil, gbbName)
+	SendChatMessage(string.format(GBB.L["JOIN_REQUEST_MESSAGE"], gbbDungeonPrefix .. GBB.dungeonNames[gbbDungeon], GBB.DB.InviteRole), "WHISPER", nil, gbbName)
 end
 
 local function IgnoreRequest(name)

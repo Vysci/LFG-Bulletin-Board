@@ -404,21 +404,24 @@ local function InviteRequest(name)
 	GBB.Tool.RunSlashCmd("/invite " .. name)
 end
 
-local function InviteRequestWithRole(gbbName,gbbDungeon,gbbHeroic,gbbRaid)
-	if not GBB.DB.InviteRole then GBB.DB.InviteRole = "DPS" end
-	local gbbDungeonPrefix = ""	
-	if gbbHeroic then
-		gbbDungeonPrefix = "H "
-	elseif not gbbHeroic and not gbbRaid then
-		gbbDungeonPrefix = "N "
+---@param leaderName string
+---@param dungeonKey string
+---@param isHeroic boolean?
+local function SendJoinRequestMessage(leaderName, dungeonKey, isHeroic)
+	local dungeon = GBB.dungeonNames[dungeonKey] or dungeonKey
+	local msg = GBB.DB.CustomLocales.JOIN_REQUEST_MESSAGE or GBB.L.JOIN_REQUEST_MESSAGE ---@type string
+	local replacements = {
+		-- note: the '%' in '%key' needs to be lua escaped with another '%' for the `gsub` function.
+		-- (they DO NOT need to be escaped in the JOIN_REQUEST_MESSAGE string).
+		["%%level"] = UnitLevel("player"),
+		["%%class"] = UnitClass("player"),
+		["%%role"] = GBB.DB.InviteRole or "DPS",
+		["%%dungeon"] = isHeroic and ("%s %s"):format(GBB.L["heroicAbr"], dungeon) or dungeon,
+	}
+	for key, value in pairs(replacements) do
+		msg = msg:gsub(key, value)
 	end
-
-	-- Not sure if necessary, but Heroic Miscellaneous sounds like a dangerous place.
-	if gbbDungeon == "MISC" or gbbDungeon == "TRADE" or gbbDungeon == "TRAVEL" then
-		gbbDungeonPrefix = ""
-	end
-
-	SendChatMessage(string.format(GBB.L["msgLeaderOutbound"], gbbDungeonPrefix .. GBB.dungeonNames[gbbDungeon], GBB.DB.InviteRole), "WHISPER", nil, gbbName)
+	SendChatMessage(msg, "WHISPER", nil, leaderName)
 end
 
 local function IgnoreRequest(name)
@@ -1046,7 +1049,7 @@ function GBB.ClickRequest(entry, button)
 			WhoRequest(req.name)
 			--SendWho( req.name )
 		elseif IsAltKeyDown() then
-			InviteRequestWithRole(req.name,req.dungeon,req.IsHeroic,req.IsRaid)
+			SendJoinRequestMessage(req.name, req.dungeon, req.IsHeroic)
 		elseif IsControlKeyDown() then
 			InviteRequest(req.name)
 		else
