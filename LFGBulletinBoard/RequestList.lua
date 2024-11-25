@@ -409,7 +409,10 @@ end
 ---@param isHeroic boolean?
 local function SendJoinRequestMessage(leaderName, dungeonKey, isHeroic)
 	local dungeon = GBB.dungeonNames[dungeonKey] or dungeonKey
-	local msg = GBB.DB.CustomLocales.JOIN_REQUEST_MESSAGE or GBB.L.JOIN_REQUEST_MESSAGE ---@type string
+	local msg = GBB.DB.CustomLocales.JOIN_REQUEST_MESSAGE
+	if not msg or strlen(msg) == 0 then -- fallback to default message
+		msg = GBB.L.JOIN_REQUEST_MESSAGE
+	end
 	local replacements = {
 		-- note: the '%' in '%key' needs to be lua escaped with another '%' for the `gsub` function.
 		-- (they DO NOT need to be escaped in the JOIN_REQUEST_MESSAGE string).
