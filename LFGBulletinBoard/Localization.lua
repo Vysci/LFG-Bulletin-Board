@@ -73,6 +73,29 @@ local preLocalizedFallbacks = {
 	["CboxTagsSpanish"] = LFG_LIST_LANGUAGE_ESES,
 }
 
+-- localized strings keyed by string identifier key
+local localizedAddonDisplayStrings = {
+	JOIN_REQUEST_HEADER = {
+        enUS = "Alt+Click to Request to Join Group",
+        deDE = "Alt+Klick, um Beitritt zur Gruppe anzufragen",
+        esMX = "Alt+clic para solicitar unirse al grupo",
+        frFR = "Alt+clic pour demander à rejoindre le groupe",
+        ptBR = "Alt+Clique para solicitar entrada no grupo",
+        ruRU = "Alt+щелчок, чтобы отправить запрос на вступление в группу",
+        zhCN = "按住Alt+点击以申请加入队伍",
+        zhTW = "按住Alt+鍵點擊以申請加入團隊",
+    },
+	JOIN_REQUEST_REPLACEMENTS_TIP = {
+        enUS = "Available replacements:|n%role - Role |n%class - Class |n%level - Level |n%dungeon - Dungeon",
+		deDE = "Verfügbare Ersetzungen:|n%role - Rolle |n%class - Klasse |n%level - Stufe |n%dungeon - Dungeon",
+        esMX = "Sustituciones disponibles:|n%role - Función |n%class - Clase |n%level - Nivel |n%dungeon - Calabozo",
+        frFR = "Remplacements disponibles:|n%role - Rôle |n%class - Classe |n%level - Niveau |n%dungeon - Donjon",
+        ptBR = "Substituições disponíveis:|n%role - Função |n%class - Classe |n%level - Nível |n%dungeon - Masmorra",
+        ruRU = "Доступные замены:|n%role - Роль |n%class - Класс |n%level - Уровень |n%dungeon - Подземелье",
+        zhCN = "可用替换：|n%role - 职责 |n%class - 职业 |n%level - 等级 |n%dungeon - 地下城",
+        zhTW = "適用的替代項目：|n%role - 角色類型 |n%class - 職業 |n%level - 等級 |n%dungeon - 地城",
+	}
+}
 ---Localized addon strings, keyed by locale
 GBB.locales = {
 	enGB = {
@@ -325,7 +348,7 @@ GBB.locales = {
 		NO_FILTERS_SELECTED = "¡No hay resultados!|nModifica las mazmorras y bandas rastreadas en la configuración de filtros del addon.",
 		-- ["lfg_channel"]="BuscarGrupo", -- uses fallback
 		["world_channel"] = "Mundo",
-		["SAVE_ON_ENTER"] = ("Pulse \"%strings\" para guardar los cambios."):format(KEY_ENTER),
+		["SAVE_ON_ENTER"] = ("Pulse \"%s\" para guardar los cambios."):format(KEY_ENTER),
 	},
 	frFR = {
 	NO_FILTERS_SELECTED = "Aucun résultat!|nModifiez les donjons et raids suivis dans les paramètres de filtre de l'addon.",
@@ -833,7 +856,12 @@ GBB.locales.enUS=GBB.locales.enGB
 function GBB.LocalizationInit()
 	local locale = GetLocale()
 	local localizedStrings = GBB.locales[locale] or {};
-	
+	for key, l10nTable in pairs(localizedAddonDisplayStrings) do
+		l10nTable.esES = l10nTable.esES or l10nTable.esMX
+		if localizedStrings[key] == nil then
+			localizedStrings[key] = l10nTable[locale] or l10nTable.enUS
+		end
+	end
 	if GroupBulletinBoardDB
 	and type(GroupBulletinBoardDB.CustomLocales) == "table"
 	then
