@@ -371,8 +371,41 @@ function GBB.OptionsInit ()
 	CheckBox("DontTrunicate",false)
 	CheckBox("EnableShowOnly",false)		
 	GBB.OptionsBuilder.Indent(30)
-	CreateEditBoxNumber("ShowOnlyNb",4,50)	
+	CreateEditBoxNumber("ShowOnlyNb", 4, 50)
 	GBB.OptionsBuilder.Indent(-30)
+	GBB.OptionsBuilder.AddSpacerToPanel(0.4)
+	do
+		local checkbox = GBB.OptionsBuilder.AddCheckBoxToCurrentPanel(GBB.DB, "EnableJoinRequestMessage",
+			true, GBB.L.JOIN_REQUEST_HEADER
+		)
+		GBB.OptionsBuilder.AddSpacerToPanel(0.1)
+		local editbox = GBB.OptionsBuilder.AddEditBoxToCurrentPanel(GBB.DB, "JoinRequestMessage",
+			GBB.L.JOIN_REQUEST_MESSAGE, '', 450, 0, false, GBB.L.JOIN_REQUEST_REPLACEMENTS_TIP, GBB.L.JOIN_REQUEST_MESSAGE
+		)
+		editbox:SetText(editbox:GetSavedValue())
+		local onFocusChanged = function(self) ---@cast self EditBox
+			local isFocused = self:HasFocus()
+			checkbox.Text:SetText(isFocused and GBB.L.SAVE_ON_ENTER or GBB.L.JOIN_REQUEST_HEADER)
+			checkbox.Text:SetTextColor((isFocused and RED_FONT_COLOR or NORMAL_FONT_COLOR):GetRGB())
+		end
+		editbox:HookScript("OnEditFocusGained", onFocusChanged)
+		editbox:HookScript("OnEditFocusLost", onFocusChanged)
+		editbox:OnSavedVarUpdate(function(value) ---@cast value string?
+			if not value or strlenutf8(value) == 0 then
+				editbox:SetSavedValue(GBB.L.JOIN_REQUEST_MESSAGE)
+				editbox:SetText(GBB.L.JOIN_REQUEST_MESSAGE)
+			end
+		end)
+		local ogCheckboxFunc = checkbox.updateFunc -- save reference since overwriting with OnSavedVarUpdate call.
+		local updateWidgets = function(value)
+			if ogCheckboxFunc then ogCheckboxFunc(value) end
+			editbox:SetEnabled(value)
+			editbox:SetTextColor((value and WHITE_FONT_COLOR or GRAY_FONT_COLOR):GetRGB())
+			checkbox.Text:SetTextColor((value and NORMAL_FONT_COLOR or GRAY_FONT_COLOR):GetRGB())
+		end
+		updateWidgets(checkbox:GetSavedValue())
+		checkbox:OnSavedVarUpdate(updateWidgets)
+	end
 	GBB.OptionsBuilder.AddColorSwatchToCurrentPanel(GBB.DB,"EntryColor",{r=1,g=1,b=1,a=1},GBB.L["BtnEntryColor"])
 	GBB.OptionsBuilder.AddColorSwatchToCurrentPanel(GBB.DB,"HeroicDungeonColor",{r=1,g=0,b=0,a=1},GBB.L["BtnHeroicDungeonColor"])
 	GBB.OptionsBuilder.AddColorSwatchToCurrentPanel(GBB.DB,"NormalDungeonColor",{r=0,g=1,b=0,a=1},GBB.L["BtnNormalDungeonColor"])
