@@ -1,5 +1,5 @@
 local tocName,
-    ---@class Addon_DungeonData
+    ---@class Addon_DungeonData: Addon_Localization
     addon = ...;
 
 if WOW_PROJECT_ID ~= WOW_PROJECT_CLASSIC then return end
@@ -41,6 +41,11 @@ local Expansions = {
 }
 
 local isSoD = C_Seasons and (C_Seasons.GetActiveSeason() == Enum.SeasonID.SeasonOfDiscovery)
+
+-- hacky way to get the localization table. rework in the future
+-- side-effects:
+-- custom users set translatiosn in the `Localization` settings panel will not apply to strings used in this file.
+local L = addon.LocalizationInit()
 
 local debug = false
 local print = function(...) if debug then print(tocName, ...) end end
@@ -105,14 +110,9 @@ local idToDungeonKey = tInvert(LFGActivityIDs)
 
 --- Any info that needs to be overridden/spoofed for a specific instances should be done here.
 local infoOverrides = {
-    -- todo: add the localized boss name, to the parsed dungeon name for the SoD instanced world bosses.
-    -- ex: https://wago.tools/db2/DungeonEncounter?build=1.15.5.57638&sort[Name_lang]=asc&filter[ID]=3079
-    CRY = isSoD and {
-        name = "Crystal Vale - Prince Thunderaan",
-        typeID = DungeonType.WorldBoss,
-    },
-    AZGS = { typeID = DungeonType.WorldBoss },
-    KAZK = { typeID = DungeonType.WorldBoss },
+    CRY = isSoD and { name = L.THUNDERAAN, typeID = DungeonType.WorldBoss },
+    AZGS = { name = L.AZUREGOS, typeID = DungeonType.WorldBoss },
+    KAZK = { name = L.LORD_KAZZAK, typeID = DungeonType.WorldBoss },
     NMG = isSoD and { typeID = DungeonType.WorldBoss },
     -- Strat is split into "Main"/"Service" Gates between 2 IDs. We use just the plain zone name.
     STR = { name = GetRealZoneText(329) },

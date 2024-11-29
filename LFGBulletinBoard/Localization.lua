@@ -104,7 +104,37 @@ local localizedAddonDisplayStrings = {
         ruRU = "Боссы вне подземелий",
         zhCN = "世界首领们",
         zhTW = "世界首領們",
-	}
+	},
+	LORD_KAZZAK = {
+		enUS = "Lord Kazzak",
+		deDE = "Lord Kazzak",
+		esMX = "Lord Kazzak",
+		frFR = "Seigneur Kazzak",
+		ptBR = "Lorde Kazzak",
+		ruRU = "Владыка Каззак",
+		zhCN = "卡扎克",
+		zhTW = "卡札克領主",
+	},
+	AZUREGOS = {
+		enUS = "Azuregos",
+		deDE = "Azuregos",
+		esMX = "Azuregos",
+		frFR = "Azuregos",
+		ptBR = "Azuregos",
+		ruRU = "Азурегос",
+		zhCN = "艾索雷葛斯",
+		zhTW = "艾索雷苟斯",
+	},
+	THUNDERAAN = {
+		enUS = "Prince Thunderaan",
+		deDE = "Prinz Donneraan",
+		esMX = "Príncipe Thunderaan",
+		frFR = "Prince Tonneraan",
+		ptBR = "Príncipe Trovejardus",
+		ruRU = "Принц Громораан",
+		zhCN = "桑德兰王子",
+		zhTW = "桑德蘭王子",
+	},
 }
 ---Localized addon strings, keyed by locale
 GBB.locales = {
