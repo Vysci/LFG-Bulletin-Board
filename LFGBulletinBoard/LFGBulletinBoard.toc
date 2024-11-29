@@ -14,8 +14,8 @@ Localization.lua
 dungeons/classic.lua
 dungeons/cata.lua
 CustomCategories.lua
-Dungeons.lua
 Tags.lua
+Dungeons.lua
 RequestList.lua
 Options.lua
 GroupList.Lua
