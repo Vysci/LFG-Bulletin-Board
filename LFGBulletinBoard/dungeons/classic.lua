@@ -88,12 +88,11 @@ local LFGActivityIDs = {
     ["AB"] = 930,  -- Arathi Basin [926-930]
     ["AV"] = 932,  -- Alterac Valley
     -- SoD Specific
-    ["WB"] = isSoD and 6969 or nil,  -- World Bosses (Used to group Azuregoes/Kazzak) *spoofed*
     ["DFC"] = isSoD and 1607 or nil, -- Demon Fall Canyon
-    -- ["AZGS"] = isSoD and 1608 or nil, -- Storm Cliffs (Azuregoes)
-    -- ["KAZK"] = isSoD and 1609 or nil, -- Tainted Scar (Kazzak)
+    ["AZGS"] = isSoD and 1608 or nil, -- Storm Cliffs (Azuregoes)
+    ["KAZK"] = isSoD and 1609 or nil, -- Tainted Scar (Kazzak)
     ["CRY"] = isSoD and 1611 or nil, -- Crystal Vale (Thunderaan)
-    -- ["NMG"] = isSoD and 1610 or nil, -- Nightmare Grove (Emerald Dragons)
+    ["NMG"] = isSoD and 1610 or nil, -- Nightmare Grove (Emerald Dragons)
 }
 --see https://wago.tools/db2/GroupFinderCategory?build=1.15.2.54332
 local activityCategoryTypeID  = {
@@ -116,12 +115,6 @@ local infoOverrides = {
     WSG = { minLevel = 10, maxLevel = 60 },
     AB = { minLevel = 20, maxLevel = 60 },
     -- Note: Following entries for are completely spoofed. hardcoded info here.
-    WB = isSoD and {
-        name = "World Bosses",
-        minLevel = 60,
-        maxLevel = 60,
-        typeID = DungeonType.Raid,
-    },
     SM2 = {
         name = GetRealZoneText(189),
         minLevel = 30, -- SMG min
