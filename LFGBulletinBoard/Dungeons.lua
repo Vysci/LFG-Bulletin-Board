@@ -1,5 +1,5 @@
 local TOCNAME,
-	---@class Addon_Dungeons : Addon_DungeonData	
+	---@class Addon_Dungeons : Addon_Tags, Addon_DungeonData
 	GBB = ...;
 
 local isClassicEra = WOW_PROJECT_ID == WOW_PROJECT_CLASSIC
@@ -712,10 +712,6 @@ GBB.VanillaDungeonKeys = GBB.GetSortedDungeonKeys(
 	GBB.Enum.Expansions.Classic,
 	{ GBB.Enum.DungeonType.Dungeon, GBB.Enum.DungeonType.Raid }
 );
-
-
--- table used in Tags.lua for determining which tags are safe for game version
-GBB.Misc = {"MISC", "TRADE", "TRAVEL"}
 
 -- clear unused dungeons in classic to not generate options/checkboxes with the-
 -- new data pipeline api these tables should already empty anyways when in classic client

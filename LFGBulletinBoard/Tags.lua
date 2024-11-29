@@ -1,5 +1,5 @@
 local TOCNAME, 
-	---@class Addon_Tags: Addon_Dungeons
+	---@class Addon_Tags: Addon_DungeonData
 	GBB = ...;
 
 local isClassicEra = WOW_PROJECT_ID == WOW_PROJECT_CLASSIC
@@ -1055,9 +1055,11 @@ local miscTags = {
 	  zhTW = nil,
 	  zhCN = nil,
 	},
+	MISC = { --[[Misc messages, no defined tags. see `GBB.GetDungeons`]]},
 }
 
---- Secondary Dungeon Tags: related to identifying dungeon or activity name from a message.
+--- Secondary Dungeon Tags: used for groupable categories such as Scarlet Monastery
+--- note: DEADMINES entry used for an edge case in categorizing between Dire Maul and Deadmines
 local dungeonSecondTags = {
 	["DEADMINES"] = { "DM", "-DMW", "-DME", "-DMN" },
 	["SM2"] = { "SMG", "SML", "SMA", "SMC" },
@@ -1082,31 +1084,24 @@ for _, categoryTags in pairs({dungeonTags, miscTags}) do
 	end
 end
 
-GBB.dungeonTagsLoc = dungeonTagsLoc
 GBB.dungeonSecondTags = dungeonSecondTags
 GBB.suffixTagsLoc = langSplit(suffixTags)
 GBB.searchTagsLoc = langSplit(searchTags)
 GBB.badTagsLoc = langSplit(badTags)
 GBB.heroicTagsLoc = langSplit(heroicTags)
+GBB.Misc = (function() local t = {}; for k, _ in pairs(miscTags) do table.insert(t,k); end return t; end)()
 
+GBB.dungeonTagsLoc = dungeonTagsLoc
 -- Remove any unused dungeon tags based on game version
-
--- Passing no specific dungeonType or ExpansionID will yeild all available.
--- This includes raids/bgs/arenas/dungeons from classic up to current expansion
-local validDungeonKeys = GBB.GetSortedDungeonKeys()
-local validGameVersionKeys = {}
-for _, key in ipairs(validDungeonKeys) do
-	validGameVersionKeys[key] = true
-end
--- manually add MISC entries to validGameVersionKeys, this is kinda hacky atm.
-for _, key in ipairs(GBB.Misc) do	
-	validGameVersionKeys[key] = true
-end
+local clientDungeonKeys = GBB.GetSortedDungeonKeys() -- includes raids/bgs/dungeons for all valid expansions.
+clientDungeonKeys = (function() ---@type table<string, boolean> convert to map
+	local t = {}; for _, key in ipairs(clientDungeonKeys) do t[key] = true; end return t;
+end)()
 -- iterate over all locales and `nil` out any entries for dungeons not in current client
 for locale, dungeonTags in pairs(GBB.dungeonTagsLoc) do
 	for dungeonKey, _ in pairs(dungeonTags) do
-		if not (validGameVersionKeys[dungeonKey] 
-			or GBB.dungeonSecondTags[dungeonKey]
+		if not (clientDungeonKeys[dungeonKey]
+			or dungeonSecondTags[dungeonKey]
 			or miscTags[dungeonKey])
 		then
 			GBB.dungeonTagsLoc[locale][dungeonKey] = nil
