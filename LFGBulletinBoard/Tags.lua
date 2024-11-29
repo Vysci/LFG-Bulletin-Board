@@ -113,20 +113,17 @@ local dungeonTags = {
 		zhTW = "地穴",
 		zhCN = "地穴",
 	},
-	WB = { -- World Bosses
-		enGB = "azu azuregos azregos world bosses wboss kazzak kaz",
-		deDE = nil,
-		ruRU = nil,
-		frFR = nil,
-		zhTW = nil,
-		zhCN = nil,
+	AZGS = { -- Azuregos
+		enGB = "azu azuregos azregos",
 	},
-	CRY = { -- Crystal vale
+	KAZK = { -- Lord Kazzak
+		enGB = "kazzak kaz",
+	},
+	CRY = { -- Crystal vale (Thunderaan)(SoD only)
 		enGB = "crystal vale thunderan thunderaan",
-		ruRU = nil,  
-		frFR = nil,  
-		zhTW = nil,
-		zhCN = nil,
+	},
+	NMG = { -- Nightmare Grove (Emerald Dragons)(SoD only)
+		enGB = "grove nmg dragons",
 	},
 	AZN = { -- Azjol-Nerub
 		enGB = "azn an nerub",
