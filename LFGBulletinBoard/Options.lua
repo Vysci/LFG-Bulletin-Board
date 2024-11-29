@@ -169,7 +169,17 @@ local function GenerateExpansionPanel(expansionID)
 	for _, key in pairs(raids) do
 		tinsert(filters, CheckBoxFilter(key, enabled))
 	end
-
+	if isClassicEra then -- World Bosses
+		local bosses = GBB.GetSortedDungeonKeys(expansionID, GBB.Enum.DungeonType.WorldBoss)
+		if #bosses > 0 then
+			GBB.OptionsBuilder.Indent(-10)
+			GBB.OptionsBuilder.AddHeaderToCurrentPanel(GBB.L.WORLD_BOSSES)
+			GBB.OptionsBuilder.Indent(10)
+			for _, key in pairs(bosses) do
+				tinsert(filters, CheckBoxFilter(key, enabled))
+			end
+		end
+	end
 	-- Battlegrounds (bg are all consider part of latest expansion atm)
 	if #bgs > 0 then
 		if isCurrentXpac and not isClassicEra then
