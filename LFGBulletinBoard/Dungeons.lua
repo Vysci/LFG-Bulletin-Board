@@ -667,7 +667,7 @@ local pvpNames = GBB.GetSortedDungeonKeys(nil, GBB.Enum.DungeonType.Battleground
 
 local debugNames = {"DEBUG", "BAD", "NIL"}
 
-local raidNames = GBB.GetSortedDungeonKeys(nil, GBB.Enum.DungeonType.Raid);
+local raidNames = GBB.GetSortedDungeonKeys(nil,{ GBB.Enum.DungeonType.Raid, GBB.Enum.DungeonType.WorldBoss });
 
 -- Becasue theyre not actually dungeons and are not parsed by 
 -- `/data/dungeons/{version}.lua` we need to add them manually
@@ -708,9 +708,9 @@ end
 
 -- used in Tags.lua for determining which tags are safe for game version
 -- used in Options.lua for determining adding filter boxes
-GBB.VanillaDungeonKeys = GBB.GetSortedDungeonKeys(
+local vanillaDungeonKeys = GBB.GetSortedDungeonKeys(
 	GBB.Enum.Expansions.Classic,
-	{ GBB.Enum.DungeonType.Dungeon, GBB.Enum.DungeonType.Raid }
+	{ GBB.Enum.DungeonType.Dungeon, GBB.Enum.DungeonType.Raid, GBB.Enum.DungeonType.WorldBoss }
 );
 
 -- clear unused dungeons in classic to not generate options/checkboxes with the-
@@ -739,11 +739,11 @@ function GBB.GetDungeonSort(additonalCategories)
 		additonalCategories = {} --[[@as string[] ]]
 	end
 	local dungeonOrder = { 
-		GBB.VanillaDungeonKeys, tbcDungeonNames, wotlkDungeonNames, cataDungeonKeys, 
+		vanillaDungeonKeys, tbcDungeonNames, wotlkDungeonNames, cataDungeonKeys, 
 		pvpNames, additonalCategories, GBB.Misc, debugNames
 	}
 
-	local vanillaDungeonSize = #GBB.VanillaDungeonKeys
+	local vanillaDungeonSize = #vanillaDungeonKeys
 	local tbcDungeonSize = #tbcDungeonNames
 	local wotlkDungeonSize = #wotlkDungeonNames
 	local cataDungeonSize = #cataDungeonKeys

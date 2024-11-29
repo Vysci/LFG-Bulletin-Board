@@ -448,7 +448,7 @@ function GBB.CreateTagList ()
 		GBB.heroicTagsLoc["custom"]=GBB.Split(GBB.DB.Custom.Heroic)
 
 		local sortedDungeonKeys = GBB.GetSortedDungeonKeys( -- dungeons & raids for all expansions
-			nil, {GBB.Enum.DungeonType.Dungeon, GBB.Enum.DungeonType.Raid}
+			nil, {GBB.Enum.DungeonType.Dungeon, GBB.Enum.DungeonType.Raid, GBB.Enum.DungeonType.WorldBoss}
 		)
 		-- insert a "custom" locale to `dungeonTagsLoc` for custom tags (before calling `setTagListByLocale`).
 		GBB.dungeonTagsLoc["custom"]={}

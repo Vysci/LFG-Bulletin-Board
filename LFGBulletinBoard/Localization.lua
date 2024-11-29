@@ -94,6 +94,16 @@ local localizedAddonDisplayStrings = {
         ruRU = "Доступные замены:|n%role - Роль |n%class - Класс |n%level - Уровень |n%dungeon - Подземелье",
         zhCN = "可用替换：|n%role - 职责 |n%class - 职业 |n%level - 等级 |n%dungeon - 地下城",
         zhTW = "適用的替代項目：|n%role - 角色類型 |n%class - 職業 |n%level - 等級 |n%dungeon - 地城",
+	},
+	WORLD_BOSSES = {
+		enUS = "World Bosses",
+        deDE = "Weltbosse",
+        esMX = "Jefes de mundo",
+        frFR = "Boss hors instance",
+        ptBR = "Chefes Mundiais",
+        ruRU = "Боссы вне подземелий",
+        zhCN = "世界首领们",
+        zhTW = "世界首領們",
 	}
 }
 ---Localized addon strings, keyed by locale

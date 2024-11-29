@@ -29,6 +29,7 @@ local DungeonType = {
     Raid = 2,
     None = 4,
     Battleground = 5, -- in classic, 5 is used for BGs
+    WorldBoss = 6,
 }
 
 ---@enum ExpansionID
@@ -108,7 +109,11 @@ local infoOverrides = {
     -- ex: https://wago.tools/db2/DungeonEncounter?build=1.15.5.57638&sort[Name_lang]=asc&filter[ID]=3079
     CRY = isSoD and {
         name = "Crystal Vale - Prince Thunderaan",
+        typeID = DungeonType.WorldBoss,
     },
+    AZGS = { typeID = DungeonType.WorldBoss },
+    KAZK = { typeID = DungeonType.WorldBoss },
+    NMG = isSoD and { typeID = DungeonType.WorldBoss },
     -- Strat is split into "Main"/"Service" Gates between 2 IDs. We use just the plain zone name.
     STR = { name = GetRealZoneText(329) },
     -- GetActivityInfoTable has unique entries for each BG level bracket. We however use a single entry.
