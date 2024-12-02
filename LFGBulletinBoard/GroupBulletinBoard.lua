@@ -485,9 +485,9 @@ local function hooked_createTooltip(self)
 	if (name) and (unit) and UnitIsPlayer(unit) then
 	
 		if GBB.DB.EnableGuild then
-			local guildName, guildRankName, guildRankIndex, realm = GetGuildInfo(unit)
-			if guildName and guildRankName then
-				self:AddLine(GBB.Tool.RGBtoEscape(GBB.DB.ColorGuild).."< "..guildName.." / "..guildRankName.." >")
+			local guildName = GetGuildInfo(unit)
+			if guildName then
+				self:AddLine(Mixin(ColorMixin, GBB.DB.ColorGuild):WrapTextInColorCode(("<%s>"):format(guildName)))
 			end
 		end
 
