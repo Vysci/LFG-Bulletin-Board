@@ -1,4 +1,13 @@
 Group Bulletin Board
+3.41
+ - Added input box to modify the "alt-click to send role message" message in the main addon settings panel.
+   - can now use `%level` `%class` `%role` in the message which will be replaced with the character's level, class, and group role respectively.
+   - additionally, the functionality can now be disabled all-together with the checkbox (enabled by default).
+ - Modified displays for World Bosses in Season of Discovery
+   - Now using world boss names instead of location names.
+   - World boss categories now separated from 'Raids' in the classic filters settings panel
+ - Removed guild rank text from the "Add guild in player tooltip" setting
+   - note: if this was feature you used, please open a github issue or comment and request it be added back in!
 
 3.40
   - Remove deprecated xml elements and API calls causing errors in 1.15.5
