@@ -1,10 +1,16 @@
 
-local 	TOCNAME,GBB=...
+local TOCNAME,
+---@class Addon_LFGTool: Addon_GroupBulletinBoard
+GBB=...
 
 local MAXGROUP=500
 local LastUpdateTime = time()
 local requestNil={dungeon="NIL",start=0,last=0,name=""}
 local isCata = WOW_PROJECT_ID == WOW_PROJECT_CATACLYSM_CLASSIC
+local isClassicEra = WOW_PROJECT_ID == WOW_PROJECT_CLASSIC
+local LFGTool = {
+	requestList = {},
+}
 local function requestSort_TOP_TOTAL (a,b)
 	if GBB.dungeonSort[a.dungeon] < GBB.dungeonSort[b.dungeon] then
 		return true
@@ -167,81 +173,6 @@ local function createMenu(DungeonID,req)
 	GBB.PopupDynamic:Show()
 end
 
-
-function GBB.GetLfgList()
-
-	local totalResultsFound, results = C_LFGList.GetSearchResults()
-
-	for _, v in pairs(results) do
-		local dungeonTXT=""
-
-        local searchResultData = C_LFGList.GetSearchResultInfo(v)
-
-        if searchResultData.isDelisted == false then
-            local requestTime=time() -  searchResultData.age
-
-            local msg = ""
-            if searchResultData.comment ~= nil and string.len(searchResultData.comment) > 2 then
-                msg = searchResultData.comment
-            end
-
-                for _, activityID in pairs(searchResultData.activityIDs) do
-                    local activityInfo = C_LFGList.GetActivityInfoTable(activityID)
-                    local activityGroupName, _ = C_LFGList.GetActivityGroupInfo(activityInfo.groupFinderActivityGroupID)
-                    local combinedMsg = activityInfo.fullName .. " " .. activityGroupName
-                    local dungeonList, _, _, _, isHeroic = GBB.GetDungeons(combinedMsg, searchResultData.leaderName)
-
-                    for dungeon, id in pairs(dungeonList) do
-                        local index=0
-                        if id== true and dungeon~=nil then
-            
-                            for ir,req in pairs(GBB.LfgRequestList) do
-                                if type(req) == "table" and req.name == searchResultData.leaderName and req.dungeon == dungeon then
-                                    index=ir
-                                    break
-                                end
-                            end
-
-                            local isRaid = GBB.RaidList[dungeon] ~= nil
-            
-                            if index==0 then
-								local playerInfo = C_LFGList.GetSearchResultPlayerInfo(searchResultData.searchResultID, 1)
-                                local partyInfo = GBB.GetPartyInfo(searchResultData.searchResultID, searchResultData.numMembers)
-                                index=#GBB.LfgRequestList +1
-                                GBB.LfgRequestList[index]={}
-                                GBB.LfgRequestList[index].class=playerInfo.classFilename
-                                GBB.LfgRequestList[index].partyInfo=partyInfo
-                                GBB.LfgRequestList[index].start=requestTime
-                                GBB.LfgRequestList[index].dungeon=dungeon
-
-                                GBB.LfgRequestList[index].IsGuildMember=false
-                                GBB.LfgRequestList[index].IsFriend=false
-                                GBB.LfgRequestList[index].IsPastPlayer=GBB.GroupTrans[searchResultData.leaderName]~=nil
-            
-                                if GBB.FilterDungeon(dungeon, isHeroic, isRaid) and GBB.LfgFoldedDungeons[dungeon]~= true then
-                                    if dungeonTXT=="" then
-                                        dungeonTXT=GBB.dungeonNames[dungeon]
-                                    else
-                                        dungeonTXT=GBB.dungeonNames[dungeon]..", "..dungeonTXT
-                                    end
-                                end
-                            end
-
-                            GBB.LfgRequestList[index].name=searchResultData.leaderName
-                            GBB.LfgRequestList[index].message= msg
-                            GBB.LfgRequestList[index].IsHeroic = isHeroic
-                            GBB.LfgRequestList[index].IsRaid = isRaid
-                            GBB.LfgRequestList[index].last= requestTime
-                            GBB.LfgRequestList[index].IsLfgTool = true
-                            GBB.LfgRequestList[index].IsDelisted = searchResultData.isDelisted
-                            GBB.LfgRequestList[index].resultId = searchResultData.searchResultID
-                        end
-                    end
-                end
-        end
-    end
-end
-
 function GBB.UpdateLfgTool()
 	-- named differently on cata/era
 	local LFGListFrame = isCata and _G.LFGListFrame or _G.LFGListingFrame
@@ -264,7 +195,7 @@ function GBB.UpdateLfgTool()
 		if LFGListFrame and LFGListFrame.searching then return end
 	end
 
-		GBB.GetLfgList()
+		GBB.LfgRequestList = LFGTool:UpdateRequestList()
 		GBB.LfgUpdateList()
 end
 
@@ -278,8 +209,7 @@ function GBB.UpdateLfgToolNoSearch()
 
 	if LFGListFrame and LFGListFrame.searching then return end
 
-    GBB.LfgRequestList = {}
-    GBB.GetLfgList()
+    GBB.LfgRequestList = LFGTool:UpdateRequestList()
     GBB.LfgUpdateList()
 end
 
@@ -412,9 +342,9 @@ local function CreateItem(yy,i,doCompact,req,forceHight)
 		end
 
 
-		local FriendIcon=(req.IsFriend and string.format(GBB.TxtEscapePicture,GBB.FriendIcon) or "") ..
-						 (req.IsGuildMember and string.format(GBB.TxtEscapePicture,GBB.GuildIcon) or "") ..
-						 (req.IsPastPlayer and string.format(GBB.TxtEscapePicture,GBB.PastPlayerIcon) or "")
+		local FriendIcon=(req.isFriend and string.format(GBB.TxtEscapePicture,GBB.FriendIcon) or "") ..
+						 (req.isGuildMember and string.format(GBB.TxtEscapePicture,GBB.GuildIcon) or "") ..
+						 (req.isPastPlayer and string.format(GBB.TxtEscapePicture,GBB.PastPlayerIcon) or "")
 
 		local suffix="|r"
 
@@ -433,10 +363,10 @@ local function CreateItem(yy,i,doCompact,req,forceHight)
 		end
 
 		local typePrefix
-		if req.IsHeroic == true then
+		if req.isHeroic == true then
 			local colorHex = GBB.Tool.RGBPercToHex(GBB.DB.HeroicDungeonColor.r,GBB.DB.HeroicDungeonColor.g,GBB.DB.HeroicDungeonColor.b)
 			typePrefix = "|c00".. colorHex .. "[" .. GBB.L["heroicAbr"] .. "]     "
-		elseif req.IsRaid == true then
+		elseif req.isRaid == true then
 			typePrefix = "|c00ffff00" .. "[" .. GBB.L["raidAbr"] .. "]     "
 		else
 			local colorHex = GBB.Tool.RGBPercToHex(GBB.DB.NormalDungeonColor.r,GBB.DB.NormalDungeonColor.g,GBB.DB.NormalDungeonColor.b)
@@ -605,7 +535,7 @@ function GBB.LfgUpdateList()
 	for i,req in pairs(GBB.LfgRequestList) do
 		if type(req) == "table" then
 
-			if (ownRequestDungeons[req.dungeon]==true or GBB.FilterDungeon(req.dungeon, req.IsHeroic, req.IsRaid)) then
+			if (ownRequestDungeons[req.dungeon]==true or GBB.FilterDungeon(req.dungeon, req.isHeroic, req.isRaid)) then
 
 				count= count + 1
 
@@ -623,7 +553,7 @@ function GBB.LfgUpdateList()
 						end
 						hi=hi+1
 
-						if (ownRequestDungeons[GBB.dungeonSort[hi]]==true or GBB.FilterDungeon(GBB.dungeonSort[hi], req.IsHeroic, req.IsRaid)) then
+						if (ownRequestDungeons[GBB.dungeonSort[hi]]==true or GBB.FilterDungeon(GBB.dungeonSort[hi], req.isHeroic, req.isRaid)) then
 							yy=CreateHeader(yy,GBB.dungeonSort[hi])
 							cEntrys=0
 						else
@@ -700,7 +630,7 @@ function GBB.LfgClickRequest(self,button)
 		elseif IsAltKeyDown() then
 			-- Leaving this here for a message without the automatic invite request
 			-- as it obviously doesn't affect overall functionality. 
-			InviteRequestWithRole(req.name,req.dungeon,req.IsHeroic,req.IsRaid)
+			InviteRequestWithRole(req.name,req.dungeon,req.isHeroic,req.isRaid)
 		elseif IsControlKeyDown() then
 			InviteRequest(req.name)
 		else
@@ -708,7 +638,7 @@ function GBB.LfgClickRequest(self,button)
             if UnitIsGroupLeader("player", LE_PARTY_CATEGORY_HOME) or searchResult.numMembers == 1 then
                 InviteRequest(req.name)
             elseif searchResult.isDelisted == false and searchResult.numMembers ~= 5 then 
-				InviteRequestWithRole(req.name,req.dungeon,req.IsHeroic,req.IsRaid) -- sends message telling leader your role
+				InviteRequestWithRole(req.name,req.dungeon,req.isHeroic,req.isRaid) -- sends message telling leader your role
                 RequestInviteFromUnit(searchResult.leaderName) -- requests the actual invite. 
             end
 		end
@@ -770,4 +700,91 @@ end
 
 function GBB.LfgRequestHideTooltip(self)
 	GameTooltip:Hide()
+end
+
+---@param name string
+---@param id number
+local getActivityDungeonKey = function(name, id)
+	local dungeonKey
+	if isClassicEra then
+		dungeonKey = GBB.GetDungeonKeyByID({activityID = id})
+	end
+	if not dungeonKey then
+		print("Dungeon key not found for activity: " .. name .. id)
+		-- DevTool:AddData(C_LFGList.GetActivityInfoTable(id), id)
+		dungeonKey = "MISC"
+	end	
+	return dungeonKey
+end
+--------------------------------------------------------------------------------
+-- Module public functions
+--------------------------------------------------------------------------------
+function LFGTool:UpdateRequestList()
+	self.requestList = {} -- reset for now
+	local _, results = C_LFGList.GetSearchResults()
+	for _, resultID in ipairs(results) do
+        local searchResultData = C_LFGList.GetSearchResultInfo(resultID)
+        local leaderInfo = C_LFGList.GetSearchResultLeaderInfo(resultID)
+		if not searchResultData.isDelisted and leaderInfo then
+			local isSolo = searchResultData.numMembers == 1
+			local isSelf = leaderInfo.name == UnitNameUnmodified("player")
+            local listingTimestamp = time() - searchResultData.age
+            local message = ""
+            if searchResultData.comment ~= nil and string.len(searchResultData.comment) > 2 then
+                message = searchResultData.comment
+            end
+			for _, activityID in pairs(searchResultData.activityIDs) do
+				local activityInfo = C_LFGList.GetActivityInfoTable(activityID)
+				-- DevTool:AddData(activityInfo, resultID)
+				local dungeonKey = getActivityDungeonKey(activityInfo.fullName, activityID)
+				if dungeonKey == "MISC" then message = message .. " " .. activityInfo.fullName end
+				local partyInfo = {};
+				if not isSolo then for i = 1, searchResultData.numMembers do
+					local memberInfo = C_LFGList.GetSearchResultPlayerInfo(searchResultData.searchResultID, i);
+					partyInfo[i] = {
+						['role'] = memberInfo.assignedRole,
+						['class'] = memberInfo.classFilename,
+						['classLocalized'] = memberInfo.className,
+						['specLocalized'] = memberInfo.specName,
+						full = memberInfo
+					}
+				end; end
+				local _bnetFriends, charFriends, guildMembers = C_LFGList.GetSearchResultFriends(resultID)
+				---@class LFGToolRequestData todo: cleanup unnecessary fields
+				local entry = {
+					-- fields copied from previous request gathering method
+					name = searchResultData.leaderName or UNKNOWN,
+					message = message,
+					class = leaderInfo.classFilename,
+					start = listingTimestamp,
+					dungeon = dungeonKey,
+					partyInfo = partyInfo,
+					isGuildMember = not isSelf and tContains(guildMembers, searchResultData.leaderName),
+					isFriend = not isSelf and tContains(charFriends, searchResultData.leaderName),
+					isPastPlayer = GBB.GroupTrans[searchResultData.leaderName] ~= nil,
+					isHeroic = activityInfo.isHeroicActivity,
+					isRaid = false,
+					last = listingTimestamp,
+					isLfgTool = true,
+					isDelisted = searchResultData.isDelisted,
+					resultId = searchResultData.searchResultID,
+					-- new fields
+					leaderInfo = leaderInfo,
+					listingTimestamp = listingTimestamp,
+					isOwnRequest = searchResultData.hasSelf,
+					isGroupLeader = not isSolo,
+					numMembers = searchResultData.numMembers,
+					roles = leaderInfo.lfgRoles,
+					activityID = activityID,
+					memberRoleCounts = C_LFGList.GetSearchResultMemberCounts(resultID),
+				}
+				table.insert(self.requestList, entry)
+			end
+		end
+    end
+	return self.requestList
+end
+
+function LFGTool:Update()
+	self:UpdateLfgTool()
 end
