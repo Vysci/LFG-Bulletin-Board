@@ -113,6 +113,7 @@ hooksecurefunc(C_LFGList, "Search", function(categoryId, filterVal, preferredFil
 	LastUpdateTime = time()
 end)
 
+local sessionCollapsedHeaders = {} -- session collapsed state. resets on reload
 ---@param scrollView ScrollBoxListTreeListViewMixin
 ---@param requestList LFGToolRequestData[]
 local updateScrollViewData = function(scrollView, requestList)
@@ -196,6 +197,9 @@ local updateScrollViewData = function(scrollView, requestList)
 				-- overwrite `InsertNode` with the same `InsetNodeSkipInvalidation` used by the tree parent node.
 				headerNode.InsertNode = headerNode.parent.InsertNode
 				headerNode:SetSortComparator(requestSortFunc, false, true)
+				if sessionCollapsedHeaders[key] ~= nil then -- explicit nil check for session state.
+					headerNode:SetCollapsed(sessionCollapsedHeaders[key], false, true)
+				else headerNode:SetCollapsed(GBB.DB.HeadersStartFolded, false, true) end
 				shouldUpdate = true
 			end
 			for _, req in pairs(requestsByName) do
@@ -274,6 +278,8 @@ local function IgnoreRequest(name)
 	C_FriendList.AddIgnore(name)
 end
 
+local setAllHeadersCollapsed ---@type function
+local toggleHeaderCollapseByKey ---@type function
 local function createMenu(DungeonID,req)
 	if not GBB.PopupDynamic:Wipe("request"..(DungeonID or "nil")..(req and "request" or "nil")) then
 		return
@@ -286,9 +292,9 @@ local function createMenu(DungeonID,req)
 		GBB.PopupDynamic:AddItem("",true)
 	end
 	if DungeonID then
-		GBB.PopupDynamic:AddItem(GBB.L["BtnFold"], false,GBB.LfgFoldedDungeons,DungeonID)
-		GBB.PopupDynamic:AddItem(GBB.L["BtnFoldAll"], false,GBB.FoldAllDungeon)
-		GBB.PopupDynamic:AddItem(GBB.L["BtnUnFoldAll"], false,GBB.UnfoldAllDungeon)
+		GBB.PopupDynamic:AddItem(GBB.L["BtnFold"], false, toggleHeaderCollapseByKey, DungeonID)
+		GBB.PopupDynamic:AddItem(GBB.L["BtnFoldAll"], false, setAllHeadersCollapsed, true)
+		GBB.PopupDynamic:AddItem(GBB.L["BtnUnFoldAll"], false, setAllHeadersCollapsed, false)
 		GBB.PopupDynamic:AddItem("",true)
 	end
 	GBB.PopupDynamic:AddItem(GBB.L["CboxShowTotalTime"],false,GBB.DB,"ShowTotalTime")
@@ -359,58 +365,6 @@ function GBB.GetPartyInfo(searchResultId, numMembers)
         }
     end
     return partyInfo
-end
-
-local function CreateHeader(yy,dungeon)
-	local AnchorTop="GroupBulletinBoardFrame_LfgChildFrame"
-	local AnchorRight="GroupBulletinBoardFrame_LfgChildFrame"
-	local ItemFrameName="GBB.LfgDungeon_"..dungeon
-
-	if GBB.LfgFramesEntries[dungeon]==nil then
-		GBB.LfgFramesEntries[dungeon]=CreateFrame("Frame",ItemFrameName , GroupBulletinBoardFrame_LfgChildFrame, "GroupBulletinBoard_LfgTmpHeader")
-		GBB.LfgFramesEntries[dungeon]:SetPoint("RIGHT", _G[AnchorRight], "RIGHT", 0, 0)
-		_G[ItemFrameName.."_name"]:SetPoint("RIGHT",GBB.LfgFramesEntries[dungeon], "RIGHT", 0,0)
-		local fname,h=_G[ItemFrameName.."_name"]:GetFont()
-		_G[ItemFrameName.."_name"]:SetHeight(h)
-		_G[ItemFrameName]:SetHeight(h+5)
-		_G[ItemFrameName.."_name"]:SetFontObject(GBB.DB.FontSize)
-
-	end
-
-	local colTXT
-	if GBB.DB.ColorOnLevel then
-		if GBB.dungeonLevel[dungeon][1] ==0 then
-			colTXT="|r"
-		elseif GBB.dungeonLevel[dungeon][2] < GBB.UserLevel then
-			colTXT="|cFFAAAAAA"
-		elseif GBB.UserLevel<GBB.dungeonLevel[dungeon][1] then
-			colTXT="|cffff4040"
-		else
-			colTXT="|cff00ff00"
-		end
-	else
-		colTXT="|r"
-	end
-
-	if LastDungeon~="" and not (lastIsFolded and GBB.LfgFoldedDungeons[dungeon]) then
-		yy=yy+10
-	end
-
-	if GBB.LfgFoldedDungeons[dungeon]==true then
-		colTXT=colTXT.."[+] "
-		lastIsFolded=true
-	else
-		lastIsFolded=false
-	end
-
-	_G[ItemFrameName.."_name"]:SetText(colTXT..GBB.dungeonNames[dungeon].." |cFFAAAAAA"..GBB.LevelRange(dungeon).."|r")
-	_G[ItemFrameName.."_name"]:SetFontObject(GBB.DB.FontSize)
-	GBB.LfgFramesEntries[dungeon]:SetPoint("TOPLEFT",_G[AnchorTop], "TOPLEFT", 0,-yy)
-	GBB.LfgFramesEntries[dungeon]:Show()
-
-	yy=yy+_G[ItemFrameName]:GetHeight()
-	LastDungeon = dungeon
-	return yy
 end
 
 local function CreateItem(yy,i,doCompact,req,forceHight)
@@ -598,21 +552,26 @@ function GBB.ScrollLfgList(self,delta)
 	self:ResetAllFadeTimes()
 end
 
-function GBB.LfgClickDungeon(self,button)
-	local id=string.match(self:GetName(), "GBB.LfgDungeon_(.+)")
-	if id==nil or id==0 then return end
-
-	if button=="LeftButton" then
-		if GBB.LfgFoldedDungeons[id] then
-			GBB.LfgFoldedDungeons[id]=false
+---@param self Button|TreeDataProviderNodeMixin
+---@param clickType mouseButton
+---@param isMouseDown boolean
+local dungeonHeaderClickHandler = function(self, clickType, isMouseDown)
+	local skipInvalidate = false
+	if clickType == "LeftButton" then
+		if IsShiftKeyDown() then
+			local shouldCollapse = not self:IsCollapsed()
+			setAllHeadersCollapsed(shouldCollapse, skipInvalidate)
+			for key, _ in pairs(sessionCollapsedHeaders) do
+				sessionCollapsedHeaders[key] = shouldCollapse
+			end
 		else
-			GBB.LfgFoldedDungeons[id]=true
+			local affectChildren = false
+			self:ToggleCollapsed(affectChildren, skipInvalidate)
+			sessionCollapsedHeaders[self:GetData().dungeon] = self:IsCollapsed()
 		end
-		GBB.UpdateLfgTool()
-	else
-		createMenu(id)
+	elseif clickType == "RightButton" then
+		createMenu(self:GetData().dungeon)
 	end
-
 end
 
 function GBB.LfgClickRequest(self,button)
@@ -698,6 +657,25 @@ function GBB.LfgRequestHideTooltip(self)
 	GameTooltip:Hide()
 end
 
+setAllHeadersCollapsed = function(shouldCollapse, skipInvalidate)
+	local scrollView = LFGTool.ScrollContainer.scrollView
+	local affectChildren = false
+	scrollView.dataProvider.node:SetChildrenCollapsed(shouldCollapse, affectChildren, skipInvalidate)
+	scrollView:ForEachFrame(function(frame, node)
+		if node.data.isHeader then ---@cast frame HeaderButton
+			frame:UpdateTextLayout()
+		end
+	end)
+end
+toggleHeaderCollapseByKey = function(key)
+	local affectChildren = false
+	local skipInvalidate = true
+	LFGTool.ScrollContainer.scrollView:ForEachFrame(function(frame, node)
+		if node.data.isHeader and node.data.dungeon == key then
+			frame:ToggleCollapsed(affectChildren, skipInvalidate)
+		end
+	end)
+end
 ---@param name string
 ---@param id number
 local getActivityDungeonKey = function(name, id)
@@ -719,7 +697,7 @@ local function InitializeHeader(header, node)
 	-- one time inits
 	if not header.created then
 		header.created = true
-		-- header:SetHeight(20)
+		header:RegisterForClicks("AnyDown")
 		header.Name = header:CreateFontString(nil, "ARTWORK", "GameFontNormal")
 		header.Name:SetAllPoints()
 		header.Name:SetFontObject(GBB.DB.FontSize)
@@ -751,9 +729,14 @@ local function InitializeHeader(header, node)
 			self:SetHeight(fontHeight + 4)
 			elementExtentByData[node.data] = self:GetHeight()
 		end
+		function header:ToggleCollapsed(...)
+			header:GetElementData():ToggleCollapsed(...)
+			header:UpdateTextLayout()
+		end
 		-- update highlight color on header hover
 		header:SetScript("OnEnter", header.UpdateTextLayout)
 		header:SetScript("OnLeave", header.UpdateTextLayout)
+		header:HookScript("OnClick", dungeonHeaderClickHandler)
 	end
 	-- regular inits
 	header:UpdateTextLayout()
