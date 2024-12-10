@@ -10,7 +10,14 @@ local isCata = WOW_PROJECT_ID == WOW_PROJECT_CATACLYSM_CLASSIC
 local isClassicEra = WOW_PROJECT_ID == WOW_PROJECT_CLASSIC
 local LFGTool = {
 	requestList = {},
+	---@type LFGToolScrollFrame|Frame
+	ScrollContainer = CreateFrame("Frame", TOCNAME.."LFGToolFrame", GroupBulletinBoardFrame),
+	RefreshButton = GroupBulletinBoardFrameRefreshButton, ---@type Button
+	StatusText = GroupBulletinBoardFrameStatusText, ---@type FontString
 }
+---@class LFGToolScrollFrame
+local LFGToolScrollContainer = LFGTool.ScrollContainer
+
 local function requestSort_TOP_TOTAL (a,b)
 	if GBB.dungeonSort[a.dungeon] < GBB.dungeonSort[b.dungeon] then
 		return true
@@ -60,6 +67,28 @@ local function requestSort_nTOP_nTOTAL (a,b)
 	return false
 end
 
+local requestNodeSortFuncs = { -- expected to be used by a TreeDataProvider sortComparator
+ [1] = function(a, b) return requestSort_TOP_TOTAL(a:GetData().req, b:GetData().req) end,
+ [2] = function(a, b) return requestSort_TOP_nTOTAL(a:GetData().req, b:GetData().req) end,
+ [3] = function(a, b) return requestSort_nTOP_TOTAL(a:GetData().req, b:GetData().req) end,
+ [4] = function(a, b) return requestSort_nTOP_nTOTAL(a:GetData().req, b:GetData().req) end,
+}
+local getRequestNodeSortFunc = function()
+	if GBB.DB.OrderNewTop and GBB.LfgRequestList ~= nil then
+		if GBB.DB.ShowTotalTime then
+			return requestNodeSortFuncs[1]
+		else
+			return requestNodeSortFuncs[2]
+		end
+	elseif  GBB.LfgRequestList ~= nil then
+		if GBB.DB.ShowTotalTime then
+			return requestNodeSortFuncs[3]
+		else
+			return requestNodeSortFuncs[4]
+		end
+	end
+end
+
 local function LFGSearch(categoryId)
     local filterVal = 0
     -- if categoryId == 2 then
@@ -80,6 +109,111 @@ local function LFGSearch(categoryId)
 	languages.ptBR =languages.ptBR or GBB.DB.TagsPortuguese
     C_LFGList.Search(categoryId, filterVal, preferredFilters, languages)
 end
+hooksecurefunc(C_LFGList, "Search", function(categoryId, filterVal, preferredFilters, languages)
+	LastUpdateTime = time()
+end)
+
+---@param scrollView ScrollBoxListTreeListViewMixin
+---@param requestList LFGToolRequestData[]
+local updateScrollViewData = function(scrollView, requestList)
+	---@type TreeDataProviderMixin
+	local categoryNodes = scrollView.dataProvider
+	local requestSortFunc = getRequestNodeSortFunc()
+	local incomingMap = {} -- {[dungeonKey]: {[playerName]: request}}
+	local shouldUpdate = false
+	local numRequests = 0 -- tracks only valid/shown requests
+	local userPlayerName = UnitNameUnmodified("player")
+	local shouldShowRequest = function(request) ---@param request LFGToolRequestData
+		local hasFilterEnabled = GBB.FilterDungeon(request.dungeon, request.isHeroic, request.isRaid)
+		-- the `DontFilterOwn` option == "always show own requests". The var name is very confusing.
+		if not hasFilterEnabled and GBB.DBChar.DontFilterOwn then
+			return request.name == userPlayerName
+		end
+		return hasFilterEnabled
+	end
+	for _, req in ipairs(requestList) do
+		---@cast req LFGToolRequestData
+		if shouldShowRequest(req) then
+			local dungeonKey = req.dungeon
+			if not incomingMap[dungeonKey] then
+				incomingMap[dungeonKey] = {}
+			end
+			numRequests = numRequests + 1
+			incomingMap[dungeonKey][req.name] = req
+		end
+	end
+	LFGTool.numRequests = numRequests
+	if not categoryNodes.node.sortComparator then -- one time setup
+		categoryNodes:SetSortComparator(function(a, b)
+			return GBB.dungeonSort[a:GetData().dungeon] < GBB.dungeonSort[b:GetData().dungeon]
+		end, false, true)
+	end
+	-- enumerate current nodes, update any existing requests, remove any that are no longer present
+	for _, node in categoryNodes:Enumerate(nil, nil, false) do
+		---@cast node TreeDataProviderNodeMixin
+		local elementData = node:GetData()
+		local key = elementData.dungeon or elementData.req.dungeon
+		if elementData.isHeader then -- remove stale headers/categories for the incoming request list
+			if not incomingMap[key] then
+				node.parent:Remove(node, true)
+				shouldUpdate = true
+			end
+			if node.sortComparator ~= requestSortFunc then -- one time setup for headers sort function
+				node:SetSortComparator(requestSortFunc, false)
+			end
+		elseif elementData.isEntry then
+			local incoming = incomingMap[key] and incomingMap[key][elementData.req.name] ---@type LFGToolRequestData?
+			if not incoming then -- remove stale entries from data-provider too
+				node.parent:Remove(node, true)
+				-- print("listing removed for", elementData.req.name, elementData.req.dungeon)
+				shouldUpdate = true
+			else
+				-- if entry unchanged, remove from the todo/incoming list
+				if incoming.last == elementData.req.last
+				and incoming.resultId == elementData.req.resultId
+				and incoming.numMembers == elementData.req.numMembers
+				and incoming.message == elementData.req.message
+				then
+					incomingMap[key][elementData.req.name] = nil
+				else -- remove request node from dataProvider (will be in next re-added step)
+					node.parent:Remove(node, true)
+					shouldUpdate = true
+				end
+			end
+		end
+	end
+	-- insert any remaining new dungeons and request.
+	for key, requestsByName in pairs(incomingMap) do
+		if next(requestsByName) then
+			local anyAdded = false
+			local headerNode = categoryNodes:FindElementDataByPredicate(function(node)
+				---@cast node TreeDataProviderNodeMixin
+				local element = node.data
+				return element.isHeader and element.dungeon == key
+			end, false)
+			if not headerNode then
+				headerNode = categoryNodes:Insert({dungeon = key, isHeader = true})
+				-- overwrite `InsertNode` with the same `InsetNodeSkipInvalidation` used by the tree parent node.
+				headerNode.InsertNode = headerNode.parent.InsertNode
+				headerNode:SetSortComparator(requestSortFunc, false, true)
+				shouldUpdate = true
+			end
+			for _, req in pairs(requestsByName) do
+				headerNode:Insert({req = req, isEntry = true})
+				shouldUpdate = true
+				anyAdded = true
+			end
+			if anyAdded then
+				headerNode:Sort()
+			end
+		end
+	end
+	-- sort and invalidate if any changes were made
+	if shouldUpdate then
+		categoryNodes:Sort() -- must be done before invalidation
+		categoryNodes:Invalidate() -- triggers UI update
+	end
+end
 
 ----------------------------------------------------
 local categoryIdx = 0
@@ -96,7 +230,7 @@ function GBB.BtnRefresh(button)
 end
 
 -- hack: set the refresh button parent to the lfg frame. hides the button when the "Tool Requests" tab is not selected
-GroupBulletinBoardFrameRefreshButton:SetParent(GroupBulletinBoardFrame_LfgFrame)
+LFGTool.RefreshButton:SetParent(LFGTool.ScrollContainer)
 
 local function WhoRequest(name)
 	--DEFAULT_CHAT_FRAME:AddMessage(GBB.MSGPREFIX .. string.format(GBB.L["msgStartWho"],name))
@@ -195,7 +329,8 @@ function GBB.UpdateLfgTool()
 		if LFGListFrame and LFGListFrame.searching then return end
 	end
 
-		GBB.LfgRequestList = LFGTool:UpdateRequestList()
+		LFGTool:UpdateBoardListings()
+		GBB.LfgRequestList = LFGTool.requestList
 		GBB.LfgUpdateList()
 end
 
@@ -209,8 +344,9 @@ function GBB.UpdateLfgToolNoSearch()
 
 	if LFGListFrame and LFGListFrame.searching then return end
 
-    GBB.LfgRequestList = LFGTool:UpdateRequestList()
-    GBB.LfgUpdateList()
+	LFGTool:UpdateBoardListings()
+	GBB.LfgRequestList = LFGTool.requestList
+	GBB.LfgUpdateList()
 end
 
 function GBB.GetPartyInfo(searchResultId, numMembers)
@@ -621,7 +757,6 @@ end
 function GBB.LfgClickRequest(self,button)
 	local id = string.match(self:GetName(), "GBB.LfgItem_(.+)")
 	if id==nil or id==0 then return end
-
 	local req=GBB.LfgRequestList[tonumber(id)]
 	if button=="LeftButton" then
 		if IsShiftKeyDown() then
@@ -710,11 +845,291 @@ local getActivityDungeonKey = function(name, id)
 		dungeonKey = GBB.GetDungeonKeyByID({activityID = id})
 	end
 	if not dungeonKey then
-		print("Dungeon key not found for activity: " .. name .. id)
+		-- print("Dungeon key not found for activity: " .. name .. id)
 		-- DevTool:AddData(C_LFGList.GetActivityInfoTable(id), id)
 		dungeonKey = "MISC"
 	end	
 	return dungeonKey
+end
+local elementExtentByData = {}
+local function InitializeHeader(header, node)
+	---@class HeaderButton: Button, ScrollElementAccessorsMixin
+	local header = header
+	-- one time inits
+	if not header.created then
+		header.created = true
+		-- header:SetHeight(20)
+		header.Name = header:CreateFontString(nil, "ARTWORK", "GameFontNormal")
+		header.Name:SetAllPoints()
+		header.Name:SetFontObject(GBB.DB.FontSize)
+		header.Name:SetJustifyH("LEFT")
+		header.Name:SetJustifyV("MIDDLE")
+		function header:UpdateTextLayout()
+			local node = self:GetElementData()
+			local dungeon = node.data.dungeon
+			local categoryName = GBB.dungeonNames[dungeon]
+			if self:IsCollapsed() then categoryName = "[+] "..categoryName end
+			local levelRange = GRAY_FONT_COLOR:WrapTextInColorCode(GBB.LevelRange(dungeon))
+			local categoryColor = NORMAL_FONT_COLOR
+			if self:IsMouseOver() then categoryColor = HIGHLIGHT_FONT_COLOR
+			elseif GBB.DB.ColorOnLevel then
+				if GBB.dungeonLevel[dungeon][1] == 0 then
+					-- skip
+				elseif GBB.dungeonLevel[dungeon][2] < GBB.UserLevel then
+					categoryColor = TRIVIAL_DIFFICULTY_COLOR
+				elseif GBB.UserLevel<GBB.dungeonLevel[dungeon][1] then
+					categoryColor = IMPOSSIBLE_DIFFICULTY_COLOR
+				else
+					categoryColor = EASY_DIFFICULTY_COLOR
+				end
+			end
+			categoryName = categoryColor:WrapTextInColorCode(categoryName)
+			self.Name:SetFontObject(GBB.DB.FontSize)
+			self.Name:SetText(("%s %s"):format(categoryName, levelRange))
+			local _, fontHeight = self.Name:GetFontObject():GetFont()
+			self:SetHeight(fontHeight + 4)
+			elementExtentByData[node.data] = self:GetHeight()
+		end
+		-- update highlight color on header hover
+		header:SetScript("OnEnter", header.UpdateTextLayout)
+		header:SetScript("OnLeave", header.UpdateTextLayout)
+	end
+	-- regular inits
+	header:UpdateTextLayout()
+	header:Show()
+end
+
+local function InitializeEntryItem(entry, node)
+	---@class RequestEntryFrame: Frame, ScrollElementAccessorsMixin
+	local entry = entry
+	-- space between inner-bottom of entry and outer-bottom of message
+	local bottomPadding = 4;
+	if not entry.created then -- one time inits
+		entry.Name = entry:CreateFontString(nil, "ARTWORK", "GameFontNormal")
+		entry.Message = entry:CreateFontString(nil, "ARTWORK", "GameFontNormal")
+		entry.Time = entry:CreateFontString(nil, "ARTWORK", "GameFontNormal")
+		entry.Time:SetPoint("TOP", entry.Name, "TOP", 0, 0)
+		entry:SetMouseMotionEnabled(true)
+		entry.Name:SetJustifyH("LEFT")
+		entry.Name:SetJustifyV("TOP")
+		entry.Message:SetJustifyH("LEFT")
+		entry.Message:SetNonSpaceWrap(false)
+		if GBB.DontTrunicate then GBB.ClearNeeded=true end
+		-- add highlight hover tex. Draw on "HIGHTLIGHT" layer to use base xml highlighting script
+		local hoverTex = entry:CreateTexture(nil, "HIGHLIGHT")
+		-- padding used compensate text clipping out of its containing frame
+		local pad = 2
+		hoverTex:SetPoint("TOPLEFT", -pad, pad)
+		hoverTex:SetPoint("BOTTOMRIGHT", pad, -pad)
+		hoverTex:SetAtlas("search-highlight")
+		hoverTex:SetDesaturated(true) -- its comes blue by default
+		hoverTex:SetVertexColor(0.7, 0.7, 0.7, 0.4)
+		hoverTex:SetBlendMode("ADD")
+
+		--- responsible for making sure everything is in its right place
+		function entry:UpdateTextLayout()
+			local node = self:GetElementData();
+			local request = node.data.req ---@type LFGToolRequestData
+			local scale = (GBB.DB.CompactStyle and not GBB.DB.ChatStyle) and 0.85 or 1
+
+			-- request player name
+			self.Name:SetFontObject(GBB.DB.FontSize)
+			self.Name:SetPoint("TOPLEFT", 0,-1.5)
+			self.Name:Show() -- incase hidden from being in chat style
+
+			-- time since request was made
+			self.Time:SetFontObject(GBB.DB.FontSize)
+			self.Time:Show()
+
+			-- request message
+			self.Message:SetFontObject(GBB.DB.FontSize)
+			self.Message:SetMaxLines(GBB.DB.DontTrunicate and 99 or 1)
+			self.Message:SetJustifyV("MIDDLE")
+			self.Message:ClearAllPoints() -- incase swapped to 2-line mode
+			self.Message:SetText(" ")
+			local lineHeight = self.Message:GetStringHeight() + 1 -- ui nit +1 offset
+
+			-- hack: make sure the initial size of the FontString object is big enough
+			-- to allow for all possible text when not truncating
+			if GBB.DontTrunicate then self.Message:SetHeight(999) end
+
+			--- Fill out the entry frames children with the request data
+			if request then
+				local formattedName = request.name
+				if GBB.RealLevel[request.name] then
+					formattedName = formattedName.." ("..GBB.RealLevel[request.name]..")"
+				end
+				if GBB.DB.ColorByClass and request.class and GBB.Tool.ClassColor[request.class].colorStr then
+					formattedName = WrapTextInColorCode(formattedName, GBB.Tool.ClassColor[request.class].colorStr)
+				end
+
+				local classIcon = (GBB.DB.ShowClassIcon and request.class)
+					and GBB.Tool.GetClassIcon(request.class, GBB.DB.ChatStyle and 12 or 18)
+					or ""
+
+				local playerRelationIcon = (
+					(request.isFriend
+					and string.format(GBB.TxtEscapePicture,GBB.FriendIcon)
+					or "")
+					..(request.isGuildMember
+					and string.format(GBB.TxtEscapePicture,GBB.GuildIcon)
+					or "")
+					..(request.isPastPlayer
+					and string.format(GBB.TxtEscapePicture,GBB.PastPlayerIcon)
+					or "")
+				);
+
+				local now = time()
+				local fmtTime
+				if GBB.DB.ShowTotalTime then
+					if (now - request.start < 0) then -- Quick fix for negative timers that happen as a result of new time calculation.
+						fmtTime=GBB.formatTime(0)
+					else
+						fmtTime=GBB.formatTime(now-request.start)
+					end
+				else
+					if (now - request.last < 0) then
+						fmtTime=GBB.formatTime(0)
+					else
+						fmtTime=GBB.formatTime(now-request.last)
+					end
+				end
+
+				local typePrefix = ""
+				if not isClassicEra then -- "heroic" is not a concept in classic era/sod
+					if request.isHeroic == true then
+						local colorHex = GBB.Tool.RGBPercToHex(GBB.DB.HeroicDungeonColor.r,GBB.DB.HeroicDungeonColor.g,GBB.DB.HeroicDungeonColor.b)
+						-- note colorHex here has no alpha channels
+						typePrefix = WrapTextInColorCode(
+							("[" .. GBB.L["heroicAbr"] .. "]    "), 'FF'..colorHex
+						);
+					elseif request.isRaid == true then
+						typePrefix = WrapTextInColorCode(
+							("[" .. GBB.L["raidAbr"] .. "]    "), "FF00FF00"
+						);
+					else
+						local colorHex = GBB.Tool.RGBPercToHex(GBB.DB.NormalDungeonColor.r,GBB.DB.NormalDungeonColor.g,GBB.DB.NormalDungeonColor.b)
+						typePrefix = WrapTextInColorCode(
+							("[" .. GBB.L["normalAbr"] .. "]    "), 'FF'..colorHex
+						)
+					end
+				end
+				if GBB.DB.ChatStyle then
+					self.Name:SetText("")
+					self.Message:SetFormattedText("%s\91%s\93%s: %s",
+						classIcon, formattedName, playerRelationIcon, request.message
+					);
+					self.Message:SetIndentedWordWrap(true)
+				else
+					self.Name:SetFormattedText("%s%s%s", classIcon, formattedName, playerRelationIcon)
+					self.Message:SetFormattedText("%s %s", typePrefix, request.message)
+					self.Time:SetText(fmtTime)
+					self.Message:SetIndentedWordWrap(false)
+				end
+
+				self.Message:SetTextColor(GBB.DB.EntryColor.r,GBB.DB.EntryColor.g,GBB.DB.EntryColor.b,GBB.DB.EntryColor.a)
+				self.Time:SetTextColor(GBB.DB.TimeColor.r,GBB.DB.TimeColor.g,GBB.DB.TimeColor.b,GBB.DB.TimeColor.a)
+			end
+
+			--- Adjust child frames based on chosen layout
+			-- check for compact or Normal styling
+			self.Name:SetScale(scale)
+			self.Time:SetScale(scale)
+			if scale < 1 then -- aka GBB.DB.CompactStyle
+				self.Message:SetPoint("TOPLEFT",self.Name, "BOTTOMLEFT", 0, -2)
+				self.Message:SetPoint("RIGHT",self.Time, "RIGHT", 0,0)
+				self.Message:SetJustifyV("TOP")
+			else
+				self.Message:SetPoint("TOPLEFT",self.Name, "TOPRIGHT", 10)
+				self.Message:SetPoint("RIGHT",self.Time, "LEFT", -10,0)
+			end
+			if GBB.DB.ChatStyle then
+				self.Time:Hide()
+				self.Name:Hide()
+				self.Name:SetWidth(1)
+				self.Time:ClearAllPoints() -- remove time in chat style
+				self.Message:SetPoint("RIGHT", self, "RIGHT", -4)
+			else -- Compact/Normal style
+				-- set width & time to this sessions widest seen frames
+				local padX = 10
+				local w = self.Name:GetStringWidth() + padX
+				GBB.DB.widthNames = math.max(GBB.DB.widthNames, w)
+				self.Name:SetWidth(GBB.DB.widthNames)
+
+				local w = self.Time:GetStringWidth() + padX
+				GBB.DB.widthTimes = math.max(GBB.DB.widthTimes, w)
+				self.Time:SetWidth(GBB.DB.widthTimes)
+				self.Time:SetPoint("TOPRIGHT", self, "TOPRIGHT")
+			end
+
+			-- determine the height of the name/message fields
+			local projectedHeight
+			if GBB.DB.ChatStyle then projectedHeight = self.Message:GetStringHeight();
+			else
+				if scale < 1 then
+					projectedHeight = self.Name:GetStringHeight() + self.Message:GetStringHeight()
+				else
+					projectedHeight = GBB.DB.DontTrunicate
+						and self.Message:GetStringHeight()
+						or lineHeight;
+				end
+			end
+
+			-- finally set element heights and save total entry container height.
+			self.Message:SetHeight(projectedHeight)
+			self.Name:SetHeight(self.Name:GetStringHeight())
+			self:SetHeight(projectedHeight + bottomPadding)
+			self:SetShown(request ~= nil)
+			elementExtentByData[node.data] = self:GetHeight()
+		end
+		entry.created = true
+	end
+	-- regular inits, called when frame is acquired by the scroll view
+	entry:UpdateTextLayout()
+end
+local InsertNodeSkipInvalidation = function(self, node)
+	table.insert(self.nodes, node)
+	return node
+end
+LFGToolScrollContainer:SetSize(400, 400)
+LFGToolScrollContainer:SetPoint("LEFT")
+LFGToolScrollContainer:SetPoint("RIGHT")
+LFGToolScrollContainer:SetPoint("TOP", 0, -30)
+LFGToolScrollContainer:SetPoint("BOTTOM", 0, 45)
+
+function LFGToolScrollContainer:OnLoad()
+	---@type ScrollBoxListTreeListViewMixin
+	self.scrollView = CreateScrollBoxListTreeListView(nil, 0, 80, 0, 0, 3);
+	self.scrollView:SetElementExtentCalculator(function(idx, node)
+		local elementData = node:GetData()
+		local preCalculated = elementExtentByData[elementData]
+		return preCalculated or 12
+	end)
+	self.scrollView:SetElementFactory(function(factory, node)
+		local elementData = node:GetData()
+		if elementData.isHeader then
+			factory("Button", InitializeHeader)
+		elseif elementData.isEntry then
+			factory("Frame", InitializeEntryItem)
+		end
+	end)
+	self.scrollBox = CreateFrame("Frame", nil, self, "WoWScrollBoxList")
+	local anchorsWithScrollBar = {
+		CreateAnchor("TOPLEFT", LFGToolScrollContainer, "TOPLEFT", 10, 0),
+		CreateAnchor("BOTTOMRIGHT", LFGToolScrollContainer, "BOTTOMRIGHT", -24, 0),
+	}
+	local anchorsWithoutScrollBar = {
+		anchorsWithScrollBar[1],
+		CreateAnchor("BOTTOMRIGHT", LFGToolScrollContainer, "BOTTOMRIGHT", -10, 0),
+	}
+    self.scrollBar = CreateFrame("EventFrame", nil, self, "MinimalScrollBar");
+    self.scrollBar:SetPoint("TOPLEFT", self.scrollBox, "TOPRIGHT", 8, 0);
+    self.scrollBar:SetPoint("BOTTOMLEFT", self.scrollBox, "BOTTOMRIGHT", 8, 0);
+    ScrollUtil.InitScrollBoxListWithScrollBar(self.scrollBox, self.scrollBar, self.scrollView);
+	ScrollUtil.AddManagedScrollBarVisibilityBehavior(self.scrollBox, self.scrollBar, anchorsWithScrollBar, anchorsWithoutScrollBar);
+
+	self.scrollView:SetDataProvider(CreateTreeDataProvider());
+	self.scrollView.dataProvider.node.InsertNode = InsertNodeSkipInvalidation
 end
 --------------------------------------------------------------------------------
 -- Module public functions
@@ -724,8 +1139,8 @@ function LFGTool:UpdateRequestList()
 	local _, results = C_LFGList.GetSearchResults()
 	for _, resultID in ipairs(results) do
         local searchResultData = C_LFGList.GetSearchResultInfo(resultID)
-        local leaderInfo = C_LFGList.GetSearchResultLeaderInfo(resultID)
-		if not searchResultData.isDelisted and leaderInfo then
+		local leaderInfo = C_LFGList.GetSearchResultLeaderInfo(resultID)
+        if not searchResultData.isDelisted and leaderInfo then
 			local isSolo = searchResultData.numMembers == 1
 			local isSelf = leaderInfo.name == UnitNameUnmodified("player")
             local listingTimestamp = time() - searchResultData.age
@@ -784,7 +1199,16 @@ function LFGTool:UpdateRequestList()
     end
 	return self.requestList
 end
-
-function LFGTool:Update()
-	self:UpdateLfgTool()
+---Populates `requestList` with search results and updates the bulletin board view container
+function LFGTool:UpdateBoardListings()
+	if not LFGTool.ScrollContainer:IsVisible() then return; end
+	self:UpdateRequestList()
+	updateScrollViewData(self.ScrollContainer.scrollView, self.requestList)
+	self.StatusText:SetText(string.format(GBB.L["msgLfgRequest"], SecondsToTime(time()-LastUpdateTime), self.numRequests))
 end
+function LFGTool:Load()
+	self.requestList = {}
+	self.numRequests = 0
+	self.ScrollContainer:OnLoad()
+end
+GBB.LfgTool = LFGTool
