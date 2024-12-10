@@ -540,8 +540,6 @@ function GBB.Popup_Minimap(frame,showMinimapOptions)
 end
 
 function GBB.Init()
-	GroupBulletinBoardFrame_LfgFrame:Hide() -- todo: remove deprecated frame from xml
-	local GroupBulletinBoardFrame_LfgFrame = GBB.LfgTool.ScrollContainer -- use new frame
 	GroupBulletinBoardFrame:SetResizeBounds(400,170)	
 	GroupBulletinBoardFrame:SetClampedToScreen(true)
 	GBB.UserLevel=UnitLevel("player")
@@ -770,8 +768,8 @@ function GBB.Init()
 		if (serverType == Enum.SeasonID.SeasonOfDiscovery)
 		or (serverType == Enum.SeasonID.Fresh)
 		or (serverType == Enum.SeasonID.FreshHardcore)
-		then GBB.Tool.AddTab(GroupBulletinBoardFrame, GBB.L.TabLfg, GroupBulletinBoardFrame_LfgFrame);
-		else GroupBulletinBoardFrame_LfgFrame:Hide() end;
+		then GBB.Tool.AddTab(GroupBulletinBoardFrame, GBB.L.TabLfg, GBB.LfgTool.ScrollContainer);
+		else GBB.LfgTool.ScrollContainer:Hide() end;
 
 		-- Past group members tab. (Inactive and broken)
 		-- GBB.Tool.AddTab(GroupBulletinBoardFrame, GBB.L.TabGroup, GroupBulletinBoardFrame_GroupFrame);
@@ -780,8 +778,8 @@ function GBB.Init()
 		-- cata client for Hide all tabs except requests for the time being
 		GBB.Tool.AddTab(GroupBulletinBoardFrame, GBB.L.TabRequest, GroupBulletinBoardFrame_ScrollFrame);
 
-		-- GBB.Tool.AddTab(GroupBulletinBoardFrame, GBB.L.TabLfg, GroupBulletinBoardFrame_LfgFrame);
-		GroupBulletinBoardFrame_LfgFrame:Hide()
+		-- GBB.Tool.AddTab(GroupBulletinBoardFrame, GBB.L.TabLfg, GBB.LfgTool.ScrollContainer);
+		GBB.LfgTool.ScrollContainer:Hide()
 
 		-- GBB.Tool.AddTab(GroupBulletinBoardFrame, GBB.L.TabGroup, GroupBulletinBoardFrame_GroupFrame);
 		GroupBulletinBoardFrame_GroupFrame:Hide()

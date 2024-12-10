@@ -214,49 +214,6 @@
 					</Frame>
 				</ScrollChild>
 			</ScrollFrame>
-
-
-			<!-- lfgframe -->
-			
-			<ScrollFrame name="GroupBulletinBoardFrame_LfgFrame" inherits="UIPanelScrollFrameTemplate">
-				<Frames>
-					<Frame name="$parentBackdrop" inherits="BackdropTemplate">
-						<Scripts>
-							<OnLoad>
-								self.backdropInfo = {
-									bgFile = "Interface\\TutorialFrame\\TutorialFrameBackground",
-									tile = true,
-									insets = {
-										left = -3,
-										right = -23,
-										top = -3,
-										bottom = -3
-									}
-								}
-								self:ApplyBackdrop()
-							</OnLoad>
-						</Scripts>
-					</Frame>
-				</Frames>
-				<Anchors>
-					<Anchor point="TOPLEFT">
-						<Offset>
-							<AbsDimension x="10" y="-30"/>
-						</Offset>						
-					</Anchor>				
-				</Anchors>
-				<Size>
-					<AbsDimension x="100" y="100"/>
-				</Size>
-				<ScrollChild>
-					<Frame name="GroupBulletinBoardFrame_LfgChildFrame">
-						<Size>
-							<AbsDimension x="100" y="100"/>
-						</Size>
-					</Frame>
-				</ScrollChild>
-			</ScrollFrame>
-
 			<!-- groupframe -->
 			
 			<ScrollingMessageFrame enableMouse="true" name="GroupBulletinBoardFrame_GroupFrame"  parentKey="MessageFrame" enableMouseClicks="true" >
