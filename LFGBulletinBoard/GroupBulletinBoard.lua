@@ -320,11 +320,6 @@ function GBB.ResizeFrameList()
 	w=GroupBulletinBoardFrame:GetWidth() -20-10-10
 	GroupBulletinBoardFrame_ScrollFrame:SetWidth( w )
 	GroupBulletinBoardFrame_ScrollChildFrame:SetWidth( w )
-
-	GroupBulletinBoardFrame_LfgFrame:SetHeight(GroupBulletinBoardFrame:GetHeight() -55-25 )
-	w=GroupBulletinBoardFrame:GetWidth() -20-10-10
-	GroupBulletinBoardFrame_LfgFrame:SetWidth( w )
-	GroupBulletinBoardFrame_LfgChildFrame:SetWidth( w )
 end
 
 function GBB.ShowWindow()
@@ -545,6 +540,8 @@ function GBB.Popup_Minimap(frame,showMinimapOptions)
 end
 
 function GBB.Init()
+	GroupBulletinBoardFrame_LfgFrame:Hide() -- todo: remove deprecated frame from xml
+	local GroupBulletinBoardFrame_LfgFrame = GBB.LfgTool.ScrollContainer -- use new frame
 	GroupBulletinBoardFrame:SetResizeBounds(400,170)	
 	GroupBulletinBoardFrame:SetClampedToScreen(true)
 	GBB.UserLevel=UnitLevel("player")
@@ -599,6 +596,9 @@ function GBB.Init()
 	-- Add tags for custom categories into `dungeonTagsLoc`. 
 	-- Must do before the call to `GBB.CreateTagList()` below
 	GBB.SyncCustomFilterTags(GBB.dungeonTagsLoc);
+
+	-- Load LFGList tool module
+	GBB.LfgTool:Load()
 
 	-- Reset Request-List
 	GBB.RequestList={}
