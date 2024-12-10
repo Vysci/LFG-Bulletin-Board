@@ -331,7 +331,6 @@ function GBB.UpdateLfgTool()
 
 		LFGTool:UpdateBoardListings()
 		GBB.LfgRequestList = LFGTool.requestList
-		GBB.LfgUpdateList()
 end
 
 function GBB.UpdateLfgToolNoSearch()
@@ -346,7 +345,6 @@ function GBB.UpdateLfgToolNoSearch()
 
 	LFGTool:UpdateBoardListings()
 	GBB.LfgRequestList = LFGTool.requestList
-	GBB.LfgUpdateList()
 end
 
 function GBB.GetPartyInfo(searchResultId, numMembers)
@@ -595,143 +593,6 @@ local function CreateItem(yy,i,doCompact,req,forceHight)
 
 end
 
-local ownRequestDungeons={}
-function GBB.LfgUpdateList()
-
-	GBB.Clear()
-
-	if not GroupBulletinBoardFrame:IsVisible()  then
-		return
-	end
-
-	GBB.UserLevel=UnitLevel("player")
-
-	if GBB.DB.OrderNewTop and GBB.LfgRequestList ~= nil then
-		if GBB.DB.ShowTotalTime then
-			table.sort(GBB.LfgRequestList, requestSort_TOP_TOTAL)
-		else
-			table.sort(GBB.LfgRequestList, requestSort_TOP_nTOTAL)
-		end
-	elseif  GBB.LfgRequestList ~= nil then
-		if GBB.DB.ShowTotalTime then
-			table.sort(GBB.LfgRequestList, requestSort_nTOP_TOTAL)
-		else
-			table.sort(GBB.LfgRequestList, requestSort_nTOP_nTOTAL)
-		end
-	end
-
-
-
-
-	for i, f in pairs(GBB.LfgFramesEntries) do
-		f:Hide()
-	end
-
-	local AnchorTop="GroupBulletinBoardFrame_LfgChildFrame"
-	local AnchorRight="GroupBulletinBoardFrame_LfgChildFrame"
-    local yy=0
-	LastDungeon=""
-	local count=0
-	local doCompact=1
-	local cEntrys=0
-
-	local w=GroupBulletinBoardFrame:GetWidth() -20-10-10
-	if GBB.DB.CompactStyle and not GBB.DB.ChatStyle then
-		doCompact=0.85
-	end
-
-	lastIsFolded=false
-
-	wipe(ownRequestDungeons)
-	if GBB.DBChar.DontFilterOwn then
-
-		local playername=(UnitFullName("player"))
-
-		for i,req in pairs(GBB.LfgRequestList) do
-			if type(req) == "table" and req.name==playername and req.last + GBB.DB.TimeOut*2 > time()then
-				ownRequestDungeons[req.dungeon]=true
-			end
-		end
-	end
-
-    if not GroupBulletinBoardFrame:IsVisible() or GBB.Tool.GetSelectedTab(GroupBulletinBoardFrame)~=2 then
-		return
-	end
-
-	local itemHight=CreateItem(yy,0,doCompact,nil)
-
-	GroupBulletinBoardFrame_LfgFrame.ScrollBar.scrollStep=itemHight*2
-
-	if #GBB.LfgFramesEntries<100 then
-		for i=1,100 do
-			CreateItem(yy,i,doCompact,nil)
-		end
-	end
-
-	for i,req in pairs(GBB.LfgRequestList) do
-		if type(req) == "table" then
-
-			if (ownRequestDungeons[req.dungeon]==true or GBB.FilterDungeon(req.dungeon, req.isHeroic, req.isRaid)) then
-
-				count= count + 1
-
-				--header
-				if LastDungeon ~= req.dungeon then
-					local hi
-					if GBB.DB.EnableShowOnly then
-						hi=GBB.dungeonSort[LastDungeon] or 0
-				    else
-						hi=GBB.dungeonSort[req.dungeon]-1
-					end
-					while hi<GBB.dungeonSort[req.dungeon] do
-						if LastDungeon~="" and GBB.LfgFoldedDungeons[GBB.dungeonSort[hi]]~=true and GBB.DB.EnableShowOnly then
-							yy=yy+ itemHight*(GBB.DB.ShowOnlyNb-cEntrys)
-						end
-						hi=hi+1
-
-						if (ownRequestDungeons[GBB.dungeonSort[hi]]==true or GBB.FilterDungeon(GBB.dungeonSort[hi], req.isHeroic, req.isRaid)) then
-							yy=CreateHeader(yy,GBB.dungeonSort[hi])
-							cEntrys=0
-						else
-							cEntrys=GBB.DB.ShowOnlyNb
-						end
-					end
-				end
-
-				--entry
-				if GBB.LfgFoldedDungeons[req.dungeon]~=true and (not GBB.DB.EnableShowOnly or cEntrys<GBB.DB.ShowOnlyNb) then
-					yy=yy+ CreateItem(yy,i,doCompact,req,itemHight)+3
-					cEntrys=cEntrys+1
-				end
-			end
-		end
-	end
-
-    if GBB.DB.EnableShowOnly then
-		local hi=GBB.dungeonSort[LastDungeon] or 0
-		while hi<GBB.WOTLKMAXDUNGEON do
-			if LastDungeon~="" and GBB.LfgFoldedDungeons[LastDungeon]~=true and GBB.DB.EnableShowOnly then
-				yy=yy+ itemHight*(GBB.DB.ShowOnlyNb-cEntrys)
-			end
-			hi=hi+1
-			if (ownRequestDungeons[GBB.dungeonSort[hi]]==true or GBB.FilterDungeon(GBB.dungeonSort[hi], false, false)) then
-				yy=CreateHeader(yy,GBB.dungeonSort[hi])
-				cEntrys=0
-			else
-				cEntrys=GBB.DB.ShowOnlyNb
-			end
-		end
-
-	end
-
-	yy=yy+GroupBulletinBoardFrame_LfgFrame:GetHeight()-20
-
-	GroupBulletinBoardFrame_LfgChildFrame:SetHeight(yy)
-	GroupBulletinBoardFrameStatusText:SetText(string.format(GBB.L["msgLfgRequest"], SecondsToTime(time()-LastUpdateTime), count))
-
-    
-end
-
 function GBB.ScrollLfgList(self,delta)
 	self:SetScrollOffset(self:GetScrollOffset() + delta*5);
 	self:ResetAllFadeTimes()
@@ -954,82 +815,80 @@ local function InitializeEntryItem(entry, node)
 			if GBB.DontTrunicate then self.Message:SetHeight(999) end
 
 			--- Fill out the entry frames children with the request data
-			if request then
-				local formattedName = request.name
-				if GBB.RealLevel[request.name] then
-					formattedName = formattedName.." ("..GBB.RealLevel[request.name]..")"
-				end
-				if GBB.DB.ColorByClass and request.class and GBB.Tool.ClassColor[request.class].colorStr then
-					formattedName = WrapTextInColorCode(formattedName, GBB.Tool.ClassColor[request.class].colorStr)
-				end
-
-				local classIcon = (GBB.DB.ShowClassIcon and request.class)
-					and GBB.Tool.GetClassIcon(request.class, GBB.DB.ChatStyle and 12 or 18)
-					or ""
-
-				local playerRelationIcon = (
-					(request.isFriend
-					and string.format(GBB.TxtEscapePicture,GBB.FriendIcon)
-					or "")
-					..(request.isGuildMember
-					and string.format(GBB.TxtEscapePicture,GBB.GuildIcon)
-					or "")
-					..(request.isPastPlayer
-					and string.format(GBB.TxtEscapePicture,GBB.PastPlayerIcon)
-					or "")
-				);
-
-				local now = time()
-				local fmtTime
-				if GBB.DB.ShowTotalTime then
-					if (now - request.start < 0) then -- Quick fix for negative timers that happen as a result of new time calculation.
-						fmtTime=GBB.formatTime(0)
-					else
-						fmtTime=GBB.formatTime(now-request.start)
-					end
-				else
-					if (now - request.last < 0) then
-						fmtTime=GBB.formatTime(0)
-					else
-						fmtTime=GBB.formatTime(now-request.last)
-					end
-				end
-
-				local typePrefix = ""
-				if not isClassicEra then -- "heroic" is not a concept in classic era/sod
-					if request.isHeroic == true then
-						local colorHex = GBB.Tool.RGBPercToHex(GBB.DB.HeroicDungeonColor.r,GBB.DB.HeroicDungeonColor.g,GBB.DB.HeroicDungeonColor.b)
-						-- note colorHex here has no alpha channels
-						typePrefix = WrapTextInColorCode(
-							("[" .. GBB.L["heroicAbr"] .. "]    "), 'FF'..colorHex
-						);
-					elseif request.isRaid == true then
-						typePrefix = WrapTextInColorCode(
-							("[" .. GBB.L["raidAbr"] .. "]    "), "FF00FF00"
-						);
-					else
-						local colorHex = GBB.Tool.RGBPercToHex(GBB.DB.NormalDungeonColor.r,GBB.DB.NormalDungeonColor.g,GBB.DB.NormalDungeonColor.b)
-						typePrefix = WrapTextInColorCode(
-							("[" .. GBB.L["normalAbr"] .. "]    "), 'FF'..colorHex
-						)
-					end
-				end
-				if GBB.DB.ChatStyle then
-					self.Name:SetText("")
-					self.Message:SetFormattedText("%s\91%s\93%s: %s",
-						classIcon, formattedName, playerRelationIcon, request.message
-					);
-					self.Message:SetIndentedWordWrap(true)
-				else
-					self.Name:SetFormattedText("%s%s%s", classIcon, formattedName, playerRelationIcon)
-					self.Message:SetFormattedText("%s %s", typePrefix, request.message)
-					self.Time:SetText(fmtTime)
-					self.Message:SetIndentedWordWrap(false)
-				end
-
-				self.Message:SetTextColor(GBB.DB.EntryColor.r,GBB.DB.EntryColor.g,GBB.DB.EntryColor.b,GBB.DB.EntryColor.a)
-				self.Time:SetTextColor(GBB.DB.TimeColor.r,GBB.DB.TimeColor.g,GBB.DB.TimeColor.b,GBB.DB.TimeColor.a)
+			local formattedName = request.name
+			if GBB.RealLevel[request.name] then
+				formattedName = formattedName.." ("..GBB.RealLevel[request.name]..")"
 			end
+			if GBB.DB.ColorByClass and request.class and GBB.Tool.ClassColor[request.class].colorStr then
+				formattedName = WrapTextInColorCode(formattedName, GBB.Tool.ClassColor[request.class].colorStr)
+			end
+
+			local classIcon = (GBB.DB.ShowClassIcon and request.class)
+				and GBB.Tool.GetClassIcon(request.class, GBB.DB.ChatStyle and 12 or 18)
+				or ""
+
+			local playerRelationIcon = (
+				(request.isFriend
+				and string.format(GBB.TxtEscapePicture,GBB.FriendIcon)
+				or "")
+				..(request.isGuildMember
+				and string.format(GBB.TxtEscapePicture,GBB.GuildIcon)
+				or "")
+				..(request.isPastPlayer
+				and string.format(GBB.TxtEscapePicture,GBB.PastPlayerIcon)
+				or "")
+			);
+
+			local now = time()
+			local fmtTime
+			if GBB.DB.ShowTotalTime then
+				if (now - request.start < 0) then -- Quick fix for negative timers that happen as a result of new time calculation.
+					fmtTime=GBB.formatTime(0)
+				else
+					fmtTime=GBB.formatTime(now-request.start)
+				end
+			else
+				if (now - request.last < 0) then
+					fmtTime=GBB.formatTime(0)
+				else
+					fmtTime=GBB.formatTime(now-request.last)
+				end
+			end
+
+			local typePrefix = ""
+			if not isClassicEra then -- "heroic" is not a concept in classic era/sod
+				if request.isHeroic == true then
+					local colorHex = GBB.Tool.RGBPercToHex(GBB.DB.HeroicDungeonColor.r,GBB.DB.HeroicDungeonColor.g,GBB.DB.HeroicDungeonColor.b)
+					-- note colorHex here has no alpha channels
+					typePrefix = WrapTextInColorCode(
+						("[" .. GBB.L["heroicAbr"] .. "]    "), 'FF'..colorHex
+					);
+				elseif request.isRaid == true then
+					typePrefix = WrapTextInColorCode(
+						("[" .. GBB.L["raidAbr"] .. "]    "), "FF00FF00"
+					);
+				else
+					local colorHex = GBB.Tool.RGBPercToHex(GBB.DB.NormalDungeonColor.r,GBB.DB.NormalDungeonColor.g,GBB.DB.NormalDungeonColor.b)
+					typePrefix = WrapTextInColorCode(
+						("[" .. GBB.L["normalAbr"] .. "]    "), 'FF'..colorHex
+					)
+				end
+			end
+			if GBB.DB.ChatStyle then
+				self.Name:SetText("")
+				self.Message:SetFormattedText("%s\91%s\93%s: %s",
+					classIcon, formattedName, playerRelationIcon, request.message
+				);
+				self.Message:SetIndentedWordWrap(true)
+			else
+				self.Name:SetFormattedText("%s%s%s", classIcon, formattedName, playerRelationIcon)
+				self.Message:SetFormattedText("%s %s", typePrefix, request.message)
+				self.Time:SetText(fmtTime)
+				self.Message:SetIndentedWordWrap(false)
+			end
+
+			self.Message:SetTextColor(GBB.DB.EntryColor.r,GBB.DB.EntryColor.g,GBB.DB.EntryColor.b,GBB.DB.EntryColor.a)
+			self.Time:SetTextColor(GBB.DB.TimeColor.r,GBB.DB.TimeColor.g,GBB.DB.TimeColor.b,GBB.DB.TimeColor.a)
 
 			--- Adjust child frames based on chosen layout
 			-- check for compact or Normal styling
