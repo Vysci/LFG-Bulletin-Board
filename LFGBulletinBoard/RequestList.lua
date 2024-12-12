@@ -407,7 +407,7 @@ end
 ---@param leaderName string
 ---@param dungeonKey string
 ---@param isHeroic boolean?
-local function SendJoinRequestMessage(leaderName, dungeonKey, isHeroic)
+function GBB.SendJoinRequestMessage(leaderName, dungeonKey, isHeroic)
 	if not GBB.DB.EnableJoinRequestMessage then return end
 	local dungeon = GBB.dungeonNames[dungeonKey] or dungeonKey
 	local msg = GBB.DB.JoinRequestMessage
@@ -1050,7 +1050,7 @@ function GBB.ClickRequest(entry, button)
 			WhoRequest(req.name)
 			--SendWho( req.name )
 		elseif IsAltKeyDown() then
-			SendJoinRequestMessage(req.name, req.dungeon, req.IsHeroic)
+			GBB.SendJoinRequestMessage(req.name, req.dungeon, req.IsHeroic)
 		elseif IsControlKeyDown() then
 			InviteRequest(req.name)
 		else
