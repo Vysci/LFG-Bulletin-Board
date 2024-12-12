@@ -1,6 +1,6 @@
 
 local TOCNAME,
----@class Addon_LFGTool: Addon_GroupBulletinBoard
+---@class Addon_LFGTool: Addon_GroupBulletinBoard, Addon_RequestList
 GBB=...
 
 local MAXGROUP=500
@@ -8,6 +8,26 @@ local LastUpdateTime = time()
 local requestNil={dungeon="NIL",start=0,last=0,name=""}
 local isCata = WOW_PROJECT_ID == WOW_PROJECT_CATACLYSM_CLASSIC
 local isClassicEra = WOW_PROJECT_ID == WOW_PROJECT_CLASSIC
+local ROLE_ATLASES = { -- for using with Textures
+	-- see Interface\AddOns\Blizzard_GroupFinder_VanillaStyle\Blizzard_LFGVanilla_Browse.lua
+	TANK = "groupfinder-icon-role-large-tank",
+	HEALER = "groupfinder-icon-role-large-heal",
+	DAMAGER = "groupfinder-icon-role-large-dps",
+	-- Solo Roles
+	SOLO_TANK = "groupfinder-icon-role-micro-tank",
+	SOLO_HEALER = "groupfinder-icon-role-micro-heal",
+	SOLO_DAMAGER = "groupfinder-icon-role-micro-dps",
+};
+local INLINE_ROLE_ICONS = { -- for inlining in fontstrings/chat
+	TANK = "|TInterface\\LFGFrame\\UI-LFG-ICON-PORTRAITROLES.blp:16:16:0:0:64:64:0:19:22:41|t";
+	HEALER = "|TInterface\\LFGFrame\\UI-LFG-ICON-PORTRAITROLES.blp:16:16:0:0:64:64:20:39:1:20|t";
+	DAMAGER = "|TInterface\\LFGFrame\\UI-LFG-ICON-PORTRAITROLES.blp:16:16:0:0:64:64:20:39:22:41|t";
+	-- (no circle)
+	SOLO_TANK = "|TInterface\\LFGFrame\\LFGROLE.BLP:12:12:0:0:64:16:32:48:0:16|t";
+	SOLO_HEALER = "|TInterface\\LFGFrame\\LFGROLE.BLP:12:12:0:0:64:16:48:64:0:16|t";
+	SOLO_DAMAGER = "|TInterface\\LFGFrame\\LFGROLE.BLP:12:12:0:0:64:16:16:32:0:16|t";
+}
+
 local LFGTool = {
 	requestList = {},
 	---@type LFGToolScrollFrame|Frame
@@ -88,7 +108,29 @@ local getRequestNodeSortFunc = function()
 		end
 	end
 end
-
+local CountdownTimer = {
+	period = 1,
+	timerCb = nil,
+	register = {}
+}
+function CountdownTimer:RegisterFrameMethod(frame, method)
+	self.register[frame] = method
+	if not self.timerCb then
+		self.timerCb = C_Timer.NewTicker(self.period, function()
+			if next(CountdownTimer.register) then
+				for frame, method in pairs(CountdownTimer.register) do
+					frame[method](frame)
+				end
+			elseif CountdownTimer.timerCb then
+				CountdownTimer.timerCb:Cancel()
+				CountdownTimer.timerCb = nil
+			end
+		end)
+	end
+end;
+function CountdownTimer:UnregisterFrame(frame)
+	self.register[frame] = nil
+end
 local function LFGSearch(categoryId)
     local filterVal = 0
     -- if categoryId == 2 then
@@ -367,186 +409,6 @@ function GBB.GetPartyInfo(searchResultId, numMembers)
     return partyInfo
 end
 
-local function CreateItem(yy,i,doCompact,req,forceHight)
-	local AnchorTop="GroupBulletinBoardFrame_LfgChildFrame"
-	local AnchorRight="GroupBulletinBoardFrame_LfgChildFrame"
-	local ItemFrameName="GBB.LfgItem_"..i
-
-	if GBB.LfgFramesEntries[i]==nil then
-		GBB.LfgFramesEntries[i]=CreateFrame("Frame",ItemFrameName , GroupBulletinBoardFrame_LfgChildFrame, "GroupBulletinBoard_LfgTmpRequest")
-		GBB.LfgFramesEntries[i]:SetPoint("RIGHT", _G[AnchorRight], "RIGHT", 0, 0)
-
-		_G[ItemFrameName.."_name"]:SetPoint("TOPLEFT")
-		_G[ItemFrameName.."_time"]:SetPoint("TOP",_G[ItemFrameName.."_name"], "TOP",0,0)
-
-		_G[ItemFrameName.."_message"]:SetNonSpaceWrap(false)
-		_G[ItemFrameName.."_message"]:SetFontObject(GBB.DB.FontSize)
-		_G[ItemFrameName.."_name"]:SetFontObject(GBB.DB.FontSize)
-		_G[ItemFrameName.."_time"]:SetFontObject(GBB.DB.FontSize)
-		if GBB.DontTrunicate then
-			GBB.ClearNeeded=true
-		end
-		GBB.Tool.EnableHyperlink(GBB.LfgFramesEntries[i])
-	end
-
-	GBB.LfgFramesEntries[i]:SetHeight(999)
-	_G[ItemFrameName.."_message"]:SetHeight(999)
-
-	if GBB.DB.DontTrunicate then
-		_G[ItemFrameName.."_message"]:SetMaxLines(99)
-		_G[ItemFrameName.."_message"]:SetText(" ")
-	else
-		_G[ItemFrameName.."_message"]:SetMaxLines(1)
-		_G[ItemFrameName.."_message"]:SetText(" ")
-	end
-
-
-	_G[ItemFrameName.."_name"]:SetScale(doCompact)
-	_G[ItemFrameName.."_time"]:SetScale(doCompact)
-
-	if doCompact<1 then
-		_G[ItemFrameName.."_message"]:SetPoint("TOPLEFT",_G[ItemFrameName.."_name"], "BOTTOMLEFT", 0,0)
-		_G[ItemFrameName.."_message"]:SetPoint("RIGHT",_G[ItemFrameName.."_time"], "RIGHT", 0,0)
-	else
-		_G[ItemFrameName.."_message"]:SetPoint("TOPLEFT",_G[ItemFrameName.."_name"], "TOPRIGHT", 10,0)
-		_G[ItemFrameName.."_message"]:SetPoint("RIGHT",_G[ItemFrameName.."_time"], "LEFT", -10,0)
-	end
-
-	if req and req.name ~= nil then
-		local prefix
-		if GBB.DB.ColorByClass and req.class and GBB.Tool.ClassColor[req.class].colorStr then
-			prefix="|c"..GBB.Tool.ClassColor[req.class].colorStr
-		else
-			prefix="|r"
-		end
-		local ClassIcon=""
-		if GBB.DB.ShowClassIcon and req.class then
-			if doCompact<1  or GBB.DB.ChatStyle then
-				ClassIcon = GBB.Tool.GetClassIcon(req.class) or ""
-
-			else
-				ClassIcon = GBB.Tool.GetClassIcon(req.class, 18) or ""
-			end
-		end
-
-
-		local FriendIcon=(req.isFriend and string.format(GBB.TxtEscapePicture,GBB.FriendIcon) or "") ..
-						 (req.isGuildMember and string.format(GBB.TxtEscapePicture,GBB.GuildIcon) or "") ..
-						 (req.isPastPlayer and string.format(GBB.TxtEscapePicture,GBB.PastPlayerIcon) or "")
-
-		local suffix="|r"
-
-		if GBB.RealLevel[req.name] then
-			suffix=" ("..GBB.RealLevel[req.name]..")"..suffix
-		end
-
-
-
-
-		local ti
-		if GBB.DB.ShowTotalTime then
-			ti=GBB.formatTime(time()-req.start)
-		else
-			ti=GBB.formatTime(time()-req.last)
-		end
-
-		local typePrefix
-		if req.isHeroic == true then
-			local colorHex = GBB.Tool.RGBPercToHex(GBB.DB.HeroicDungeonColor.r,GBB.DB.HeroicDungeonColor.g,GBB.DB.HeroicDungeonColor.b)
-			typePrefix = "|c00".. colorHex .. "[" .. GBB.L["heroicAbr"] .. "]     "
-		elseif req.isRaid == true then
-			typePrefix = "|c00ffff00" .. "[" .. GBB.L["raidAbr"] .. "]     "
-		else
-			local colorHex = GBB.Tool.RGBPercToHex(GBB.DB.NormalDungeonColor.r,GBB.DB.NormalDungeonColor.g,GBB.DB.NormalDungeonColor.b)
-			typePrefix = "|c00".. colorHex .. "[" .. GBB.L["normalAbr"] .. "]    "
-		end
-
-        local roles = ""
-        
-        for _, v in pairs(req.partyInfo) do 
-			if (v.classLocalized == "ROGUE" or v.classLocalized == "WARLOCK" or v.classLocalized == "MAGE") then 
-				roles = roles..GBB.Tool.RoleIcon["DAMAGER"]
-			elseif (v.class == "DAMAGER") then
-                roles = roles..GBB.Tool.RoleIcon["DAMAGER"]
-            elseif (v.class == "TANK") then
-                roles = roles..GBB.Tool.RoleIcon["TANK"]
-            elseif (v.class == "HEALER") then
-                roles = roles..GBB.Tool.RoleIcon["HEALER"]
-            end
-        end
-
-		if GBB.DB.ChatStyle then
-			_G[ItemFrameName.."_name"]:SetText()
-			_G[ItemFrameName.."_message"]:SetText(ClassIcon.."["..prefix ..req.name..suffix.."]"..FriendIcon..": "..req.message)
-		else
-			_G[ItemFrameName.."_name"]:SetText(ClassIcon..prefix .. req.name .. suffix..FriendIcon)
-			_G[ItemFrameName.."_message"]:SetText(typePrefix .. suffix .. roles .. " ".. req.message)
-			_G[ItemFrameName.."_time"]:SetText(ti)
-		end
-
-		_G[ItemFrameName.."_message"]:SetTextColor(GBB.DB.EntryColor.r,GBB.DB.EntryColor.g,GBB.DB.EntryColor.b,GBB.DB.EntryColor.a)
-		_G[ItemFrameName.."_time"]:SetTextColor(GBB.DB.TimeColor.r,GBB.DB.TimeColor.g,GBB.DB.TimeColor.b,GBB.DB.TimeColor.a)
-
-	else
-		_G[ItemFrameName.."_name"]:SetText("Aag ")
-		_G[ItemFrameName.."_message"]:SetText("Aag ")
-		_G[ItemFrameName.."_time"]:SetText("Aag ")
-	end
-
-
-	if GBB.DB.ChatStyle then
-		_G[ItemFrameName.."_time"]:Hide()
-		_G[ItemFrameName.."_name"]:Hide()
-
-		_G[ItemFrameName.."_name"]:SetWidth(1)
-		_G[ItemFrameName.."_time"]:SetPoint("LEFT", _G[AnchorRight], "RIGHT", 0,0)
-	else
-		_G[ItemFrameName.."_time"]:Show()
-		_G[ItemFrameName.."_name"]:Show()
-		local w=_G[ItemFrameName.."_name"]:GetStringWidth() +10
-		if w>GBB.DB.widthNames then
-			GBB.DB.widthNames=w
-		end
-		_G[ItemFrameName.."_name"]:SetWidth(GBB.DB.widthNames)
-
-		local w=_G[ItemFrameName.."_time"]:GetStringWidth() +10
-		if w>GBB.DB.widthTimes then
-			GBB.DB.widthTimes=w
-		end
-		_G[ItemFrameName.."_time"]:SetPoint("LEFT", _G[AnchorRight], "RIGHT", -GBB.DB.widthTimes,0)
-
-	end
-	local h
-	if GBB.DB.ChatStyle then
-		h=_G[ItemFrameName.."_message"]:GetStringHeight()
-	else
-		if doCompact<1 then
-			h=_G[ItemFrameName.."_name"]:GetStringHeight() + _G[ItemFrameName.."_message"]:GetStringHeight()
-		elseif GBB.DB.DontTrunicate then
-			h=_G[ItemFrameName.."_message"]:GetStringHeight()
-		else
-			h=_G[ItemFrameName.."_name"]:GetStringHeight()
-		end
-	end
-
-	if not GBB.DB.DontTrunicate and forceHight then
-		h=forceHight
-	end
-
-	GBB.LfgFramesEntries[i]:SetPoint("TOPLEFT",_G[AnchorTop], "TOPLEFT", 10,-yy)
-	_G[ItemFrameName.."_message"]:SetHeight(h+10)
-	GBB.LfgFramesEntries[i]:SetHeight(h)
-
-	if req then
-		GBB.LfgFramesEntries[i]:Show()
-	else
-		GBB.LfgFramesEntries[i]:Hide()
-	end
-
-	return h
-
-end
-
 function GBB.ScrollLfgList(self,delta)
 	self:SetScrollOffset(self:GetScrollOffset() + delta*5);
 	self:ResetAllFadeTimes()
@@ -573,90 +435,6 @@ local dungeonHeaderClickHandler = function(self, clickType, isMouseDown)
 		createMenu(self:GetData().dungeon)
 	end
 end
-
-function GBB.LfgClickRequest(self,button)
-	local id = string.match(self:GetName(), "GBB.LfgItem_(.+)")
-	if id==nil or id==0 then return end
-	local req=GBB.LfgRequestList[tonumber(id)]
-	if button=="LeftButton" then
-		if IsShiftKeyDown() then
-			WhoRequest(req.name)
-			--SendWho( req.name )
-		elseif IsAltKeyDown() then
-			-- Leaving this here for a message without the automatic invite request
-			-- as it obviously doesn't affect overall functionality. 
-			InviteRequestWithRole(req.name,req.dungeon,req.isHeroic,req.isRaid)
-		elseif IsControlKeyDown() then
-			InviteRequest(req.name)
-		else
-            local searchResult = C_LFGList.GetSearchResultInfo(req.resultId)
-            if UnitIsGroupLeader("player", LE_PARTY_CATEGORY_HOME) or searchResult.numMembers == 1 then
-                InviteRequest(req.name)
-            elseif searchResult.isDelisted == false and searchResult.numMembers ~= 5 then 
-				InviteRequestWithRole(req.name,req.dungeon,req.isHeroic,req.isRaid) -- sends message telling leader your role
-                RequestInviteFromUnit(searchResult.leaderName) -- requests the actual invite. 
-            end
-		end
-	else
-		createMenu(nil,req)
-	end
-
-end
-
-
-function GBB.LfgRequestShowTooltip(self)
-	for id in string.gmatch(self:GetName(), "GBB.LfgItem_(.+)") do
-		local n=_G[self:GetName().."_message"]
-		local req=GBB.LfgRequestList[tonumber(id)]
-        if req == nil then return end
-		GameTooltip_SetDefaultAnchor(GameTooltip,UIParent)
-		if not GBB.DB.EnableGroup then
-			GameTooltip:SetOwner(GroupBulletinBoardFrame, "ANCHOR_BOTTOM", 0,0	)
-		else
-			GameTooltip:SetOwner(GroupBulletinBoardFrame, "ANCHOR_BOTTOM", 0,-25)
-		end
-		GameTooltip:ClearLines()
-		local tip=""
-		if n:IsTruncated() then
-			GameTooltip:AddLine(req.message,0.9,0.9,0.9,1)
-		end
-
-		if GBB.DB.ChatStyle then
-			GameTooltip:AddLine(string.format(GBB.L["msgLastTime"],GBB.formatTime(time()-req.last)).."|n"..string.format(GBB.L["msgTotalTime"],GBB.formatTime(time()-req.start)))
-		elseif GBB.DB.ShowTotalTime then
-			GameTooltip:AddLine(string.format(GBB.L["msgLastTime"],GBB.formatTime(time()-req.last)))
-		else
-			GameTooltip:AddLine(string.format(GBB.L["msgTotalTime"],GBB.formatTime(time()-req.start)))
-		end
-
-		if GBB.DB.EnableGroup and GBB.GroupTrans and GBB.GroupTrans[req.name] then
-			local entry=GBB.GroupTrans[req.name]
-
-			GameTooltip:AddLine((GBB.Tool.GetClassIcon(entry.class) or "")..
-				"|c"..GBB.Tool.ClassColor[entry.class].colorStr ..
-				entry.name)
-			if entry.dungeon then
-				GameTooltip:AddLine(entry.dungeon)
-			end
-			if entry.Note then
-				GameTooltip:AddLine(entry.Note)
-			end
-			GameTooltip:AddLine(SecondsToTime(GetServerTime()-entry.lastSeen))
-		end
-
-    -- Integration with LogTracker addon (if addon is present and loaded)
-    if LogTracker then
-      LogTracker:AddPlayerInfoToTooltip(req.name);
-    end
-
-		GameTooltip:Show()
-	end
-end
-
-function GBB.LfgRequestHideTooltip(self)
-	GameTooltip:Hide()
-end
-
 setAllHeadersCollapsed = function(shouldCollapse, skipInvalidate)
 	local scrollView = LFGTool.ScrollContainer.scrollView
 	local affectChildren = false
@@ -743,6 +521,67 @@ local function InitializeHeader(header, node)
 	header:Show()
 end
 
+---@param self Frame|TreeDataProviderNodeMixin
+---@param clickType mouseButton
+local requestEntryClickHandler = function(self, clickType)
+	local req = self:GetData().req ---@type LFGToolRequestData
+	if clickType == "LeftButton" then
+		if IsShiftKeyDown() then
+			WhoRequest(req.name)
+		elseif IsAltKeyDown() then
+			GBB.SendJoinRequestMessage(req.name, req.dungeon, req.isHeroic)
+		elseif IsControlKeyDown() then
+			InviteToGroup(req.name)
+		else
+            local searchResult = C_LFGList.GetSearchResultInfo(req.resultId) -- get latest info from server
+			if searchResult then -- can be `nil` if an entry with a "stale" resultID is click mid C_LFGList.Search
+				req.isDelisted = searchResult.isDelisted
+				req.numMembers = searchResult.numMembers
+			end
+            if req.isDelisted == false
+			and req.numMembers < (req.maxMembers or 5) -- party is not full
+			and C_PartyInfo.RequestInviteFromUnit -- check if api exists (doesnt in classic era)
+			then
+                C_PartyInfo.RequestInviteFromUnit(req.leaderInfo.name)
+            else -- atm for classic just start a whisper
+				ChatFrame_SendTell(req.leaderInfo.name)
+			end
+		end
+	else -- on right click
+		createMenu(nil, req)
+	end
+end
+---@param entry RequestEntryFrame|ScrollElementAccessorsMixin
+---@param isMouseOver boolean
+local function onEntryMouseover(entry, isMouseOver)
+	if isMouseOver then
+		GameTooltip:SetOwner(GroupBulletinBoardFrame, 'ANCHOR_BOTTOM', 0, -25)
+		GameTooltip:ClearLines()
+		local request = entry:GetData().req ---@type LFGToolRequestData
+		GameTooltip:AddLine(request.message, 0.9, 0.9, 0.9, 1)
+		if GBB.DB.ShowTotalTime then
+			GameTooltip:AddLine(string.format(GBB.L['msgLastTime'], GBB.formatTime(time() - request.last)))
+		else
+			GameTooltip:AddLine(string.format(GBB.L['msgTotalTime'], GBB.formatTime(time() - request.start)))
+		end
+		if GBB.DB.EnableGroup and GBB.GroupTrans and GBB.GroupTrans[request.name] then
+			local history=GBB.GroupTrans[request.name]
+			GameTooltip:AddLine((GBB.Tool.GetClassIcon(history.class) or "")..
+				"|c"..GBB.Tool.ClassColor[history.class].colorStr ..
+				history.name)
+			if history.dungeon then
+				GameTooltip:AddLine(history.dungeon)
+			end
+			if history.Note then
+				GameTooltip:AddLine(history.Note)
+			end
+			GameTooltip:AddLine(SecondsToTime(GetServerTime()-history.lastSeen))
+		end
+		GameTooltip:Show()
+	else
+		GameTooltip:Hide()
+	end
+end
 local function InitializeEntryItem(entry, node)
 	---@class RequestEntryFrame: Frame, ScrollElementAccessorsMixin
 	local entry = entry
@@ -762,13 +601,16 @@ local function InitializeEntryItem(entry, node)
 		-- add highlight hover tex. Draw on "HIGHTLIGHT" layer to use base xml highlighting script
 		local hoverTex = entry:CreateTexture(nil, "HIGHLIGHT")
 		-- padding used compensate text clipping out of its containing frame
-		local pad = 2
+		local pad = 1.5
 		hoverTex:SetPoint("TOPLEFT", -pad, pad)
 		hoverTex:SetPoint("BOTTOMRIGHT", pad, -pad)
 		hoverTex:SetAtlas("search-highlight")
 		hoverTex:SetDesaturated(true) -- its comes blue by default
 		hoverTex:SetVertexColor(0.7, 0.7, 0.7, 0.4)
 		hoverTex:SetBlendMode("ADD")
+		entry:HookScript("OnMouseDown", requestEntryClickHandler)
+		entry:HookScript("OnEnter", function(self) onEntryMouseover(self, true) end)
+		entry:HookScript("OnLeave", function(self) onEntryMouseover(self, false) end)
 
 		--- responsible for making sure everything is in its right place
 		function entry:UpdateTextLayout()
@@ -799,13 +641,16 @@ local function InitializeEntryItem(entry, node)
 
 			--- Fill out the entry frames children with the request data
 			local formattedName = request.name
-			if GBB.RealLevel[request.name] then
-				formattedName = formattedName.." ("..GBB.RealLevel[request.name]..")"
+			local playerLevel = GBB.RealLevel[request.name] or request.leaderInfo.level
+				if playerLevel then
+				formattedName = string.format("%s (%s)", formattedName, playerLevel)
 			end
 			if GBB.DB.ColorByClass and request.class and GBB.Tool.ClassColor[request.class].colorStr then
 				formattedName = WrapTextInColorCode(formattedName, GBB.Tool.ClassColor[request.class].colorStr)
 			end
 
+			-- Note: in the future there should be dedicated texture frames for all the following icons (and roles)
+			-- that way we dont have to deal with all the annoying parsing of strings to display them in the rendered text.
 			local classIcon = (GBB.DB.ShowClassIcon and request.class)
 				and GBB.Tool.GetClassIcon(request.class, GBB.DB.ChatStyle and 12 or 18)
 				or ""
@@ -820,8 +665,33 @@ local function InitializeEntryItem(entry, node)
 				..(request.isPastPlayer
 				and string.format(GBB.TxtEscapePicture,GBB.PastPlayerIcon)
 				or "")
+				..(request.isGroupLeader
+				and string.format(GBB.TxtEscapePicture, "Interface/GroupFrame/UI-Group-LeaderIcon")
+				or "")
 			);
-
+			local roles = ""
+			if not request.isGroupLeader then
+				-- show players roles
+				if request.roles.tank then
+					roles = INLINE_ROLE_ICONS.SOLO_TANK
+				end
+				if request.roles.healer then
+					roles = roles..INLINE_ROLE_ICONS.SOLO_HEALER
+				end
+				if request.roles.dps then
+					roles = roles..INLINE_ROLE_ICONS.SOLO_DAMAGER
+				end
+			else
+				-- show role/count of group
+				local damageCount = request.memberRoleCounts.DAMAGER
+				local tankCount = request.memberRoleCounts.TANK
+				local healerCount = request.memberRoleCounts.HEALER
+				roles = string.format("%s%d  %s%d  %s%d",
+					INLINE_ROLE_ICONS.TANK, tankCount,
+					INLINE_ROLE_ICONS.HEALER, healerCount,
+					INLINE_ROLE_ICONS.DAMAGER, damageCount
+				)
+			end
 			local now = time()
 			local fmtTime
 			if GBB.DB.ShowTotalTime then
@@ -857,15 +727,23 @@ local function InitializeEntryItem(entry, node)
 					)
 				end
 			end
+			local displayMessage = request.message
+			if roles ~= "" then
+				if displayMessage == "" then
+					displayMessage = roles
+				else
+					displayMessage = roles.." -- "..request.message
+				end
+			end
 			if GBB.DB.ChatStyle then
 				self.Name:SetText("")
 				self.Message:SetFormattedText("%s\91%s\93%s: %s",
-					classIcon, formattedName, playerRelationIcon, request.message
+					classIcon, formattedName, playerRelationIcon, displayMessage
 				);
 				self.Message:SetIndentedWordWrap(true)
 			else
-				self.Name:SetFormattedText("%s%s%s", classIcon, formattedName, playerRelationIcon)
-				self.Message:SetFormattedText("%s %s", typePrefix, request.message)
+				self.Name:SetFormattedText("%s%s %s", classIcon, formattedName, playerRelationIcon)
+				self.Message:SetFormattedText("%s %s", typePrefix, displayMessage)
 				self.Time:SetText(fmtTime)
 				self.Message:SetIndentedWordWrap(false)
 			end
@@ -924,10 +802,15 @@ local function InitializeEntryItem(entry, node)
 			self:SetShown(request ~= nil)
 			elementExtentByData[node.data] = self:GetHeight()
 		end
+		function entry:UpdateTime()
+			if not self:IsVisible() then return end;
+			self.Time:SetText(GBB.formatTime(time() - self:GetData().req.last))
+		end
 		entry.created = true
 	end
 	-- regular inits, called when frame is acquired by the scroll view
 	entry:UpdateTextLayout()
+	CountdownTimer:RegisterFrameMethod(entry, "UpdateTime")
 end
 local InsertNodeSkipInvalidation = function(self, node)
 	table.insert(self.nodes, node)
@@ -954,6 +837,9 @@ function LFGToolScrollContainer:OnLoad()
 		elseif elementData.isEntry then
 			factory("Frame", InitializeEntryItem)
 		end
+	end)
+	self.scrollView:SetElementResetter(function(frame, node)
+		if node.data.isEntry then CountdownTimer:UnregisterFrame(frame) end
 	end)
 	self.scrollBox = CreateFrame("Frame", nil, self, "WoWScrollBoxList")
 	local anchorsWithScrollBar = {
@@ -1031,6 +917,7 @@ function LFGTool:UpdateRequestList()
 					isOwnRequest = searchResultData.hasSelf,
 					isGroupLeader = not isSolo,
 					numMembers = searchResultData.numMembers,
+					maxMembers =  activityInfo.maxNumPlayers,
 					roles = leaderInfo.lfgRoles,
 					activityID = activityID,
 					memberRoleCounts = C_LFGList.GetSearchResultMemberCounts(resultID),
