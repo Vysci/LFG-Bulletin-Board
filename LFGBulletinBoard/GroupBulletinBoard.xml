@@ -100,9 +100,7 @@
 					<Anchor point="RIGHT" relativeTo="$parentSettingsButton" relativePoint="LEFT"/>
 				</Anchors>
 				<Scripts>
-					<OnMouseDown>
-						GroupBulletinBoard_Addon.BtnRefresh(button )
-					</OnMouseDown>
+					<!-- see LfgToolList.lua -->
 				</Scripts>
 			</Button>
 
