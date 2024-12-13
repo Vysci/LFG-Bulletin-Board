@@ -360,10 +360,6 @@ function GBB.BtnSettings(button )
 		--GBB.Options.Open(1)
 	end
 end
-
-function GBB.BtnRefresh(button)
-	GBB.UpdateLfgTool()
-end
 --------------------------------------------------------------------------------
 -- Tag Lists
 --------------------------------------------------------------------------------
@@ -600,12 +596,9 @@ function GBB.Init()
 
 	-- Reset Request-List
 	GBB.RequestList={}
-	GBB.LfgRequestList={}
 	GBB.FramesEntries={}
-	GBB.LfgFramesEntries = {}
 
 	GBB.FoldedDungeons={}
-	GBB.LfgFoldedDungeons = {}
 	
 	-- Timer-Stuff
 	GBB.MAXTIME=time() +60*60*24*365 --add a year!
@@ -956,21 +949,12 @@ function GBB.OnUpdate(elapsed)
 			if GBB.Tool.GetSelectedTab(GroupBulletinBoardFrame)==1 then
 				GBB.UpdateList()
 			elseif  GBB.Tool.GetSelectedTab(GroupBulletinBoardFrame)==2 then
-				GBB.UpdateLfgToolNoSearch()
+				GBB.UpdateLfgTool()
 			end
-				
 			GBB.ElapsedSinceListUpdate = 0;
 		else
 			GBB.ElapsedSinceListUpdate = GBB.ElapsedSinceListUpdate + elapsed;
 		end;
-
-		if GBB.ElapsedSinceLfgUpdate > 18 and GBB.Tool.GetSelectedTab(GroupBulletinBoardFrame)==2 and GroupBulletinBoardFrame:IsVisible() then
-			-- LFGListFrame.SearchPanel.RefreshButton:Click() -- hwevent protected
-			GBB.UpdateLfgTool()
-			GBB.ElapsedSinceLfgUpdate = 0
-		else
-			GBB.ElapsedSinceLfgUpdate = GBB.ElapsedSinceLfgUpdate + elapsed
-		end
 	end
 end
 

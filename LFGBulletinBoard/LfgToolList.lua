@@ -29,16 +29,57 @@ local INLINE_ROLE_ICONS = { -- for inlining in fontstrings/chat
 }
 
 local LFGTool = {
+	---@type LFGToolRequestData[]
 	requestList = {},
 	---@type LFGToolScrollFrame|Frame
 	ScrollContainer = CreateFrame("Frame", TOCNAME.."LFGToolFrame", GroupBulletinBoardFrame),
 	RefreshButton = GroupBulletinBoardFrameRefreshButton, ---@type Button
 	StatusText = GroupBulletinBoardFrameStatusText, ---@type FontString
 }
----@class LFGToolScrollFrame
-local LFGToolScrollContainer = LFGTool.ScrollContainer
 
-local function requestSort_TOP_TOTAL (a,b)
+--- note: the C_LFGList.Search requires a #hwevent to work. So this function should only be
+--- used in onclick or keypress events.
+local function LFGList_DoSearch(categoryId)
+    local filterVal = 0 -- no filters
+	local preferredFilters
+    local languages = C_LFGList.GetLanguageSearchFilter() or {};
+	-- include addon set languages
+	languages.enUS =languages.enUS or GBB.DB.TagsEnglish
+	languages.deDE =languages.deDE or GBB.DB.TagsGerman
+	languages.ruRU =languages.ruRU or GBB.DB.TagsRussian
+	languages.frFR =languages.frFR or GBB.DB.TagsFrench
+	languages.zhTW =languages.zhTW or GBB.DB.TagsZhtw
+	languages.zhCN =languages.zhCN or GBB.DB.TagsZhcn
+	languages.esES =languages.esES or GBB.DB.TagsSpanish
+	languages.esMX =languages.esMX or GBB.DB.TagsSpanish
+	languages.ptBR =languages.ptBR or GBB.DB.TagsPortuguese
+    C_LFGList.Search(categoryId, filterVal, preferredFilters, languages)
+end
+local categoryIdx = 0
+local lfgCategories = {
+	2, -- Dungeons
+	114, -- Raids
+	116, -- Quests & Zones
+	118, -- PVP (not enabled in cata clients atm)
+	120, -- "Custom"
+}
+local function RefreshButton_OnClick(self, button)
+	categoryIdx = math.fmod(categoryIdx, #lfgCategories) + 1
+	LFGList_DoSearch(lfgCategories[categoryIdx])
+end
+hooksecurefunc(C_LFGList, "Search", function()
+	LastUpdateTime = time()
+end)
+
+-- attach refresh button to the lfg frame so that its hidden when the "Tool Requests" tab is hidden.
+LFGTool.RefreshButton:SetParent(LFGTool.ScrollContainer)
+LFGTool.RefreshButton:SetScript("OnClick", RefreshButton_OnClick)
+
+--------------------------------------------------------------------------------
+-- local helpers
+--------------------------------------------------------------------------------
+
+local function SortRequests_NewestByTotalTime (a,b)
 	if GBB.dungeonSort[a.dungeon] < GBB.dungeonSort[b.dungeon] then
 		return true
 	elseif GBB.dungeonSort[a.dungeon] == GBB.dungeonSort[b.dungeon]then
@@ -50,7 +91,7 @@ local function requestSort_TOP_TOTAL (a,b)
 	end
 	return false
 end
-local function requestSort_TOP_nTOTAL (a,b)
+local function SortRequests_NewestByLastUpdate (a,b)
 	if GBB.dungeonSort[a.dungeon] < GBB.dungeonSort[b.dungeon] then
 		return true
 	elseif GBB.dungeonSort[a.dungeon] == GBB.dungeonSort[b.dungeon] and (a.start ~= nil and b.start ~= nil and a.name ~= nil and b.name ~= nil) then
@@ -62,7 +103,7 @@ local function requestSort_TOP_nTOTAL (a,b)
 	end
 	return false
 end
-local function requestSort_nTOP_TOTAL (a,b)
+local function SortRequests_OldestByTotalTime (a,b)
 	if GBB.dungeonSort[a.dungeon] < GBB.dungeonSort[b.dungeon] then
 		return true
 	elseif GBB.dungeonSort[a.dungeon] == GBB.dungeonSort[b.dungeon] then
@@ -74,7 +115,7 @@ local function requestSort_nTOP_TOTAL (a,b)
 	end
 	return false
 end
-local function requestSort_nTOP_nTOTAL (a,b)
+local function SortRequests_OldestByLastUpdate (a,b)
 	if GBB.dungeonSort[a.dungeon] < GBB.dungeonSort[b.dungeon] then
 		return true
 	elseif GBB.dungeonSort[a.dungeon] == GBB.dungeonSort[b.dungeon] then
@@ -88,24 +129,16 @@ local function requestSort_nTOP_nTOTAL (a,b)
 end
 
 local requestNodeSortFuncs = { -- expected to be used by a TreeDataProvider sortComparator
- [1] = function(a, b) return requestSort_TOP_TOTAL(a:GetData().req, b:GetData().req) end,
- [2] = function(a, b) return requestSort_TOP_nTOTAL(a:GetData().req, b:GetData().req) end,
- [3] = function(a, b) return requestSort_nTOP_TOTAL(a:GetData().req, b:GetData().req) end,
- [4] = function(a, b) return requestSort_nTOP_nTOTAL(a:GetData().req, b:GetData().req) end,
+ [1] = function(a, b) return SortRequests_NewestByTotalTime(a:GetData().req, b:GetData().req) end,
+ [2] = function(a, b) return SortRequests_NewestByLastUpdate(a:GetData().req, b:GetData().req) end,
+ [3] = function(a, b) return SortRequests_OldestByTotalTime(a:GetData().req, b:GetData().req) end,
+ [4] = function(a, b) return SortRequests_OldestByLastUpdate(a:GetData().req, b:GetData().req) end,
 }
 local getRequestNodeSortFunc = function()
-	if GBB.DB.OrderNewTop and GBB.LfgRequestList ~= nil then
-		if GBB.DB.ShowTotalTime then
-			return requestNodeSortFuncs[1]
-		else
-			return requestNodeSortFuncs[2]
-		end
-	elseif  GBB.LfgRequestList ~= nil then
-		if GBB.DB.ShowTotalTime then
-			return requestNodeSortFuncs[3]
-		else
-			return requestNodeSortFuncs[4]
-		end
+	if GBB.DB.OrderNewTop then -- newest first
+		return GBB.DB.ShowTotalTime and requestNodeSortFuncs[1] or requestNodeSortFuncs[2]
+	else -- oldest first
+		return GBB.DB.ShowTotalTime and requestNodeSortFuncs[3] or requestNodeSortFuncs[4]
 	end
 end
 local CountdownTimer = {
@@ -131,157 +164,8 @@ end;
 function CountdownTimer:UnregisterFrame(frame)
 	self.register[frame] = nil
 end
-local function LFGSearch(categoryId)
-    local filterVal = 0
-    -- if categoryId == 2 then
-    --     filterVal = 1
-    -- end
-
-	local preferredFilters
-    local languages = C_LFGList.GetLanguageSearchFilter() or {};
-	-- include addon set languages
-	languages.enUS =languages.enUS or GBB.DB.TagsEnglish
-	languages.deDE =languages.deDE or GBB.DB.TagsGerman
-	languages.ruRU =languages.ruRU or GBB.DB.TagsRussian
-	languages.frFR =languages.frFR or GBB.DB.TagsFrench
-	languages.zhTW =languages.zhTW or GBB.DB.TagsZhtw
-	languages.zhCN =languages.zhCN or GBB.DB.TagsZhcn
-	languages.esES =languages.esES or GBB.DB.TagsSpanish
-	languages.esMX =languages.esMX or GBB.DB.TagsSpanish
-	languages.ptBR =languages.ptBR or GBB.DB.TagsPortuguese
-    C_LFGList.Search(categoryId, filterVal, preferredFilters, languages)
-end
-hooksecurefunc(C_LFGList, "Search", function(categoryId, filterVal, preferredFilters, languages)
-	LastUpdateTime = time()
-end)
-
-local sessionCollapsedHeaders = {} -- session collapsed state. resets on reload
----@param scrollView ScrollBoxListTreeListViewMixin
----@param requestList LFGToolRequestData[]
-local updateScrollViewData = function(scrollView, requestList)
-	---@type TreeDataProviderMixin
-	local categoryNodes = scrollView.dataProvider
-	local requestSortFunc = getRequestNodeSortFunc()
-	local incomingMap = {} -- {[dungeonKey]: {[playerName]: request}}
-	local shouldUpdate = false
-	local numRequests = 0 -- tracks only valid/shown requests
-	local userPlayerName = UnitNameUnmodified("player")
-	local shouldShowRequest = function(request) ---@param request LFGToolRequestData
-		local hasFilterEnabled = GBB.FilterDungeon(request.dungeon, request.isHeroic, request.isRaid)
-		-- the `DontFilterOwn` option == "always show own requests". The var name is very confusing.
-		if not hasFilterEnabled and GBB.DBChar.DontFilterOwn then
-			return request.name == userPlayerName
-		end
-		return hasFilterEnabled
-	end
-	for _, req in ipairs(requestList) do
-		---@cast req LFGToolRequestData
-		if shouldShowRequest(req) then
-			local dungeonKey = req.dungeon
-			if not incomingMap[dungeonKey] then
-				incomingMap[dungeonKey] = {}
-			end
-			numRequests = numRequests + 1
-			incomingMap[dungeonKey][req.name] = req
-		end
-	end
-	LFGTool.numRequests = numRequests
-	if not categoryNodes.node.sortComparator then -- one time setup
-		categoryNodes:SetSortComparator(function(a, b)
-			return GBB.dungeonSort[a:GetData().dungeon] < GBB.dungeonSort[b:GetData().dungeon]
-		end, false, true)
-	end
-	-- enumerate current nodes, update any existing requests, remove any that are no longer present
-	for _, node in categoryNodes:Enumerate(nil, nil, false) do
-		---@cast node TreeDataProviderNodeMixin
-		local elementData = node:GetData()
-		local key = elementData.dungeon or elementData.req.dungeon
-		if elementData.isHeader then -- remove stale headers/categories for the incoming request list
-			if not incomingMap[key] then
-				node.parent:Remove(node, true)
-				shouldUpdate = true
-			end
-			if node.sortComparator ~= requestSortFunc then -- one time setup for headers sort function
-				node:SetSortComparator(requestSortFunc, false)
-			end
-		elseif elementData.isEntry then
-			local incoming = incomingMap[key] and incomingMap[key][elementData.req.name] ---@type LFGToolRequestData?
-			if not incoming then -- remove stale entries from data-provider too
-				node.parent:Remove(node, true)
-				-- print("listing removed for", elementData.req.name, elementData.req.dungeon)
-				shouldUpdate = true
-			else
-				-- if entry unchanged, remove from the todo/incoming list
-				if incoming.last == elementData.req.last
-				and incoming.resultId == elementData.req.resultId
-				and incoming.numMembers == elementData.req.numMembers
-				and incoming.message == elementData.req.message
-				then
-					incomingMap[key][elementData.req.name] = nil
-				else -- remove request node from dataProvider (will be in next re-added step)
-					node.parent:Remove(node, true)
-					shouldUpdate = true
-				end
-			end
-		end
-	end
-	-- insert any remaining new dungeons and request.
-	for key, requestsByName in pairs(incomingMap) do
-		if next(requestsByName) then
-			local anyAdded = false
-			local headerNode = categoryNodes:FindElementDataByPredicate(function(node)
-				---@cast node TreeDataProviderNodeMixin
-				local element = node.data
-				return element.isHeader and element.dungeon == key
-			end, false)
-			if not headerNode then
-				headerNode = categoryNodes:Insert({dungeon = key, isHeader = true})
-				-- overwrite `InsertNode` with the same `InsetNodeSkipInvalidation` used by the tree parent node.
-				headerNode.InsertNode = headerNode.parent.InsertNode
-				headerNode:SetSortComparator(requestSortFunc, false, true)
-				if sessionCollapsedHeaders[key] ~= nil then -- explicit nil check for session state.
-					headerNode:SetCollapsed(sessionCollapsedHeaders[key], false, true)
-				else headerNode:SetCollapsed(GBB.DB.HeadersStartFolded, false, true) end
-				shouldUpdate = true
-			end
-			for _, req in pairs(requestsByName) do
-				headerNode:Insert({req = req, isEntry = true})
-				shouldUpdate = true
-				anyAdded = true
-			end
-			if anyAdded then
-				headerNode:Sort()
-			end
-		end
-	end
-	-- sort and invalidate if any changes were made
-	if shouldUpdate then
-		categoryNodes:Sort() -- must be done before invalidation
-		categoryNodes:Invalidate() -- triggers UI update
-	end
-end
-
-----------------------------------------------------
-local categoryIdx = 0
-local lfgCategories = {
-	2, -- Dungeons
-	114, -- Raids
-	116, -- Quests & Zones
-	118, -- PVP (not enabled in cata clients atm)
-	120, -- "Custom"
-}
-function GBB.BtnRefresh(button)
-	categoryIdx = math.fmod(categoryIdx, #lfgCategories) + 1
-	LFGSearch(lfgCategories[categoryIdx])
-end
-
--- hack: set the refresh button parent to the lfg frame. hides the button when the "Tool Requests" tab is not selected
-LFGTool.RefreshButton:SetParent(LFGTool.ScrollContainer)
 
 local function WhoRequest(name)
-	--DEFAULT_CHAT_FRAME:AddMessage(GBB.MSGPREFIX .. string.format(GBB.L["msgStartWho"],name))
-	--DEFAULT_CHAT_FRAME.editBox:SetText("/who " .. name)
-	--ChatEdit_SendText(DEFAULT_CHAT_FRAME.editBox)
 	GBB.Tool.RunSlashCmd("/who " .. name)
 end
 
@@ -291,23 +175,6 @@ end
 
 local function InviteRequest(name)
 	GBB.Tool.RunSlashCmd("/invite " .. name)
-end
-
-local function InviteRequestWithRole(gbbName,gbbDungeon,gbbHeroic,gbbRaid)
-	if not GBB.DB.InviteRole then GBB.DB.InviteRole = "DPS" end
-	local gbbDungeonPrefix = ""	
-	if gbbHeroic then
-		gbbDungeonPrefix = "H "
-	elseif not gbbHeroic and not gbbRaid then
-		gbbDungeonPrefix = "N "
-	end
-
-	-- Not sure if necessary, but Heroic Miscellaneous sounds like a dangerous place.
-	if gbbDungeon == "MISC" or gbbDungeon == "TRADE" or gbbDungeon == "TRAVEL" or gbbDungeon == "INCUR" then
-		gbbDungeonPrefix = ""
-	end
-
-	SendChatMessage(string.format(GBB.L["JOIN_REQUEST_MESSAGE"], gbbDungeonPrefix .. GBB.dungeonNames[gbbDungeon], GBB.DB.InviteRole), "WHISPER", nil, gbbName)
 end
 
 local function IgnoreRequest(name)
@@ -322,7 +189,7 @@ end
 
 local setAllHeadersCollapsed ---@type function
 local toggleHeaderCollapseByKey ---@type function
-local function createMenu(DungeonID,req)
+local function createMenu(DungeonID,req) -- shared right-click menu for headers and requests
 	if not GBB.PopupDynamic:Wipe("request"..(DungeonID or "nil")..(req and "request" or "nil")) then
 		return
 	end
@@ -354,65 +221,11 @@ local function createMenu(DungeonID,req)
 	GBB.PopupDynamic:AddItem(GBB.L["BtnCancel"],false)
 	GBB.PopupDynamic:Show()
 end
+--------------------------------------------------------------------------------
+-- Dungeon/Category Header frame setup
+--------------------------------------------------------------------------------
 
-function GBB.UpdateLfgTool()
-	-- named differently on cata/era
-	local LFGListFrame = isCata and _G.LFGListFrame or _G.LFGListingFrame
-	if isCata then
-		if LFGListFrame and LFGListFrame.CategorySelection.selectedCategory == 120 then return end
-		if  LFGListFrame and LFGListFrame.CategorySelection.selectedCategory == nil then
-			LFGListFrame.CategorySelection.selectedCategory = 2
-		end
-
-		LastUpdateTime = time()
-		GBB.LfgRequestList = {}
-
-		local category = 2
-		if LFGListFrame and LFGListFrame.CategorySelection.selectedCategory ~= nil then
-			category = LFGListFrame.CategorySelection.selectedCategory
-		end
-
-		local activities = C_LFGList.GetAvailableActivities(category)
-		--C_LFGList.Search(category, activities)
-		if LFGListFrame and LFGListFrame.searching then return end
-	end
-
-		LFGTool:UpdateBoardListings()
-		GBB.LfgRequestList = LFGTool.requestList
-end
-
-function GBB.UpdateLfgToolNoSearch()
-	if isCata then
-		if LFGListFrame.CategorySelection.selectedCategory == 120 then return end
-		if  LFGListFrame.CategorySelection.selectedCategory == nil then
-			LFGListFrame.CategorySelection.selectedCategory = 2
-		end
-	end
-
-	if LFGListFrame and LFGListFrame.searching then return end
-
-	LFGTool:UpdateBoardListings()
-	GBB.LfgRequestList = LFGTool.requestList
-end
-
-function GBB.GetPartyInfo(searchResultId, numMembers)
-    local partyInfo = {}
-    for i = 1, numMembers do
-        local role, class, classLocalized, specLocalized = C_LFGList.GetSearchResultMemberInfo(searchResultId, i);
-        partyInfo[i] = {
-            ["role"] = role,
-            ["class"] = class,
-            ["classLocalized"] = classLocalized,
-            ["specLocalized"] = specLocalized,
-        }
-    end
-    return partyInfo
-end
-
-function GBB.ScrollLfgList(self,delta)
-	self:SetScrollOffset(self:GetScrollOffset() + delta*5);
-	self:ResetAllFadeTimes()
-end
+local sessionCollapsedHeaders = {} -- session collapsed state. resets on reload
 
 ---@param self Button|TreeDataProviderNodeMixin
 ---@param clickType mouseButton
@@ -520,6 +333,10 @@ local function InitializeHeader(header, node)
 	header:UpdateTextLayout()
 	header:Show()
 end
+
+--------------------------------------------------------------------------------
+-- Request Entry frame setup
+--------------------------------------------------------------------------------
 
 ---@param self Frame|TreeDataProviderNodeMixin
 ---@param clickType mouseButton
@@ -812,6 +629,120 @@ local function InitializeEntryItem(entry, node)
 	entry:UpdateTextLayout()
 	CountdownTimer:RegisterFrameMethod(entry, "UpdateTime")
 end
+
+--------------------------------------------------------------------------------
+-- LfgTool Tab scroll frame setup
+--------------------------------------------------------------------------------
+
+---@class LFGToolScrollFrame: Frame
+local LFGToolScrollContainer = LFGTool.ScrollContainer
+
+---@param scrollView ScrollBoxListTreeListViewMixin
+---@param requestList LFGToolRequestData[]
+local updateScrollViewData = function(scrollView, requestList)
+	---@type TreeDataProviderMixin
+	local categoryNodes = scrollView.dataProvider
+	local requestSortFunc = getRequestNodeSortFunc()
+	local incomingMap = {} -- {[dungeonKey]: {[playerName]: request}}
+	local shouldUpdate = false
+	local numRequests = 0 -- tracks only valid/shown requests
+	local userPlayerName = UnitNameUnmodified("player")
+	local shouldShowRequest = function(request) ---@param request LFGToolRequestData
+		local hasFilterEnabled = GBB.FilterDungeon(request.dungeon, request.isHeroic, request.isRaid)
+		-- the `DontFilterOwn` option == "always show own requests". The var name is very confusing.
+		if not hasFilterEnabled and GBB.DBChar.DontFilterOwn then
+			return request.name == userPlayerName
+		end
+		return hasFilterEnabled
+	end
+	for _, req in ipairs(requestList) do
+		---@cast req LFGToolRequestData
+		if shouldShowRequest(req) then
+			local dungeonKey = req.dungeon
+			if not incomingMap[dungeonKey] then
+				incomingMap[dungeonKey] = {}
+			end
+			numRequests = numRequests + 1
+			incomingMap[dungeonKey][req.name] = req
+		end
+	end
+	LFGTool.numRequests = numRequests
+	if not categoryNodes.node.sortComparator then -- one time setup
+		categoryNodes:SetSortComparator(function(a, b)
+			return GBB.dungeonSort[a:GetData().dungeon] < GBB.dungeonSort[b:GetData().dungeon]
+		end, false, true)
+	end
+	-- enumerate current nodes, update any existing requests, remove any that are no longer present
+	for _, node in categoryNodes:Enumerate(nil, nil, false) do
+		---@cast node TreeDataProviderNodeMixin
+		local elementData = node:GetData()
+		local key = elementData.dungeon or elementData.req.dungeon
+		if elementData.isHeader then -- remove stale headers/categories for the incoming request list
+			if not incomingMap[key] then
+				node.parent:Remove(node, true)
+				shouldUpdate = true
+			end
+			if node.sortComparator ~= requestSortFunc then -- one time setup for headers sort function
+				node:SetSortComparator(requestSortFunc, false)
+			end
+		elseif elementData.isEntry then
+			local incoming = incomingMap[key] and incomingMap[key][elementData.req.name] ---@type LFGToolRequestData?
+			if not incoming then -- remove stale entries from data-provider too
+				node.parent:Remove(node, true)
+				-- print("listing removed for", elementData.req.name, elementData.req.dungeon)
+				shouldUpdate = true
+			else
+				-- if entry unchanged, remove from the todo/incoming list
+				if incoming.last == elementData.req.last
+				and incoming.resultId == elementData.req.resultId
+				and incoming.numMembers == elementData.req.numMembers
+				and incoming.message == elementData.req.message
+				then
+					incomingMap[key][elementData.req.name] = nil
+				else -- remove request node from dataProvider (will be in next re-added step)
+					node.parent:Remove(node, true)
+					shouldUpdate = true
+				end
+			end
+		end
+	end
+	-- insert any remaining new dungeons and request.
+	for key, requestsByName in pairs(incomingMap) do
+		if next(requestsByName) then
+			local anyAdded = false
+			local headerNode = categoryNodes:FindElementDataByPredicate(function(node)
+				---@cast node TreeDataProviderNodeMixin
+				local element = node.data
+				return element.isHeader and element.dungeon == key
+			end, false)
+			if not headerNode then
+				headerNode = categoryNodes:Insert({dungeon = key, isHeader = true})
+				-- overwrite `InsertNode` with the same `InsetNodeSkipInvalidation` used by the tree parent node.
+				headerNode.InsertNode = headerNode.parent.InsertNode
+				headerNode:SetSortComparator(requestSortFunc, false, true)
+				if sessionCollapsedHeaders[key] ~= nil then -- explicit nil check for session state.
+					headerNode:SetCollapsed(sessionCollapsedHeaders[key], false, true)
+				else headerNode:SetCollapsed(GBB.DB.HeadersStartFolded, false, true) end
+				shouldUpdate = true
+			end
+			for _, req in pairs(requestsByName) do
+				headerNode:Insert({req = req, isEntry = true})
+				shouldUpdate = true
+				anyAdded = true
+			end
+			if anyAdded then
+				headerNode:Sort()
+			end
+		end
+	end
+	-- sort and invalidate if any changes were made
+	if shouldUpdate then
+		categoryNodes:Sort() -- must be done before invalidation
+		categoryNodes:Invalidate() -- triggers UI update
+	end
+end
+
+-- perf: needed to skip invalidation/sorting on every insert to the dataprovider
 local InsertNodeSkipInvalidation = function(self, node)
 	table.insert(self.nodes, node)
 	return node
@@ -862,6 +793,7 @@ end
 --------------------------------------------------------------------------------
 -- Module public functions
 --------------------------------------------------------------------------------
+
 function LFGTool:UpdateRequestList()
 	self.requestList = {} -- reset for now
 	local _, results = C_LFGList.GetSearchResults()
@@ -940,4 +872,26 @@ function LFGTool:Load()
 	self.numRequests = 0
 	self.ScrollContainer:OnLoad()
 end
+function GBB.UpdateLfgTool()
+	-- named differently on cata/era
+	local LFGListFrame = isCata and _G.LFGListFrame or _G.LFGBrowseFrame
+	if LFGListFrame and LFGListFrame.searching then return end
+	if isCata then -- todo, revise cataclysm support
+		if LFGListFrame and LFGListFrame.CategorySelection.selectedCategory == 120 then return end
+		if  LFGListFrame and LFGListFrame.CategorySelection.selectedCategory == nil then
+			LFGListFrame.CategorySelection.selectedCategory = 2
+		end
+
+		LastUpdateTime = time()
+
+		local category = 2
+		if LFGListFrame and LFGListFrame.CategorySelection.selectedCategory ~= nil then
+			category = LFGListFrame.CategorySelection.selectedCategory
+		end
+
+		local activities = C_LFGList.GetAvailableActivities(category)
+	end
+	LFGTool:UpdateBoardListings()
+end
+
 GBB.LfgTool = LFGTool
