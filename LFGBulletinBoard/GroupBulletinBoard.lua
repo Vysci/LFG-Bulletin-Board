@@ -327,7 +327,6 @@ function GBB.ShowWindow()
 
     -- Check if classic or not
     if string.sub(version, 1, 2) ~= "1." then
-		GBB.UpdateLfgTool()
 		GBB.UpdateGroupList()
     end
 	GroupBulletinBoardFrame:Show()
@@ -949,8 +948,6 @@ function GBB.OnUpdate(elapsed)
 		if GBB.ElapsedSinceListUpdate > 1 then
 			if GBB.Tool.GetSelectedTab(GroupBulletinBoardFrame)==1 then
 				GBB.UpdateList()
-			elseif  GBB.Tool.GetSelectedTab(GroupBulletinBoardFrame)==2 then
-				GBB.UpdateLfgTool()
 			end
 			GBB.ElapsedSinceListUpdate = 0;
 		else

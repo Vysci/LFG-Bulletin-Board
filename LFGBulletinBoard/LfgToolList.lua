@@ -4,7 +4,7 @@ local TOCNAME,
 GBB=...
 
 local MAXGROUP=500
-local LastUpdateTime = time()
+local lastUpdateTime = time()
 local requestNil={dungeon="NIL",start=0,last=0,name=""}
 local isCata = WOW_PROJECT_ID == WOW_PROJECT_CATACLYSM_CLASSIC
 local isClassicEra = WOW_PROJECT_ID == WOW_PROJECT_CLASSIC
@@ -114,7 +114,7 @@ local onSearchComplete = function()
 	LFGTool.CategoryButton.Dropdown:Enable()
 	LFGTool.CategoryButton.Dropdown:SignalUpdate()
     LFGTool:UpdateBoardListings()
-	LastUpdateTime = time()
+	lastUpdateTime = time()
 end
 hooksecurefunc(C_LFGList, "Search", onSearchStart) -- keep state up to date, with external/blizz calls to LFGList.Search
 GBB.Tool.RegisterEvent("LFG_LIST_SEARCH_RESULTS_RECEIVED", onSearchComplete)
@@ -215,6 +215,30 @@ function CountdownTimer:RegisterFrameMethod(frame, method)
 end;
 function CountdownTimer:UnregisterFrame(frame)
 	self.register[frame] = nil
+end
+
+---@param func function
+---@param delay number in seconds
+---@return fun(...) debouncedFunc any arguments passed through to func.
+local getDebounceHandle = function(func, delay)
+	local timer ---@type TimerCallback?
+	return function(...)
+		local invokeNow = not timer or timer:IsCancelled()
+		if not invokeNow and timer then timer:Cancel() end;
+		if invokeNow then
+			func(...);
+			timer = C_Timer.NewTimer(delay, function(self)
+				self:Cancel();
+			end)
+		else
+			local args = {...}
+			timer = C_Timer.NewTimer(delay, function(self)
+				if args[1] then func(unpack(args)) else func() end
+				self:Cancel();
+				timer = nil
+			end)
+		end
+	end
 end
 
 local function WhoRequest(name)
@@ -913,7 +937,7 @@ function LFGTool:UpdateRequestList()
 	return self.requestList
 end
 ---Populates `requestList` with search results and updates the bulletin board view container
-function LFGTool:UpdateBoardListings()
+LFGTool.UpdateBoardListings = getDebounceHandle(function()
 	if not LFGTool.ScrollContainer:IsVisible() then return end
 
 	if LFGTool.searching then -- use existing requests if update called mid search
@@ -921,12 +945,13 @@ function LFGTool:UpdateBoardListings()
 	else LFGTool:UpdateRequestList() end -- otherwise, update the request list
 
 	updateScrollViewData(LFGTool.ScrollContainer.scrollView, LFGTool.requestList)
-	self.StatusText:SetText(string.format(GBB.L["msgLfgRequest"], SecondsToTime(time()-LastUpdateTime), self.numRequests))
-end
+end, 0.5 --[[bucket updates within 0.5 seconds]])
+
 function LFGTool:Load()
 	self.requestList = {}
 	self.numRequests = 0
 	self.ScrollContainer:OnLoad()
+	self:UpdateRequestList()
 end
 function GBB.UpdateLfgTool()
 	-- named differently on cata/era
@@ -938,7 +963,7 @@ function GBB.UpdateLfgTool()
 			LFGListFrame.CategorySelection.selectedCategory = 2
 		end
 
-		LastUpdateTime = time()
+		lastUpdateTime = time()
 
 		local category = 2
 		if LFGListFrame and LFGListFrame.CategorySelection.selectedCategory ~= nil then
@@ -949,5 +974,17 @@ function GBB.UpdateLfgTool()
 	end
 	LFGTool:UpdateBoardListings()
 end
+
+-- Do full update of the view on each LFG_LIST_SEARCH_RESULT_UPDATED
+-- todo: this event has the searchResultID as the payload, we could use that to update only the changed entry
+-- and save full reset for when the refresh button is explicitly clicked.
+GBB.Tool.RegisterEvent("LFG_LIST_SEARCH_RESULT_UPDATED", GBB.UpdateLfgTool);
+
+-- attach status text to the timer since full Update no longer called every second
+function LFGTool.StatusText:UpdateText()
+	if not LFGTool.ScrollContainer:IsVisible() then return end
+	self:SetText(string.format(GBB.L['msgLfgRequest'], SecondsToTime(time() - lastUpdateTime), LFGTool.numRequests))
+end
+CountdownTimer:RegisterFrameMethod(LFGTool.StatusText, "UpdateText")
 
 GBB.LfgTool = LFGTool
