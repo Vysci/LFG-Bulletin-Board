@@ -94,13 +94,29 @@ do -- Setup category selection dropdown buttons
 		end
 	end);
 end
+-- LFGList searching spinner
+LFGTool.RefreshSpinner = CreateFrame("Frame", nil, LFGTool.RefreshButton, "LoadingSpinnerTemplate")
+LFGTool.RefreshSpinner:SetSize(25, 25)
+LFGTool.RefreshSpinner:SetPoint("RIGHT", LFGTool.RefreshButton, "LEFT", -2, 0)
+LFGTool.RefreshSpinner:Hide()
 
--- allows us to keep category up to date, with external/blizz calls to LFGList.Search
-hooksecurefunc(C_LFGList, "Search", function(categoryID)
+local onSearchStart = function(categoryID)
 	selectedCategoryID = categoryID
+	LFGTool.RefreshButton:Disable()
+	LFGTool.RefreshSpinner:Show()
+	LFGTool.CategoryButton.Dropdown:Disable()
+end
+local onSearchComplete = function()
+    LFGTool.RefreshButton:Enable()
+    LFGTool.RefreshSpinner:Hide()
+	LFGTool.CategoryButton.Dropdown:Enable()
 	LFGTool.CategoryButton.Dropdown:SignalUpdate()
+    LFGTool:UpdateBoardListings()
 	LastUpdateTime = time()
-end)
+end
+hooksecurefunc(C_LFGList, "Search", onSearchStart) -- keep state up to date, with external/blizz calls to LFGList.Search
+GBB.Tool.RegisterEvent("LFG_LIST_SEARCH_RESULTS_RECEIVED", onSearchComplete)
+GBB.Tool.RegisterEvent("LFG_LIST_SEARCH_FAILED", onSearchComplete)
 
 local RefreshButton_OnClick = function()
 	LFGList_DoCategorySearch(selectedCategoryID)
