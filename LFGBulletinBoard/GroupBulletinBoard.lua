@@ -791,10 +791,11 @@ function GBB.Init()
 	end
 	enableGroupVar:AddUpdateHook(refreshGroupTab)
 	refreshGroupTab(enableGroupVar:GetValue()) -- run once to match the set state.
-	
 	GBB.Tool.TabOnSelect(GroupBulletinBoardFrame,3,GBB.UpdateGroupList)
-	GBB.Tool.TabOnSelect(GroupBulletinBoardFrame,2,GBB.UpdateLfgTool)
-	
+	GBB.Tool.TabOnSelect(GroupBulletinBoardFrame,2,function()
+		GBB.LfgTool:UpdateBoardListings() -- optimistic update of listings if any residual search result data is present.
+		GBB.LfgTool.RefreshButton:GetScript("OnClick")() -- refresh search results
+	end)
 	GameTooltip:HookScript("OnTooltipSetUnit", hooked_createTooltip)
 		
 	print("|cFFFF1C1C Loaded: "..GetAddOnMetadata(TOCNAME, "Title") .." ".. GetAddOnMetadata(TOCNAME, "Version") .." by "..GetAddOnMetadata(TOCNAME, "Author"))

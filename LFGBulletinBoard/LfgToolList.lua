@@ -101,12 +101,14 @@ LFGTool.RefreshSpinner:SetPoint("RIGHT", LFGTool.RefreshButton, "LEFT", -2, 0)
 LFGTool.RefreshSpinner:Hide()
 
 local onSearchStart = function(categoryID)
+	LFGTool.searching = true
 	selectedCategoryID = categoryID
 	LFGTool.RefreshButton:Disable()
 	LFGTool.RefreshSpinner:Show()
 	LFGTool.CategoryButton.Dropdown:Disable()
 end
 local onSearchComplete = function()
+	LFGTool.searching = false
     LFGTool.RefreshButton:Enable()
     LFGTool.RefreshSpinner:Hide()
 	LFGTool.CategoryButton.Dropdown:Enable()
@@ -912,9 +914,13 @@ function LFGTool:UpdateRequestList()
 end
 ---Populates `requestList` with search results and updates the bulletin board view container
 function LFGTool:UpdateBoardListings()
-	if not LFGTool.ScrollContainer:IsVisible() then return; end
-	self:UpdateRequestList()
-	updateScrollViewData(self.ScrollContainer.scrollView, self.requestList)
+	if not LFGTool.ScrollContainer:IsVisible() then return end
+
+	if LFGTool.searching then -- use existing requests if update called mid search
+		if not LFGTool.requestList[1] then return; end
+	else LFGTool:UpdateRequestList() end -- otherwise, update the request list
+
+	updateScrollViewData(LFGTool.ScrollContainer.scrollView, LFGTool.requestList)
 	self.StatusText:SetText(string.format(GBB.L["msgLfgRequest"], SecondsToTime(time()-LastUpdateTime), self.numRequests))
 end
 function LFGTool:Load()
