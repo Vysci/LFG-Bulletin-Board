@@ -27,6 +27,13 @@ local INLINE_ROLE_ICONS = { -- for inlining in fontstrings/chat
 	SOLO_HEALER = "|TInterface\\LFGFrame\\LFGROLE.BLP:12:12:0:0:64:16:48:64:0:16|t";
 	SOLO_DAMAGER = "|TInterface\\LFGFrame\\LFGROLE.BLP:12:12:0:0:64:16:16:32:0:16|t";
 }
+local LFGLIST_CATEGORY_IDS = { -- alternatively, use C_LFGList.GetAvailableCategories()
+	2, -- Dungeons
+	114, -- Raids
+	116, -- Quests & Zones
+	118, -- PVP (not enabled in cata clients atm)
+	120, -- "Custom"
+}
 
 local LFGTool = {
 	---@type LFGToolRequestData[]
@@ -37,9 +44,19 @@ local LFGTool = {
 	StatusText = GroupBulletinBoardFrameStatusText, ---@type FontString
 }
 
---- note: the C_LFGList.Search requires a #hwevent to work. So this function should only be
---- used in onclick or keypress events.
-local function LFGList_DoSearch(categoryId)
+LFGTool.CategoryButton = CreateFrame("Frame", nil, LFGTool.ScrollContainer, "Metal2DropdownWithSteppersAndLabelTemplate")
+LFGTool.CategoryButton:SetPoint("LEFT", GroupBulletinBoardFrameTitle, "RIGHT", 20, 0)
+LFGTool.CategoryButton:SetSize(150, 15)
+LFGTool.CategoryButton.Dropdown:SetAllPoints()
+LFGTool.CategoryButton.Dropdown.Text:SetFontObject("GameFontNormalSmall")
+LFGTool.CategoryButton.IncrementButton:Hide()
+LFGTool.CategoryButton.DecrementButton:Hide()
+
+-- only one category can searched at a time with the LFGList tool
+local selectedCategoryID = LFGLIST_CATEGORY_IDS[1]
+--- note: the C_LFGList.Search requires a #hwevent to work.
+--- So this function IS ONLY to be used in OnClick/Mouse/keypress event handlers.
+local function LFGList_DoCategorySearch(categoryId)
     local filterVal = 0 -- no filters
 	local preferredFilters
     local languages = C_LFGList.GetLanguageSearchFilter() or {};
@@ -55,22 +72,39 @@ local function LFGList_DoSearch(categoryId)
 	languages.ptBR =languages.ptBR or GBB.DB.TagsPortuguese
     C_LFGList.Search(categoryId, filterVal, preferredFilters, languages)
 end
-local categoryIdx = 0
-local lfgCategories = {
-	2, -- Dungeons
-	114, -- Raids
-	116, -- Quests & Zones
-	118, -- PVP (not enabled in cata clients atm)
-	120, -- "Custom"
-}
-local function RefreshButton_OnClick(self, button)
-	categoryIdx = math.fmod(categoryIdx, #lfgCategories) + 1
-	LFGList_DoSearch(lfgCategories[categoryIdx])
+do -- Setup category selection dropdown buttons
+	local IsSelected = function(buttonID) return buttonID == selectedCategoryID ; end
+	local OnSelect = function(buttonID)
+		selectedCategoryID = buttonID;
+		LFGList_DoCategorySearch(buttonID)
+	end
+	-- hack: on reloads, the game can have previous search results still. deduce the last selectedCategoryID if so.
+	local numResults, results = C_LFGList.GetSearchResults()
+	if numResults > 0 then
+		local activityID = C_LFGList.GetSearchResultInfo(results[1]).activityIDs[1]
+		selectedCategoryID = C_LFGList.GetActivityInfoTable(activityID).categoryID
+	end
+	-- create dropdown buttons for each LFGlist categoryID (refresh/search on select)
+	LFGTool.CategoryButton.Dropdown:SetupMenu(function(dropdown, rootDescription)
+		rootDescription:CreateTitle(CATEGORY)
+		for i = 1, #LFGLIST_CATEGORY_IDS do
+			local categoryID = LFGLIST_CATEGORY_IDS[i]
+			local categoryName = C_LFGList.GetLfgCategoryInfo(categoryID).name
+			rootDescription:CreateRadio(categoryName, IsSelected, OnSelect, categoryID)
+		end
+	end);
 end
-hooksecurefunc(C_LFGList, "Search", function()
+
+-- allows us to keep category up to date, with external/blizz calls to LFGList.Search
+hooksecurefunc(C_LFGList, "Search", function(categoryID)
+	selectedCategoryID = categoryID
+	LFGTool.CategoryButton.Dropdown:SignalUpdate()
 	LastUpdateTime = time()
 end)
 
+local RefreshButton_OnClick = function()
+	LFGList_DoCategorySearch(selectedCategoryID)
+end
 -- attach refresh button to the lfg frame so that its hidden when the "Tool Requests" tab is hidden.
 LFGTool.RefreshButton:SetParent(LFGTool.ScrollContainer)
 LFGTool.RefreshButton:SetScript("OnClick", RefreshButton_OnClick)
