@@ -241,7 +241,6 @@ local function GenerateExpansionPanel(expansionID)
 				if newValue == true and mutualBox:GetSavedValue() == true then
 					mutualBox:SetSavedValue(false)
 				end
-				updatedBox:SetChecked(newValue)
 			end
 		end
 		heroicOnly:OnSavedVarUpdate(exclusiveUpdateHandler(heroicOnly, normalOnly))
@@ -327,7 +326,6 @@ function GBB.OptionsInit ()
 		local updateHook = function(useLibDBIcon)
 			lockDistCheckbox:SetChecked(useLibDBIcon or  GBB.DB.MinimapButton.lockDistance)
 			lockDistCheckbox:SetEnabled(not useLibDBIcon)
-			lockDistCheckbox.Text:SetTextColor(unpack(useLibDBIcon and {GRAY_FONT_COLOR:GetRGB()} or {WHITE_FONT_COLOR:GetRGB()}))
 		end
 		GBB.OptionsBuilder.GetSavedVarHandle(GBB.DB.MinimapButton, 'UseLibDBIcon'):AddUpdateHook(updateHook);
 		updateHook(GBB.DB.MinimapButton.UseLibDBIcon) -- run once to sync the checkbox state.
@@ -373,7 +371,6 @@ function GBB.OptionsInit ()
 			if selection == true -- both options can be  toggled off at the same time, but not on.
 			and mutualBox:GetSavedValue() == true
 			then mutualBox:SetSavedValue(false) end;
-			updatedBox:SetChecked(selection)
 		end
 	end
 	chatStyleBox:OnSavedVarUpdate(exclusiveUpdateHandler(chatStyleBox, compactStyleBox))
@@ -406,12 +403,8 @@ function GBB.OptionsInit ()
 				editbox:SetText(GBB.L.JOIN_REQUEST_MESSAGE)
 			end
 		end)
-		local ogCheckboxFunc = checkbox.updateFunc -- save reference since overwriting with OnSavedVarUpdate call.
 		local updateWidgets = function(value)
-			if ogCheckboxFunc then ogCheckboxFunc(value) end
 			editbox:SetEnabled(value)
-			editbox:SetTextColor((value and WHITE_FONT_COLOR or GRAY_FONT_COLOR):GetRGB())
-			checkbox.Text:SetTextColor((value and NORMAL_FONT_COLOR or GRAY_FONT_COLOR):GetRGB())
 		end
 		updateWidgets(checkbox:GetSavedValue())
 		checkbox:OnSavedVarUpdate(updateWidgets)

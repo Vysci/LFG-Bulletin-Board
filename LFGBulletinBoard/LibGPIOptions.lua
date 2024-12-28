@@ -386,15 +386,15 @@ function Options.AddCheckBoxToCurrentPanel(dbTable,key,default,labelText,width)
 	if dbTable ~= nil and key ~= nil then
 		-- note: RegisterFrameWithSavedVar has been set up to also initialize first time saved vars.
 		if dbTable[key] == nil then dbTable[key] = default end
-		checkButton = Options.RegisterFrameWithSavedVar(checkButton, dbTable, key, default)
+		local checkButton, sVarHandle = Options.RegisterFrameWithSavedVar(checkButton, dbTable, key, default)
 		checkButton:SetChecked(checkButton:GetSavedValue())
 		--`.func` is called in the `OnClick` handler for the template.
 		-- see https://github.com/Gethe/wow-ui-source/blob/classic_era/Interface/FrameXML/ChatConfigFrame.xml#L177
 		checkButton.func = function(self, isChecked)
 			checkButton:SetSavedValue(isChecked)
 		end
-		checkButton:OnSavedVarUpdate(function(newValue)
-			checkButton:SetChecked(newValue)
+		sVarHandle:AddUpdateHook(function(isChecked)
+			checkButton:SetChecked(isChecked)
 		end)
 		checkButton:SetScript("OnMouseDown", RegisteredFrame_OnShiftRightClick)
 	end
@@ -417,6 +417,13 @@ function Options.AddCheckBoxToCurrentPanel(dbTable,key,default,labelText,width)
 		checkButton:SetPoint('LEFT', Options.LineRelativ..'Text', 'RIGHT', 10, 0)
 		Options.LineRelativ = buttonName
 	end
+	local updateDisabledState = function()
+		local isDisabled = not checkButton:IsEnabled()
+		local r, g, b = (isDisabled and DISABLED_FONT_COLOR or WHITE_FONT_COLOR):GetRGB()
+		checkButton.Text:SetTextColor(r, g, b)
+	end
+	checkButton:HookScript("OnDisable", updateDisabledState)
+	checkButton:HookScript("OnEnable", updateDisabledState)
 	if dbTable == nil and key == nil then 
 		checkButton:Hide()
 	end
@@ -438,9 +445,11 @@ function Options.AddColorSwatchToCurrentPanel(dbTable,key,default,labelText,widt
 	textFrame:AdjustPointsOffset(0, textFrame:GetHeight() - size) -- move text down a bit for bigger swatch buttons
 	local swatchButtonName = Options.Prefix..'ColorSwatch'..frameIdx
 	-- Initialize Button
+	---@class SwatchButton
 	local swatchButton = CreateFrame('Button', swatchButtonName, Options.CurrentPanel)
 	swatchButton:SetNormalTexture('Interface\\ChatFrame\\ChatFrameColorSwatch')
 	swatchButton.Bg = swatchButton:GetNormalTexture()
+	swatchButton.Label = textFrame
 	swatchButton:SetWidth(size)
 	swatchButton:SetHeight(size)
 	swatchButton:ClearAllPoints()
@@ -464,13 +473,13 @@ function Options.AddColorSwatchToCurrentPanel(dbTable,key,default,labelText,widt
 	
 	-- Register button with saved var handler
 	---@class SwatchButton:RegisteredFrameMixin, Button
-	swatchButton = Options.RegisterFrameWithSavedVar(swatchButton, dbTable, key, default)
+	local swatchButton, sVarHandle = Options.RegisterFrameWithSavedVar(swatchButton, dbTable, key, default)
 	local syncWithSavedVar = function()
-		local color = swatchButton:GetSavedValue() -- method from RegisterFrameWithSavedVar
+		local color = sVarHandle:GetValue()
 		swatchButton.Bg:SetVertexColor(color.r, color.g, color.b, color.a)
 	end
-	swatchButton:OnSavedVarUpdate(syncWithSavedVar);
 	syncWithSavedVar() -- run once to set the initial color
+	sVarHandle:AddUpdateHook(syncWithSavedVar)
 	local onSwatchColorChange = function() -- passed to ColorPickerFrame handlers.
 		local a = 1.0 - OpacitySliderFrame:GetValue()
 		local r, g, b = ColorPickerFrame:GetColorRGB()
@@ -490,6 +499,14 @@ function Options.AddColorSwatchToCurrentPanel(dbTable,key,default,labelText,widt
 		ColorPickerFrame:Hide()
 		ColorPickerFrame:Show()
 	end)
+	local updateDisabledState = function()
+		local isDisabled = not swatchButton:IsEnabled()
+		local r, g, b = (isDisabled and DISABLED_FONT_COLOR or WHITE_FONT_COLOR):GetRGB()
+		swatchButton.Highlight:SetVertexColor(r, g, b)
+		swatchButton.Label:SetTextColor(r, g, b)
+	end
+	swatchButton:HookScript("OnDisable", updateDisabledState)
+	swatchButton:HookScript("OnEnable", updateDisabledState)
 	return swatchButton
 end
 
@@ -505,7 +522,7 @@ function Options.AddDropdownToCurrentPanel(dbTable,key,default,menuButtons)
 	---@class Dropdown: UIDropDownMenu, RegisteredFrameMixin, Frame
 	local dropdownFrame = CreateFrame('Frame', dropdownName, Options.CurrentPanel, 'UIDropDownMenuTemplate')
 	--note: defaulting for uninitialized saved vars now done in RegisterFrameWithSavedVar
-	Options.RegisterFrameWithSavedVar(dropdownFrame, dbTable, key, default)
+	local _, sVarHandle = Options.RegisterFrameWithSavedVar(dropdownFrame, dbTable, key, default)
 	dropdownFrame.Button:SetScript("OnMouseDown", function(self, button)
 		RegisteredFrame_OnShiftRightClick(dropdownFrame, button) -- Default on right-click of the dropdown toggle
 		PlaySound(SOUNDKIT.IG_MAINMENU_OPTION_CHECKBOX_ON);
@@ -539,9 +556,9 @@ function Options.AddDropdownToCurrentPanel(dbTable,key,default,menuButtons)
 			end
 		end
 	end
-	dropdownFrame:OnSavedVarUpdate(syncDropDownWithValue);
 	UIDropDownMenu_SetWidth(dropdownFrame, maxWidth);
 	syncDropDownWithValue(dropdownFrame:GetSavedValue()); -- set initial text
+	sVarHandle:AddUpdateHook(syncDropDownWithValue)
 	-- Create and bind the initialization function to the dropdown menu
 	UIDropDownMenu_Initialize(dropdownFrame, function(self, level, menuList)
 		local buttonInfo = UIDropDownMenu_CreateInfo()
@@ -695,13 +712,14 @@ function Options.AddEditBoxToCurrentPanel(dbTable,key,default,labelText,width,la
 		label:SetJustifyH('LEFT')
 		label:SetJustifyV('TOP')
 	end
-	---@type EditBox|{Instructions: FontString} # Create the edit box
+	---@type EditBox|{Instructions: FontString, Label: FontString} # Create the edit box
 	local editBox = CreateFrame('EditBox', editBoxName, Options.CurrentPanel, 'InputBoxInstructionsTemplate')
 	editBox:SetPoint('TOPLEFT', label, 'TOPRIGHT', 5, 5)
 	editBox:SetScale(Options.scale)
 	editBox:SetWidth(width)
 	editBox:SetHeight(20)
 	label:SetHeight(editBox:GetHeight() - 10)
+	editBox.Label = label
 	editBox:SetNumeric(isNumeric)
 	editBox:SetAutoFocus(false)
 	editBox:SetFontObject('ChatFontNormal') -- matches InputBoxTemplate font
@@ -745,6 +763,14 @@ function Options.AddEditBoxToCurrentPanel(dbTable,key,default,labelText,width,la
 		end)
 		editBox:SetScript('OnLeave', GameTooltip_Hide)
 	end
+	local updateDisabledState = function()
+		local isDisabled = not editBox:IsEnabled()
+		local r, g, b =  (isDisabled and DISABLED_FONT_COLOR or WHITE_FONT_COLOR):GetRGB()
+		editBox:SetTextColor(r, g, b)
+		editBox.Label:SetTextColor(r, g, b)
+	end
+	editBox:HookScript("OnEnable", updateDisabledState)
+	editBox:HookScript("OnDisable", updateDisabledState)
 	Options.NextRelativ=labelName
 	Options.NextRelativX=0
 	Options.NextRelativY=-10
