@@ -44,6 +44,35 @@ local LFGTool = {
 	StatusText = GroupBulletinBoardFrameStatusText, ---@type FontString
 }
 
+---@param name? string
+---@param id number
+local getActivityDungeonKey = function(name, id)
+	local dungeonKey
+	if isClassicEra then
+		dungeonKey = GBB.GetDungeonKeyByID({activityID = id})
+	end
+	if not dungeonKey then
+		-- print("Dungeon key not found for activity: " .. name .. id)
+		-- DevTool:AddData(C_LFGList.GetActivityInfoTable(id), id)
+		dungeonKey = "MISC"
+	end
+	return dungeonKey
+end
+
+---@param categoryID number
+local function getFilteredActivitiesForCategory(categoryID)
+	local available = C_LFGList.GetAvailableActivities(categoryID)
+	local activityIDs = {}
+	for _, activityID in ipairs(available) do
+		local dungeonKey = getActivityDungeonKey(_, activityID)
+		if dungeonKey and GBB.FilterDungeon(dungeonKey) then
+			table.insert(activityIDs, activityID)
+		end
+	end
+	if activityIDs[1] == nil then return nil
+	else return activityIDs end;
+end
+
 LFGTool.CategoryButton = CreateFrame("Frame", nil, LFGTool.ScrollContainer, "Metal2DropdownWithSteppersAndLabelTemplate")
 LFGTool.CategoryButton:SetPoint("LEFT", GroupBulletinBoardFrameTitle, "RIGHT", 20, 0)
 LFGTool.CategoryButton:SetSize(150, 15)
@@ -58,7 +87,9 @@ local selectedCategoryID = LFGLIST_CATEGORY_IDS[1]
 --- So this function IS ONLY to be used in OnClick/Mouse/keypress event handlers.
 local function LFGList_DoCategorySearch(categoryId)
     local filterVal = 0 -- no filters
-	local preferredFilters
+	local preferredFilters = nil
+	local advancedFilters = nil
+	local crossFaction = nil
     local languages = C_LFGList.GetLanguageSearchFilter() or {};
 	-- include addon set languages
 	languages.enUS =languages.enUS or GBB.DB.TagsEnglish
@@ -70,7 +101,8 @@ local function LFGList_DoCategorySearch(categoryId)
 	languages.esES =languages.esES or GBB.DB.TagsSpanish
 	languages.esMX =languages.esMX or GBB.DB.TagsSpanish
 	languages.ptBR =languages.ptBR or GBB.DB.TagsPortuguese
-    C_LFGList.Search(categoryId, filterVal, preferredFilters, languages)
+	local activityIDs = getFilteredActivitiesForCategory(categoryId)
+    C_LFGList.Search(categoryId, filterVal, preferredFilters, languages, crossFaction, advancedFilters, activityIDs)
 end
 do -- Setup category selection dropdown buttons
 	local IsSelected = function(buttonID) return buttonID == selectedCategoryID ; end
@@ -342,20 +374,6 @@ toggleHeaderCollapseByKey = function(key)
 			frame:ToggleCollapsed(affectChildren, skipInvalidate)
 		end
 	end)
-end
----@param name string
----@param id number
-local getActivityDungeonKey = function(name, id)
-	local dungeonKey
-	if isClassicEra then
-		dungeonKey = GBB.GetDungeonKeyByID({activityID = id})
-	end
-	if not dungeonKey then
-		-- print("Dungeon key not found for activity: " .. name .. id)
-		-- DevTool:AddData(C_LFGList.GetActivityInfoTable(id), id)
-		dungeonKey = "MISC"
-	end	
-	return dungeonKey
 end
 local elementExtentByData = {}
 local function InitializeHeader(header, node)
