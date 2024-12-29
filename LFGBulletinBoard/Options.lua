@@ -341,50 +341,93 @@ function GBB.OptionsInit ()
 	CheckBox("CombineSubDungeons",false)
 	CheckBox("IsolateTravelServices",true)
 	GBB.OptionsBuilder.AddSpacerToPanel()
-	CheckBox("NotifySound",false)
-	CheckBox("NotifyChat",false)
-	GBB.OptionsBuilder.Indent(20)
-	CheckBox("NotfiyInnone",true)
-	CheckBox("NotfiyInpvp",false)
-	CheckBox("NotfiyInparty",true)
-	CheckBox("NotfiyInraid",false)
-	CheckBox("OneLineNotification",false)
-	GBB.OptionsBuilder.AddColorSwatchToCurrentPanel(GBB.DB,"NotifyColor",{r=1,g=1,b=1,a=1},GBB.L["BtnNotifyColor"])
-	GBB.OptionsBuilder.Indent(-20)	
+	do -- Chat/Sound Notification for New Chat Requests
+		local notifySound = CheckBox("NotifySound",false)
+		local notifyChat = CheckBox("NotifyChat",false)
+		GBB.OptionsBuilder.Indent(20)
+		local childOpts = {
+			CheckBox("NotfiyInnone",true),
+			CheckBox("NotfiyInpvp",false),
+			CheckBox("NotfiyInparty",true),
+			CheckBox("NotfiyInraid",false),
+			CheckBox("OneLineNotification",false),
+		}
+		local chatColor = GBB.OptionsBuilder.AddColorSwatchToCurrentPanel(
+			GBB.DB, "NotifyColor", {r=1,g=1,b=1,a=1}, GBB.L["BtnNotifyColor"]
+		)
+		local updateChildren = function()
+			local notifyChat = notifyChat:GetSavedValue()
+			local isEnabled = notifyChat or notifySound:GetSavedValue()
+			for _, option in ipairs(childOpts) do
+				option:SetEnabled(isEnabled)
+			end
+			chatColor:SetEnabled(notifyChat)
+		end
+		notifyChat:OnSavedVarUpdate(updateChildren)
+		notifySound:OnSavedVarUpdate(updateChildren)
+		updateChildren()
+		GBB.OptionsBuilder.Indent(-20)
+	end
 	GBB.OptionsBuilder.AddSpacerToPanel()
 	CheckBox("ColorOnLevel",true)
 	CheckBox("UseAllInLFG",true)
 	CheckBox("EscapeQuit",true)
 	CheckBox("DisplayLFG",false)
 	GBB.OptionsBuilder.AddSpacerToPanel()
-	GBB.OptionsBuilder.InLine()
-	CheckBox("ColorByClass",true)
-	CheckBox("ShowClassIcon",true)
-	GBB.OptionsBuilder.EndInLine()
-	CheckBox("RemoveRaidSymbols",true)	
-	CheckBox("RemoveRealm",false)
-	local chatStyleBox = CheckBox('ChatStyle', false)
-	local compactStyleBox = CheckBox('CompactStyle', false)
-	-- setup mutually exclusive updates when enabled (previously done in `GBB.OptionsInit()`)
-	local exclusiveUpdateHandler = function(updatedBox, mutualBox)
-		return function(selection)
-			if selection == true -- both options can be  toggled off at the same time, but not on.
-			and mutualBox:GetSavedValue() == true
-			then mutualBox:SetSavedValue(false) end;
+	do -- Bulletin board request entry display settings
+		GBB.OptionsBuilder.InLine()
+		CheckBox("ColorByClass",true)
+		CheckBox("ShowClassIcon",true)
+		GBB.OptionsBuilder.EndInLine()
+		CheckBox("RemoveRaidSymbols",true)
+		CheckBox("RemoveRealm",false)
+		local chatStyleBox = CheckBox('ChatStyle', false)
+		local compactStyleBox = CheckBox('CompactStyle', false)
+		-- setup mutually exclusive updates when enabled (previously done in `GBB.OptionsInit()`)
+		local exclusiveUpdateHandler = function(updatedBox, mutualBox)
+			return function(selection)
+				if selection == true -- both options can be  toggled off at the same time, but not on.
+				and mutualBox:GetSavedValue() == true
+				then mutualBox:SetSavedValue(false) end;
+			end
 		end
+		chatStyleBox:OnSavedVarUpdate(exclusiveUpdateHandler(chatStyleBox, compactStyleBox))
+		compactStyleBox:OnSavedVarUpdate(exclusiveUpdateHandler(compactStyleBox, chatStyleBox))
+		CheckBox("DontTrunicate",false)
+		do -- "Show fixed num requests per category" setting
+			local limitRequests = CheckBox("EnableShowOnly",false)
+			GBB.OptionsBuilder.Indent(30)
+			local editLimit = CreateEditBoxNumber("ShowOnlyNb", 4, 50)
+			local updateChild = function(value)
+				editLimit:SetEnabled(value)
+			end
+			limitRequests:OnSavedVarUpdate(function(value)
+				limitRequests:SetChecked(value)
+				updateChild(value)
+			end)
+			updateChild(limitRequests:GetSavedValue())
+			GBB.OptionsBuilder.Indent(-30)
+		end
+		GBB.OptionsBuilder.AddSpacerToPanel(0.2)
+		local timeOutSetting = CreateEditBoxNumber("TimeOut",150,50)
+		local savedVarHandle = GBB.OptionsBuilder.GetSavedVarHandle(GBB.DB, "TimeOut")
+		-- override the default `SetSavedValue` behavior to clamp the TimeOut value above 30s
+		function timeOutSetting:SetSavedValue(value)
+			savedVarHandle:SetValue(Clamp(value, 30, math.huge))
+		end
+
+		GBB.OptionsBuilder.AddColorSwatchToCurrentPanel(GBB.DB,"EntryColor",{r=1,g=1,b=1,a=1},GBB.L["BtnEntryColor"])
+		GBB.OptionsBuilder.AddColorSwatchToCurrentPanel(GBB.DB,"HeroicDungeonColor",{r=1,g=0,b=0,a=1},GBB.L["BtnHeroicDungeonColor"])
+		GBB.OptionsBuilder.AddColorSwatchToCurrentPanel(GBB.DB,"NormalDungeonColor",{r=0,g=1,b=0,a=1},GBB.L["BtnNormalDungeonColor"])
+		GBB.OptionsBuilder.AddColorSwatchToCurrentPanel(GBB.DB,"TimeColor",{r=1,g=1,b=1,a=1},GBB.L["BtnTimeColor"])
 	end
-	chatStyleBox:OnSavedVarUpdate(exclusiveUpdateHandler(chatStyleBox, compactStyleBox))
-	compactStyleBox:OnSavedVarUpdate(exclusiveUpdateHandler(compactStyleBox, chatStyleBox))
-	CheckBox("DontTrunicate",false)
-	CheckBox("EnableShowOnly",false)		
-	GBB.OptionsBuilder.Indent(30)
-	CreateEditBoxNumber("ShowOnlyNb", 4, 50)
-	GBB.OptionsBuilder.Indent(-30)
-	GBB.OptionsBuilder.AddSpacerToPanel(0.4)
-	do
+	GBB.OptionsBuilder.AddSpacerToPanel()
+	do -- "Request To Join Group" message settings
 		local checkbox = GBB.OptionsBuilder.AddCheckBoxToCurrentPanel(GBB.DB, "EnableJoinRequestMessage",
 			true, GBB.L.JOIN_REQUEST_HEADER
 		)
+		GBB.OptionsBuilder.Indent(20)
+		checkbox.Text:SetTextColor(NORMAL_FONT_COLOR:GetRGB())
 		GBB.OptionsBuilder.AddSpacerToPanel(0.1)
 		local editbox = GBB.OptionsBuilder.AddEditBoxToCurrentPanel(GBB.DB, "JoinRequestMessage",
 			GBB.L.JOIN_REQUEST_MESSAGE, '', 450, 0, false, GBB.L.JOIN_REQUEST_REPLACEMENTS_TIP, GBB.L.JOIN_REQUEST_MESSAGE
@@ -403,35 +446,44 @@ function GBB.OptionsInit ()
 				editbox:SetText(GBB.L.JOIN_REQUEST_MESSAGE)
 			end
 		end)
-		local updateWidgets = function(value)
+		local updateChild = function(value)
 			editbox:SetEnabled(value)
 		end
-		updateWidgets(checkbox:GetSavedValue())
-		checkbox:OnSavedVarUpdate(updateWidgets)
-	end
-	GBB.OptionsBuilder.AddColorSwatchToCurrentPanel(GBB.DB,"EntryColor",{r=1,g=1,b=1,a=1},GBB.L["BtnEntryColor"])
-	GBB.OptionsBuilder.AddColorSwatchToCurrentPanel(GBB.DB,"HeroicDungeonColor",{r=1,g=0,b=0,a=1},GBB.L["BtnHeroicDungeonColor"])
-	GBB.OptionsBuilder.AddColorSwatchToCurrentPanel(GBB.DB,"NormalDungeonColor",{r=0,g=1,b=0,a=1},GBB.L["BtnNormalDungeonColor"])
-	GBB.OptionsBuilder.AddColorSwatchToCurrentPanel(GBB.DB,"TimeColor",{r=1,g=1,b=1,a=1},GBB.L["BtnTimeColor"])
-	GBB.OptionsBuilder.AddSpacerToPanel()
-	--override the default `SetSavedValue` behavior to clamp the TimeOut value above 30s (previously done in `GBB.OptionsUpdate()`)
-	local timeOutSetting = CreateEditBoxNumber("TimeOut",150,50)
-	local savedVarHandle = GBB.OptionsBuilder.GetSavedVarHandle(GBB.DB, "TimeOut")
-	function timeOutSetting:SetSavedValue(value) 
-		savedVarHandle:SetValue(Clamp(value, 30, math.huge))
+		updateChild(checkbox:GetSavedValue())
+		checkbox:OnSavedVarUpdate(updateChild)
+		GBB.OptionsBuilder.Indent(-20)
 	end
 	GBB.OptionsBuilder.AddSpacerToPanel()
 	CheckBox("AdditionalInfo",false)
-	CheckBox("EnableGroup",false)
-	GBB.OptionsBuilder.Indent(30)
-	GBB.OptionsBuilder.AddColorSwatchToCurrentPanel(GBB.DB,"PlayerNoteColor",{r=1,g=0.8,b=0.2,a=1},GBB.L["BtnPlayerNoteColor"])
-	GBB.OptionsBuilder.Indent(-30)
+	do -- "Remember Past Group Members" setting
+		local mainChkbox = CheckBox("EnableGroup",false)
+		GBB.OptionsBuilder.Indent(30)
+		local childColorBox = GBB.OptionsBuilder.AddColorSwatchToCurrentPanel(GBB.DB,"PlayerNoteColor",{r=1,g=0.8,b=0.2,a=1},GBB.L["BtnPlayerNoteColor"])
+		local updateChild = function(value)
+			childColorBox:SetEnabled(value)
+		end
+		mainChkbox:OnSavedVarUpdate(updateChild)
+		updateChild(mainChkbox:GetSavedValue())
+		GBB.OptionsBuilder.Indent(-30)
+	end
 	GBB.OptionsBuilder.AddSpacerToPanel()
-	
-	CheckBox("EnableGuild",false)
-	GBB.OptionsBuilder.Indent(30)
-	GBB.OptionsBuilder.AddColorSwatchToCurrentPanel(GBB.DB,"ColorGuild",{a=1,r=.2,g=1,b=.2},GBB.L["BtnColorGuild"])
-	GBB.OptionsBuilder.Indent(-30)
+	do -- update the nested setting widgets based on EnableGuild checkbox state.
+		local mainChkbox = CheckBox("EnableGuild",false)
+		GBB.OptionsBuilder.Indent(30)
+		local rankChkbox = GBB.OptionsBuilder.AddCheckBoxToCurrentPanel(GBB.DB, "EnableGuildRank",
+			false, GBB.L.ADD_GUILDRANK_LABEL
+		);
+		local colorBox = GBB.OptionsBuilder.AddColorSwatchToCurrentPanel(GBB.DB, "ColorGuild",
+			{a = 1, r = .2, g = 1, b = .2}, GBB.L['BtnColorGuild']
+		)
+		GBB.OptionsBuilder.Indent(-30)
+		local updateSubOptions = function(mainSetting)
+			rankChkbox:SetEnabled(mainSetting)
+			colorBox:SetEnabled(mainSetting)
+		end
+		updateSubOptions(mainChkbox:GetSavedValue())
+		mainChkbox:OnSavedVarUpdate(updateSubOptions)
+	end
 	GBB.OptionsBuilder.AddSpacerToPanel()
 	CheckBox("OnDebug",false)
 

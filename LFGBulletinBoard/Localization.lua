@@ -29,6 +29,8 @@ local preLocalizedFallbacks = {
 		local localizedName = C_ChatInfo.GetChannelShortcutForChannelID(lfgChannelID)
 		return localizedName
 	end)(),
+	-- default global string includes an unwanted colon at the end
+	ADD_GUILDRANK_LABEL = ADD_GUILDRANK_LABEL:gsub("%p", ""),
 	["world_channel"] = CHANNEL_CATEGORY_WORLD,
 	["GuildChannel"] = GUILD_CHAT,
 	["msgLevelRange"] = LFD_LEVEL_FORMAT_RANGE:gsub("%(", ("(%s "):format(LEVEL)),
