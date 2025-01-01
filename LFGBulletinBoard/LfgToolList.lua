@@ -432,6 +432,100 @@ end
 -- Request Entry frame setup
 --------------------------------------------------------------------------------
 
+local buildPartyInfoTooltipFrame; ---@type fun(request: LFGToolRequestData): Frame, number
+local clearPartyInfoTooltipFrame; ---@type fun(): nil
+do
+	local gridContainer = CreateFrame("Frame", nil, GroupBulletinBoardFrame, "ResizeLayoutFrame")
+	local initMemberInfoFrame = function(frame)
+		---@class LFGTool_TooltipMemberInfo: Frame
+		local frame = frame
+		frame.LeaderIcon = frame:CreateTexture(nil, "ARTWORK")
+		frame.LeaderIcon:SetSize(12, 12)
+		frame.LeaderIcon:SetPoint("LEFT")
+		frame.Name = frame:CreateFontString(nil, "ARTWORK", "GameFontNormal")
+		frame.Name:SetPoint("LEFT", frame.LeaderIcon, "RIGHT", 2, 0)
+		frame.Name:SetText(" ")
+		frame.Name:SetWidth(70)
+		frame.Name:SetMaxLines(1)
+		frame.Name:SetJustifyH("LEFT")
+		frame.Name:SetJustifyV("MIDDLE")
+		frame.Level = frame:CreateFontString(nil, "ARTWORK", "GameFontNormal")
+		frame.Level:SetPoint("LEFT", frame.Name, "RIGHT", 2, 0)
+		frame.Level:SetJustifyH("CENTER")
+		frame.Level:SetJustifyV("MIDDLE")
+		frame.Level:SetWidth(26)
+		frame.RoleIcon = frame:CreateTexture(nil, "ARTWORK")
+		frame.RoleIcon:SetSize(13, 13)
+		frame.RoleIcon:SetPoint("LEFT", frame.Level, "RIGHT", 2, 0)
+		frame:SetSize(124, 14)
+	end
+	local memberFramePool = CreateFramePool("Frame", gridContainer, nil, nil, nil, initMemberInfoFrame)
+	---@param request LFGToolRequestData
+	buildPartyInfoTooltipFrame = function(request)
+		local numMembers = 0
+		for memberIdx, member in ipairs(request.partyInfo) do
+			-- edge case: re-query for player names if missing
+			if (not member.name) or member.name == UNKNOWN
+			or not (member.level and member.assignedRole )then
+				local info = C_LFGList.GetSearchResultPlayerInfo(request.resultId, memberIdx)
+				if info then -- resultID can be stale. check if it exists
+					info.name = info.name or UNKNOWN
+					request.partyInfo[memberIdx] = info
+					member = info
+				end
+			end;
+			if member.name and member.level and member.assignedRole then
+				---@type LFGTool_TooltipMemberInfo
+				local frame = memberFramePool:Acquire()
+				frame:Show()
+				frame.LeaderIcon:SetTexture(member.isLeader and "Interface/GroupFrame/UI-Group-LeaderIcon" or "")
+				local colorText = function(text)
+					return GBB.Tool.ClassColor[member.classFilename]:WrapTextInColorCode(text)
+				end
+				frame.Name:SetText(colorText(member.name))
+				frame.Level:SetText(colorText(("(%i)"):format(member.level)))
+				frame.RoleIcon:SetAtlas(ROLE_ATLASES[member.assignedRole or "DAMAGER"])
+				frame:SetID(memberIdx)
+				frame.data = member
+				numMembers = numMembers + 1
+			end
+		end
+		local entriesPerCol = 5
+		if numMembers > 19 then
+			entriesPerCol = 10
+		end
+		local layout = GridLayoutUtil.CreateStandardGridLayout(entriesPerCol, 1.5, 0, -1, 1, true)
+		local frames = {}
+		for f, _ in memberFramePool:EnumerateActive() do table.insert(frames, f) end
+		--> leader -> (tank -> healer -> dps) -> class (reverse) -> level -> name
+		local rolePrio = { TANK = 1, HEALER = 2, DAMAGER = 3 }
+		local sortMemberFrames = function(a, b)
+			if a.data.isLeader then return true;
+			elseif b.data.isLeader then return false end;
+			if a.data.assignedRole ~= b.data.assignedRole then
+				return rolePrio[a.data.assignedRole] < rolePrio[b.data.assignedRole]
+			end;
+			if a.data.classFilename ~= b.data.classFilename then
+				-- sort reverse alphabetical to get warriors first
+				return a.data.classFilename > b.data.classFilename
+			end;
+			if a.data.level ~= b.data.level then return a.data.level > b.data.level end;
+			if a.data.name ~= b.data.name then
+				return a.data.name < b.data.name
+			end
+			return a:GetID() < b:GetID()
+		end
+		sort(frames, sortMemberFrames)
+		GridLayoutUtil.ApplyGridLayout(frames, CreateAnchor("TOPLEFT", gridContainer, "TOPLEFT"), layout)
+		gridContainer:Layout()
+		gridContainer:Show()
+		return gridContainer, numMembers;
+	end
+	clearPartyInfoTooltipFrame = function()
+		memberFramePool:ReleaseAll()
+		gridContainer:Hide()
+	end
+end
 ---@param self Frame|TreeDataProviderNodeMixin
 ---@param clickType mouseButton
 local requestEntryClickHandler = function(self, clickType)
@@ -475,6 +569,14 @@ local function onEntryMouseover(entry, isMouseOver)
 		else
 			GameTooltip:AddLine(string.format(GBB.L['msgTotalTime'], GBB.formatTime(time() - request.start)))
 		end
+		if request.isGroupLeader then
+			local frame, numMembers = buildPartyInfoTooltipFrame(request)
+			local counts = request.memberRoleCounts;
+			GameTooltip:AddLine(LFG_LIST_TOOLTIP_MEMBERS:format(
+				numMembers, counts.TANK, counts.HEALER, counts.DAMAGER)
+			);
+			GameTooltip_InsertFrame(GameTooltip, frame)
+		end
 		if GBB.DB.EnableGroup and GBB.GroupTrans and GBB.GroupTrans[request.name] then
 			local history=GBB.GroupTrans[request.name]
 			GameTooltip:AddLine((GBB.Tool.GetClassIcon(history.class) or "")..
@@ -491,6 +593,7 @@ local function onEntryMouseover(entry, isMouseOver)
 		GameTooltip:Show()
 	else
 		GameTooltip:Hide()
+		clearPartyInfoTooltipFrame()
 	end
 end
 local function InitializeEntryItem(entry, node)
@@ -908,16 +1011,9 @@ function LFGTool:UpdateRequestList()
 				local dungeonKey = getActivityDungeonKey(activityInfo.fullName, activityID)
 				if dungeonKey == "MISC" then message = message .. " " .. activityInfo.fullName end
 				local partyInfo = {};
-				if not isSolo then for i = 1, searchResultData.numMembers do
-					local memberInfo = C_LFGList.GetSearchResultPlayerInfo(searchResultData.searchResultID, i);
-					partyInfo[i] = {
-						['role'] = memberInfo.assignedRole,
-						['class'] = memberInfo.classFilename,
-						['classLocalized'] = memberInfo.className,
-						['specLocalized'] = memberInfo.specName,
-						full = memberInfo
-					}
-				end; end
+				for i = 1, searchResultData.numMembers do
+					partyInfo[i] = C_LFGList.GetSearchResultPlayerInfo(searchResultData.searchResultID, i);
+				end;
 				local _bnetFriends, charFriends, guildMembers = C_LFGList.GetSearchResultFriends(resultID)
 				---@class LFGToolRequestData todo: cleanup unnecessary fields
 				local entry = {
