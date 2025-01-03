@@ -353,10 +353,16 @@ end
 
 function GBB.BtnSettings(button )
 	if button == "LeftButton" then
-		GBB.OptionsBuilder.OpenCategoryPanel(1)
+		local shouldOpen = GBB.PopupDynamic:Wipe("SettingsButtonMenu");
+		if shouldOpen then
+			GBB.PopupDynamic:AddItem(FILTERS, false, GBB.OptionsBuilder.OpenCategoryPanel, 2)
+			GBB.PopupDynamic:AddItem(ALL_SETTINGS, false, GBB.OptionsBuilder.OpenCategoryPanel, 1)
+			GBB.PopupDynamic:AddItem(GBB.L["BtnCancel"],false)
+			GBB.PopupDynamic:Show(GroupBulletinBoardFrameSettingsButton,0,0)
+		end
+		PlaySound(SOUNDKIT.IG_MAINMENU_OPTION, "SFX")
 	else
 		GBB.Popup_Minimap("cursor",false)
-		--GBB.Options.Open(1)
 	end
 end
 --------------------------------------------------------------------------------
@@ -753,6 +759,8 @@ function GBB.Init()
 	GBB.Initalized=true
 	
 	GBB.PopupDynamic=GBB.Tool.CreatePopup(GBB.OptionsUpdate)
+	-- hack: hide settings button popup whenever the board frame is hidden
+	GroupBulletinBoardFrameSettingsButton:HookScript("OnHide", function() GBB.PopupDynamic:Wipe("SettingsButtonMenu") end)
 	GBB.InitGroupList()
 
 	if isClassicEra then -- setup tabs
