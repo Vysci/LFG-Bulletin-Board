@@ -333,13 +333,12 @@ end
 -- Dungeon/Category Header frame setup
 --------------------------------------------------------------------------------
 
-local sessionCollapsedHeaders = {} -- session collapsed state. resets on reload
-
 ---@param self Button|TreeDataProviderNodeMixin
 ---@param clickType mouseButton
 ---@param isMouseDown boolean
 local dungeonHeaderClickHandler = function(self, clickType, isMouseDown)
 	local skipInvalidate = false
+	local sessionCollapsedHeaders = GBB.FoldedDungeons
 	if clickType == "LeftButton" then
 		if IsShiftKeyDown() then
 			local shouldCollapse = not self:IsCollapsed()
@@ -844,6 +843,7 @@ local updateScrollViewData = function(scrollView, requestList)
 	local shouldUpdate = false
 	local numRequests = 0 -- tracks only valid/shown requests
 	local userPlayerName = UnitNameUnmodified("player")
+	local sessionCollapsedHeaders = GBB.FoldedDungeons
 	local shouldShowRequest = function(request) ---@param request LFGToolRequestData
 		local hasFilterEnabled = GBB.FilterDungeon(request.dungeon, request.isHeroic, request.isRaid)
 		-- the `DontFilterOwn` option == "always show own requests". The var name is very confusing.
@@ -917,9 +917,7 @@ local updateScrollViewData = function(scrollView, requestList)
 				-- overwrite `InsertNode` with the same `InsetNodeSkipInvalidation` used by the tree parent node.
 				headerNode.InsertNode = headerNode.parent.InsertNode
 				headerNode:SetSortComparator(requestSortFunc, false, true)
-				if sessionCollapsedHeaders[key] ~= nil then -- explicit nil check for session state.
-					headerNode:SetCollapsed(sessionCollapsedHeaders[key], false, true)
-				else headerNode:SetCollapsed(GBB.DB.HeadersStartFolded, false, true) end
+				headerNode:SetCollapsed(sessionCollapsedHeaders[key], false, true)
 				shouldUpdate = true
 			end
 			for _, req in pairs(requestsByName) do
@@ -987,6 +985,33 @@ function LFGToolScrollContainer:OnLoad()
 	self.scrollView:SetDataProvider(CreateTreeDataProvider());
 	self.scrollView.dataProvider.node.InsertNode = InsertNodeSkipInvalidation
 end
+
+-- hack: sync the state of collapsed headers when the container is shown (ie tabbing into the tool frame)
+LFGToolScrollContainer:HookScript("OnShow", function()
+	local sessionCollapsedHeaders = GBB.FoldedDungeons
+	local shouldInvalidate = false
+	local updatedHeaders = {}
+	LFGToolScrollContainer.scrollView:ForEachElementData(function(node)
+		if node.data.isHeader
+			and node:IsCollapsed() ~= sessionCollapsedHeaders[node.data.dungeon]
+		then
+			local affectChildren = false;
+			local skipInvalidation = true;
+			node:ToggleCollapsed(affectChildren, skipInvalidation)
+			updatedHeaders[node.data.dungeon] = true
+			shouldInvalidate = true
+		end
+	end)
+	if shouldInvalidate then
+		-- update the header text for any existing frames
+		LFGToolScrollContainer.scrollView:ForEachFrame(function(frame, node)
+			if node.data.isHeader and updatedHeaders[node.data.dungeon]
+			then frame:UpdateTextLayout() end;
+		end)
+		-- trigger scrollView refresh
+		LFGTool.ScrollContainer.scrollView:GetDataProvider():Invalidate()
+	end
+end)
 --------------------------------------------------------------------------------
 -- Module public functions
 --------------------------------------------------------------------------------
