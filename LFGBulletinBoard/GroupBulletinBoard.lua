@@ -600,6 +600,15 @@ function GBB.Init()
 	-- Must do before the call to `GBB.CreateTagList()` below
 	GBB.SyncCustomFilterTags(GBB.dungeonTagsLoc);
 
+	--- Track state for a headers collapsed between both the chat and tool request tabs.
+	GBB.FoldedDungeons = setmetatable({}, {
+		-- default to `GBB.DB.HeadersStartFolded` instead of nil when key first seen
+		__index = function(self, key)
+			rawset(self, key, GBB.DB.HeadersStartFolded)
+			return GBB.DB.HeadersStartFolded
+		end
+	});
+
 	-- Load LFGList tool module
 	GBB.LfgTool:Load()
 
@@ -607,8 +616,6 @@ function GBB.Init()
 	GBB.RequestList={}
 	GBB.FramesEntries={}
 
-	GBB.FoldedDungeons={}
-	
 	-- Timer-Stuff
 	GBB.MAXTIME=time() +60*60*24*365 --add a year!
 	
@@ -967,4 +974,3 @@ function GBB.OnUpdate(elapsed)
 		end;
 	end
 end
-

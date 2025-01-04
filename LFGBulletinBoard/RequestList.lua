@@ -154,12 +154,6 @@ local function CreateHeader(scrollPos, dungeon)
 			categoryName = EASY_DIFFICULTY_COLOR:WrapTextInColorCode(categoryName)
 		end
 	end
-	
-	-- Initialize this value now so we can (un)fold only existing entries later
-	-- while still allowing new headers to follow the HeadersStartFolded setting
-	if GBB.FoldedDungeons[dungeon] == nil then
-		GBB.FoldedDungeons[dungeon]=GBB.DB.HeadersStartFolded
-	end
 
 	header.Name:SetText(("%s %s"):format(categoryName, levelRange))
 	header.Name:SetFontObject(GBB.DB.FontSize)
