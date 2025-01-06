@@ -1022,7 +1022,7 @@ function LFGTool:UpdateRequestList()
 	for _, resultID in ipairs(results) do
         local searchResultData = C_LFGList.GetSearchResultInfo(resultID)
 		local leaderInfo = C_LFGList.GetSearchResultLeaderInfo(resultID)
-        if not searchResultData.isDelisted and leaderInfo then
+        if not searchResultData.isDelisted and leaderInfo and leaderInfo.name then
 			local isSolo = searchResultData.numMembers == 1
 			local isSelf = leaderInfo.name == UnitNameUnmodified("player")
             local listingTimestamp = time() - searchResultData.age
@@ -1043,7 +1043,7 @@ function LFGTool:UpdateRequestList()
 				---@class LFGToolRequestData todo: cleanup unnecessary fields
 				local entry = {
 					-- fields copied from previous request gathering method
-					name = searchResultData.leaderName or UNKNOWN,
+					name = leaderInfo.name,
 					message = message,
 					class = leaderInfo.classFilename,
 					start = listingTimestamp,
