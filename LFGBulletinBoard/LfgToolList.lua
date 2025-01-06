@@ -1030,6 +1030,7 @@ function LFGTool:UpdateRequestList()
             if searchResultData.comment ~= nil and string.len(searchResultData.comment) > 2 then
                 message = searchResultData.comment
             end
+			GBB.RealLevel[leaderInfo.name] = leaderInfo.level
 			for _, activityID in pairs(searchResultData.activityIDs) do
 				local activityInfo = C_LFGList.GetActivityInfoTable(activityID)
 				-- DevTool:AddData(activityInfo, resultID)
