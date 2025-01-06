@@ -550,6 +550,8 @@ function GBB.Init()
 	GBB.UserLevel=UnitLevel("player")
 	GBB.UserName=(UnitFullName("player"))
 	GBB.ServerName=GetRealmName()
+	GBB.RealLevel = {} -- recently seen player levels
+	GBB.RealLevel[GBB.UserName] = GBB.UserLevel
 
 	-- Initalize options
 	if not GroupBulletinBoardDB then GroupBulletinBoardDB = {} end -- fresh DB
@@ -754,13 +756,11 @@ function GBB.Init()
 		end
 	)
 	GBB.Tool.EnableMoving(GroupBulletinBoardFrame,GBB.SaveAnchors)
-	
+
 	GBB.PatternWho1=GBB.Tool.CreatePattern(WHO_LIST_FORMAT )
 	GBB.PatternWho2=GBB.Tool.CreatePattern(WHO_LIST_GUILD_FORMAT )
 	GBB.PatternOnline=GBB.Tool.CreatePattern(ERR_FRIEND_ONLINE_SS)
-	GBB.RealLevel={}
-	GBB.RealLevel[GBB.UserName]=GBB.UserLevel
-	
+
 	GroupBulletinBoardFrameTitle:SetText(string.format(GBB.TxtEscapePicture,GBB.MiniIcon).." ".. GBB.Title)
 	
 	GBB.Initalized=true
