@@ -19,13 +19,13 @@ local ROLE_ATLASES = { -- for using with Textures
 	SOLO_DAMAGER = "groupfinder-icon-role-micro-dps",
 };
 local INLINE_ROLE_ICONS = { -- for inlining in fontstrings/chat
-	TANK = "|TInterface\\LFGFrame\\UI-LFG-ICON-PORTRAITROLES.blp:16:16:0:0:64:64:0:19:22:41|t";
-	HEALER = "|TInterface\\LFGFrame\\UI-LFG-ICON-PORTRAITROLES.blp:16:16:0:0:64:64:20:39:1:20|t";
-	DAMAGER = "|TInterface\\LFGFrame\\UI-LFG-ICON-PORTRAITROLES.blp:16:16:0:0:64:64:20:39:22:41|t";
+	TANK = "|TInterface\\LFGFrame\\UI-LFG-ICON-PORTRAITROLES.blp:16:16:0:-1:64:64:0:19:22:41|t";
+	HEALER = "|TInterface\\LFGFrame\\UI-LFG-ICON-PORTRAITROLES.blp:16:16:0:-1:64:64:20:39:1:20|t";
+	DAMAGER = "|TInterface\\LFGFrame\\UI-LFG-ICON-PORTRAITROLES.blp:16:16:0:-1:64:64:20:39:22:41|t";
 	-- (no circle)
-	SOLO_TANK = "|TInterface\\LFGFrame\\LFGROLE.BLP:12:12:0:0:64:16:32:48:0:16|t";
-	SOLO_HEALER = "|TInterface\\LFGFrame\\LFGROLE.BLP:12:12:0:0:64:16:48:64:0:16|t";
-	SOLO_DAMAGER = "|TInterface\\LFGFrame\\LFGROLE.BLP:12:12:0:0:64:16:16:32:0:16|t";
+	SOLO_TANK = "|TInterface\\LFGFrame\\LFGROLE.BLP:13:13:0:0:64:16:32:48:0:16|t";
+	SOLO_HEALER = "|TInterface\\LFGFrame\\LFGROLE.BLP:13:13:0:0:64:16:48:64:0:16|t";
+	SOLO_DAMAGER = "|TInterface\\LFGFrame\\LFGROLE.BLP:13:13:0:0:64:16:16:32:0:16|t";
 }
 local LFGLIST_CATEGORY_IDS = { -- alternatively, use C_LFGList.GetAvailableCategories()
 	2, -- Dungeons
@@ -655,8 +655,9 @@ local function InitializeEntryItem(entry, node)
 			self.Message:SetMaxLines(GBB.DB.DontTrunicate and 99 or 1)
 			self.Message:SetJustifyV("MIDDLE")
 			self.Message:ClearAllPoints() -- incase swapped to 2-line mode
-			self.Message:SetText(" ")
-			local lineHeight = self.Message:GetStringHeight() + 1 -- ui nit +1 offset
+			-- dummy text to calculate normalized line height (icons are the biggest characters in any message)
+			self.Message:SetText(INLINE_ROLE_ICONS.DAMAGER)
+			local lineHeight = self.Message:GetStringHeight()
 
 			-- hack: make sure the initial size of the FontString object is big enough
 			-- to allow for all possible text when not truncating
@@ -813,7 +814,7 @@ local function InitializeEntryItem(entry, node)
 					projectedHeight = self.Name:GetStringHeight() + self.Message:GetStringHeight()
 				else
 					projectedHeight = GBB.DB.DontTrunicate
-						and self.Message:GetStringHeight()
+						and math.max(lineHeight, self.Message:GetStringHeight())
 						or lineHeight;
 				end
 			end
@@ -968,7 +969,7 @@ function LFGToolScrollContainer:OnLoad()
 	self.scrollView:SetElementExtentCalculator(function(idx, node)
 		local elementData = node:GetData()
 		local preCalculated = elementExtentByData[elementData]
-		return preCalculated or 12
+		return preCalculated or 15
 	end)
 	self.scrollView:SetElementFactory(function(factory, node)
 		local elementData = node:GetData()
@@ -1001,6 +1002,9 @@ function LFGToolScrollContainer:OnLoad()
 	self.scrollView.dataProvider:UnregisterCallback(DataProviderMixin.Event.OnSort, self.scrollView);
 	-- prevent invalidation from happening on every `Insert` call
 	self.scrollView.dataProvider.node.InsertNode = InsertNodeSkipInvalidation
+	--- hack: update the layout anytime the scrollbox is updated.
+	-- fixes an issue with scroll elements initializing with incorrect extents
+	self.scrollBox:RegisterCallback(ScrollBoxListMixin.Event.OnUpdate, self.scrollBox.Layout, self.scrollBox)
 end
 
 -- hack: sync the state of collapsed headers when the container is shown (ie tabbing into the tool frame)
@@ -1101,6 +1105,18 @@ LFGTool.UpdateBoardListings = getDebounceHandle(function()
 
 	updateScrollViewData(LFGTool.ScrollContainer.scrollView, LFGTool.requestList)
 end, 0.5 --[[bucket updates within 0.5 seconds]])
+
+function LFGTool.OnFrameResized()
+	if not LFGToolScrollContainer:IsVisible() then return end;
+	-- iterate visible frames and update text layouts
+	LFGToolScrollContainer.scrollView:ForEachFrame(function(frame, node)
+		---@cast frame HeaderButton|RequestEntryFrame
+		frame:UpdateTextLayout()
+	end)
+	-- Update scrollbox so that extents are set to match any new frame sizes
+	local immediately = false
+	LFGToolScrollContainer.scrollBox:FullUpdate(immediately)
+end
 
 function LFGTool:Load()
 	self.requestList = {}
