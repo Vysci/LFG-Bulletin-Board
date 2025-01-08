@@ -353,7 +353,7 @@ local dungeonHeaderClickHandler = function(self, clickType, isMouseDown)
 	if clickType == "LeftButton" then
 		if IsShiftKeyDown() then
 			local shouldCollapse = not self:IsCollapsed()
-			setAllHeadersCollapsed(shouldCollapse, DataProviderConsts.DoInvalidation)
+			setAllHeadersCollapsed(shouldCollapse)
 			for key, _ in pairs(sessionCollapsedHeaders) do
 				sessionCollapsedHeaders[key] = shouldCollapse
 			end
@@ -365,16 +365,17 @@ local dungeonHeaderClickHandler = function(self, clickType, isMouseDown)
 		createMenu(self:GetData().dungeon)
 	end
 end
-setAllHeadersCollapsed = function(shouldCollapse, skipInvalidate)
+setAllHeadersCollapsed = function(shouldCollapse)
 	local scrollView = LFGTool.ScrollContainer.scrollView
 	scrollView.dataProvider.node:SetChildrenCollapsed(shouldCollapse,
-		DataProviderConsts.ExcludeChildren, skipInvalidate
+		DataProviderConsts.ExcludeChildren, DataProviderConsts.SkipInvalidation
 	);
 	scrollView:ForEachFrame(function(frame, node)
 		if node.data.isHeader then ---@cast frame HeaderButton
 			frame:UpdateTextLayout()
 		end
 	end)
+	scrollView.dataProvider:Invalidate()
 end
 toggleHeaderCollapseByKey = function(key)
 	LFGTool.ScrollContainer.scrollView:ForEachFrame(function(frame, node)
@@ -996,6 +997,9 @@ function LFGToolScrollContainer:OnLoad()
 	ScrollUtil.AddManagedScrollBarVisibilityBehavior(self.scrollBox, self.scrollBar, anchorsWithScrollBar, anchorsWithoutScrollBar);
 
 	self.scrollView:SetDataProvider(CreateTreeDataProvider());
+	-- prevent invalidation from happening on every `Sort` call
+	self.scrollView.dataProvider:UnregisterCallback(DataProviderMixin.Event.OnSort, self.scrollView);
+	-- prevent invalidation from happening on every `Insert` call
 	self.scrollView.dataProvider.node.InsertNode = InsertNodeSkipInvalidation
 end
 
