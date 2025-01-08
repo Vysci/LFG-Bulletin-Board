@@ -295,6 +295,18 @@ local function IgnoreRequest(name)
 	C_FriendList.AddIgnore(name)
 end
 
+-- argument constants used by various methods in the TreeDataProviderNodeMixin
+-- here to make the source more readable.
+local DataProviderConsts = {
+	SkipInvalidation = true,
+	DoInvalidation = false,
+	AffectChildren = true,
+	ExcludeChildren = false,
+	IncludeCollapsed = false,
+	ExcludeCollapsed = true,
+	SkipSort = true,
+	DoSort = false,
+}
 local setAllHeadersCollapsed ---@type function
 local toggleHeaderCollapseByKey ---@type function
 local function createMenu(DungeonID,req) -- shared right-click menu for headers and requests
@@ -337,18 +349,16 @@ end
 ---@param clickType mouseButton
 ---@param isMouseDown boolean
 local dungeonHeaderClickHandler = function(self, clickType, isMouseDown)
-	local skipInvalidate = false
 	local sessionCollapsedHeaders = GBB.FoldedDungeons
 	if clickType == "LeftButton" then
 		if IsShiftKeyDown() then
 			local shouldCollapse = not self:IsCollapsed()
-			setAllHeadersCollapsed(shouldCollapse, skipInvalidate)
+			setAllHeadersCollapsed(shouldCollapse, DataProviderConsts.DoInvalidation)
 			for key, _ in pairs(sessionCollapsedHeaders) do
 				sessionCollapsedHeaders[key] = shouldCollapse
 			end
 		else
-			local affectChildren = false
-			self:ToggleCollapsed(affectChildren, skipInvalidate)
+			self:ToggleCollapsed(DataProviderConsts.ExcludeChildren, DataProviderConsts.DoInvalidation)
 			sessionCollapsedHeaders[self:GetData().dungeon] = self:IsCollapsed()
 		end
 	elseif clickType == "RightButton" then
@@ -357,8 +367,9 @@ local dungeonHeaderClickHandler = function(self, clickType, isMouseDown)
 end
 setAllHeadersCollapsed = function(shouldCollapse, skipInvalidate)
 	local scrollView = LFGTool.ScrollContainer.scrollView
-	local affectChildren = false
-	scrollView.dataProvider.node:SetChildrenCollapsed(shouldCollapse, affectChildren, skipInvalidate)
+	scrollView.dataProvider.node:SetChildrenCollapsed(shouldCollapse,
+		DataProviderConsts.ExcludeChildren, skipInvalidate
+	);
 	scrollView:ForEachFrame(function(frame, node)
 		if node.data.isHeader then ---@cast frame HeaderButton
 			frame:UpdateTextLayout()
@@ -366,11 +377,9 @@ setAllHeadersCollapsed = function(shouldCollapse, skipInvalidate)
 	end)
 end
 toggleHeaderCollapseByKey = function(key)
-	local affectChildren = false
-	local skipInvalidate = true
 	LFGTool.ScrollContainer.scrollView:ForEachFrame(function(frame, node)
 		if node.data.isHeader and node.data.dungeon == key then
-			frame:ToggleCollapsed(affectChildren, skipInvalidate)
+			frame:ToggleCollapsed(DataProviderConsts.ExcludeChildren, DataProviderConsts.SkipInvalidation)
 		end
 	end)
 end
@@ -837,7 +846,7 @@ local LFGToolScrollContainer = LFGTool.ScrollContainer
 ---@param requestList LFGToolRequestData[]
 local updateScrollViewData = function(scrollView, requestList)
 	---@type TreeDataProviderMixin
-	local categoryNodes = scrollView.dataProvider
+	local dataProvider = scrollView.dataProvider
 	local requestSortFunc = getRequestNodeSortFunc()
 	local incomingMap = {} -- {[dungeonKey]: {[playerName]: request}}
 	local shouldUpdate = false
@@ -864,28 +873,28 @@ local updateScrollViewData = function(scrollView, requestList)
 		end
 	end
 	LFGTool.numRequests = numRequests
-	if not categoryNodes.node.sortComparator then -- one time setup
-		categoryNodes:SetSortComparator(function(a, b)
+	if not dataProvider.node.sortComparator then -- one time setup
+		dataProvider:SetSortComparator(function(a, b)
 			return GBB.dungeonSort[a:GetData().dungeon] < GBB.dungeonSort[b:GetData().dungeon]
 		end, false, true)
 	end
 	-- enumerate current nodes, update any existing requests, remove any that are no longer present
-	for _, node in categoryNodes:Enumerate(nil, nil, false) do
+	for _, node in dataProvider:Enumerate(nil, nil, DataProviderConsts.IncludeCollapsed) do
 		---@cast node TreeDataProviderNodeMixin
 		local elementData = node:GetData()
 		local key = elementData.dungeon or elementData.req.dungeon
 		if elementData.isHeader then -- remove stale headers/categories for the incoming request list
 			if not incomingMap[key] then
-				node.parent:Remove(node, true)
+				node.parent:Remove(node, DataProviderConsts.SkipInvalidation)
 				shouldUpdate = true
 			end
 			if node.sortComparator ~= requestSortFunc then -- one time setup for headers sort function
-				node:SetSortComparator(requestSortFunc, false)
+				node:SetSortComparator(requestSortFunc, DataProviderConsts.ExcludeChildren)
 			end
 		elseif elementData.isEntry then
 			local incoming = incomingMap[key] and incomingMap[key][elementData.req.name] ---@type LFGToolRequestData?
 			if not incoming then -- remove stale entries from data-provider too
-				node.parent:Remove(node, true)
+				node.parent:Remove(node, DataProviderConsts.SkipInvalidation)
 				-- print("listing removed for", elementData.req.name, elementData.req.dungeon)
 				shouldUpdate = true
 			else
@@ -897,7 +906,7 @@ local updateScrollViewData = function(scrollView, requestList)
 				then
 					incomingMap[key][elementData.req.name] = nil
 				else -- remove request node from dataProvider (will be in next re-added step)
-					node.parent:Remove(node, true)
+					node.parent:Remove(node, DataProviderConsts.SkipInvalidation)
 					shouldUpdate = true
 				end
 			end
@@ -907,17 +916,21 @@ local updateScrollViewData = function(scrollView, requestList)
 	for key, requestsByName in pairs(incomingMap) do
 		if next(requestsByName) then
 			local anyAdded = false
-			local headerNode = categoryNodes:FindElementDataByPredicate(function(node)
+			local headerNode = dataProvider:FindElementDataByPredicate(function(node)
 				---@cast node TreeDataProviderNodeMixin
 				local element = node.data
 				return element.isHeader and element.dungeon == key
 			end, false)
 			if not headerNode then
-				headerNode = categoryNodes:Insert({dungeon = key, isHeader = true})
+				headerNode = dataProvider:Insert({dungeon = key, isHeader = true})
 				-- overwrite `InsertNode` with the same `InsetNodeSkipInvalidation` used by the tree parent node.
-				headerNode.InsertNode = headerNode.parent.InsertNode
-				headerNode:SetSortComparator(requestSortFunc, false, true)
-				headerNode:SetCollapsed(sessionCollapsedHeaders[key], false, true)
+				headerNode.InsertNode = scrollView.dataProvider.node.InsertNode
+				headerNode:SetSortComparator(requestSortFunc,
+					DataProviderConsts.ExcludeChildren, DataProviderConsts.SkipSort
+				);
+				headerNode:SetCollapsed(sessionCollapsedHeaders[key],
+					DataProviderConsts.ExcludeChildren, DataProviderConsts.SkipInvalidation
+				);
 				shouldUpdate = true
 			end
 			for _, req in pairs(requestsByName) do
@@ -932,8 +945,8 @@ local updateScrollViewData = function(scrollView, requestList)
 	end
 	-- sort and invalidate if any changes were made
 	if shouldUpdate then
-		categoryNodes:Sort() -- must be done before invalidation
-		categoryNodes:Invalidate() -- triggers UI update
+		dataProvider:Sort() -- must be done before invalidation
+		dataProvider:Invalidate() -- triggers UI update
 	end
 end
 
@@ -967,7 +980,7 @@ function LFGToolScrollContainer:OnLoad()
 	self.scrollView:SetElementResetter(function(frame, node)
 		if node.data.isEntry then CountdownTimer:UnregisterFrame(frame) end
 	end)
-	self.scrollBox = CreateFrame("Frame", nil, self, "WoWScrollBoxList")
+	self.scrollBox = CreateFrame("Frame", nil, self, "WowScrollBoxList")
 	local anchorsWithScrollBar = {
 		CreateAnchor("TOPLEFT", LFGToolScrollContainer, "TOPLEFT", 10, 0),
 		CreateAnchor("BOTTOMRIGHT", LFGToolScrollContainer, "BOTTOMRIGHT", -24, 0),
@@ -995,9 +1008,7 @@ LFGToolScrollContainer:HookScript("OnShow", function()
 		if node.data.isHeader
 			and node:IsCollapsed() ~= sessionCollapsedHeaders[node.data.dungeon]
 		then
-			local affectChildren = false;
-			local skipInvalidation = true;
-			node:ToggleCollapsed(affectChildren, skipInvalidation)
+			node:ToggleCollapsed(DataProviderConsts.ExcludeChildren, DataProviderConsts.SkipInvalidation)
 			updatedHeaders[node.data.dungeon] = true
 			shouldInvalidate = true
 		end
