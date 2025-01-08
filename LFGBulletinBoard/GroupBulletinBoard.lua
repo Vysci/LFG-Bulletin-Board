@@ -753,6 +753,7 @@ function GBB.Init()
 		GBB.ResizeFrameList()
 		GBB.SaveAnchors()
 		GBB.UpdateList()
+		GBB.LfgTool.OnFrameResized()
 		end
 	)
 	GBB.Tool.EnableMoving(GroupBulletinBoardFrame,GBB.SaveAnchors)
