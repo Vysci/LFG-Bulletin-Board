@@ -1,4 +1,15 @@
 Group Bulletin Board
+
+3.42
+ - Adds "Karazhan Crypts" dungeon category for SoD servers.
+ - Adds bulletin board support for the new official Group Finder under the "Tool Requests" tab.
+   - Users can use the category button at the top of the tab to switch between the Dungeon/Raids/Bgs/Etc.
+   - The "refresh" button has been moved to the added "Tool Requests" tab.
+   - Clicking the "refresh" button will now refresh lfg tool results for the current category.
+ - Fixed issue which caused the official Group Finder to sometimes break after interacting with addon dropdowns.
+ - Settings button now toggles a simple dropdown with options to open to filter settings or main addon settings
+ - Re-added option to show guild rank in player tooltip when "Add guild in player tooltip" setting is enabled.
+
 3.41
  - Added input box to modify the "alt-click to send role message" message in the main addon settings panel.
    - can now use `%level` `%class` `%role` in the message which will be replaced with the character's level, class, and group role respectively.
