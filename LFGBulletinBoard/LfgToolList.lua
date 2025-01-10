@@ -31,7 +31,7 @@ local LFGLIST_CATEGORY_IDS = { -- alternatively, use C_LFGList.GetAvailableCateg
 	2, -- Dungeons
 	114, -- Raids
 	116, -- Quests & Zones
-	118, -- PVP (not enabled in cata clients atm)
+	-- 118, -- PVP (not enabled in any clients atm)
 	120, -- "Custom"
 }
 
