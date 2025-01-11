@@ -27,12 +27,13 @@ local INLINE_ROLE_ICONS = { -- for inlining in fontstrings/chat
 	SOLO_HEALER = "|TInterface\\LFGFrame\\LFGROLE.BLP:13:13:0:0:64:16:48:64:0:16|t";
 	SOLO_DAMAGER = "|TInterface\\LFGFrame\\LFGROLE.BLP:13:13:0:0:64:16:16:32:0:16|t";
 }
-local LFGLIST_CATEGORY_IDS = { -- alternatively, use C_LFGList.GetAvailableCategories()
-	2, -- Dungeons
-	114, -- Raids
-	116, -- Quests & Zones
-	-- 118, -- PVP (not enabled in any clients atm)
-	120, -- "Custom"
+--- see https://wago.tools/db2/GroupFinderCategory?build=1.15.6.58185
+local LFGListCategoryEnum = {
+	Dungeons = 2;
+	Raids = 114;
+	QuestsAndZones = 116;
+	PvP = 118; -- aka "Battlegrounds"
+	Custom = 120;
 }
 
 local LFGTool = {
@@ -82,7 +83,7 @@ LFGTool.CategoryButton.IncrementButton:Hide()
 LFGTool.CategoryButton.DecrementButton:Hide()
 
 -- only one category can searched at a time with the LFGList tool
-local selectedCategoryID = LFGLIST_CATEGORY_IDS[1]
+local selectedCategoryID = LFGListCategoryEnum.Dungeons -- default to dungeons
 --- note: the C_LFGList.Search requires a #hwevent to work.
 --- So this function IS ONLY to be used in OnClick/Mouse/keypress event handlers.
 local function LFGList_DoCategorySearch(categoryId)
@@ -117,14 +118,20 @@ do -- Setup category selection dropdown buttons
 		selectedCategoryID = C_LFGList.GetActivityInfoTable(activityID).categoryID
 	end
 	-- create dropdown buttons for each LFGlist categoryID (refresh/search on select)
-	LFGTool.CategoryButton.Dropdown:SetupMenu(function(dropdown, rootDescription)
+	local menuGenerator = function(_, rootDescription)
 		rootDescription:CreateTitle(CATEGORY)
-		for i = 1, #LFGLIST_CATEGORY_IDS do
-			local categoryID = LFGLIST_CATEGORY_IDS[i]
+		-- note: api can return empty list early in addon load process
+		local lfgCategories = C_LFGList.GetAvailableCategories()
+		for i = 1, #lfgCategories do
+			local categoryID = lfgCategories[i]
 			local categoryName = C_LFGList.GetLfgCategoryInfo(categoryID).name
 			rootDescription:CreateRadio(categoryName, IsSelected, OnSelect, categoryID)
 		end
-	end);
+	end
+	-- (re)build menu options whenever dropdown button shown
+	LFGTool.CategoryButton:HookScript('OnShow', function()
+		LFGTool.CategoryButton.Dropdown:SetupMenu(menuGenerator)
+	end)
 end
 -- LFGList searching spinner
 LFGTool.RefreshSpinner = CreateFrame("Frame", nil, LFGTool.RefreshButton, "LoadingSpinnerTemplate")
