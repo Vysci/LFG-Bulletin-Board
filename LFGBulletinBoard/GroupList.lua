@@ -111,7 +111,9 @@ function GBB.UpdateGroupList()
 		table.sort(GBB.DBChar.GroupList,function(a,b) return a.lastSeen<b.lastSeen end)	
 	end
 		
-	if not GroupBulletinBoardFrame:IsVisible() or GBB.Tool.GetSelectedTab(GroupBulletinBoardFrame)~=3 then
+	if not GroupBulletinBoardFrame:IsVisible()
+	or GBB.GetSelectedTab() ~= GBB.Enum.Tabs.RecentPlayers
+	then
 		return
 	end
 	GBB.EditNote(nil)
