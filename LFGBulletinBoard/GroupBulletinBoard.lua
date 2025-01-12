@@ -771,52 +771,59 @@ function GBB.Init()
 	GroupBulletinBoardFrameSettingsButton:HookScript("OnHide", function() GBB.PopupDynamic:Wipe("SettingsButtonMenu") end)
 	GBB.InitGroupList()
 
+	local TabEnum; ---@type {ChatRequests: number?, RecentPlayers: number?, LFGTool: number?}
 	if isClassicEra then -- setup tabs
-		-- Normal requests tab
-		GBB.Tool.AddTab(GroupBulletinBoardFrame, GBB.L.TabRequest, GroupBulletinBoardFrame_ScrollFrame);
-
-		-- LFG Tool tab. Note: currently only active in anniversary(fresh) servers and SoD
 		local serverType = C_Seasons.GetActiveSeason()
-		if (serverType == Enum.SeasonID.SeasonOfDiscovery)
-		or (serverType == Enum.SeasonID.Fresh)
-		or (serverType == Enum.SeasonID.FreshHardcore)
-		then GBB.Tool.AddTab(GroupBulletinBoardFrame, GBB.L.TabLfg, GBB.LfgTool.ScrollContainer);
-		else GBB.LfgTool.ScrollContainer:Hide() end;
+		-- Note: tool currently only active in anniversary/fresh servers and SoD
+		local useToolRequestTab = (serverType == Enum.SeasonID.SeasonOfDiscovery)
+			or (serverType == Enum.SeasonID.Fresh)
+			or (serverType == Enum.SeasonID.FreshHardcore);
 
-		-- Past group members tab. (Inactive and broken)
-		-- GBB.Tool.AddTab(GroupBulletinBoardFrame, GBB.L.TabGroup, GroupBulletinBoardFrame_GroupFrame);
-		GroupBulletinBoardFrame_GroupFrame:Hide()
+		TabEnum = {
+			-- Normal requests tab
+			ChatRequests = GBB.Tool.AddTab(GroupBulletinBoardFrame, GBB.L.TabRequest, GroupBulletinBoardFrame_ScrollFrame),
+			-- LFG Tool requests
+			LFGTool = useToolRequestTab and GBB.Tool.AddTab(GroupBulletinBoardFrame, GBB.L.TabLfg, GBB.LfgTool.ScrollContainer) or nil,
+			-- Past group members tab. (Inactive and broken)
+			-- RecentPlayers = GBB.Tool.AddTab(GroupBulletinBoardFrame, GBB.L.TabGroup, GroupBulletinBoardFrame_GroupFrame);
+		}
 	else
 		-- cata client for Hide all tabs except requests for the time being
-		GBB.Tool.AddTab(GroupBulletinBoardFrame, GBB.L.TabRequest, GroupBulletinBoardFrame_ScrollFrame);
-
-		-- GBB.Tool.AddTab(GroupBulletinBoardFrame, GBB.L.TabLfg, GBB.LfgTool.ScrollContainer);
-		GBB.LfgTool.ScrollContainer:Hide()
-
-		-- GBB.Tool.AddTab(GroupBulletinBoardFrame, GBB.L.TabGroup, GroupBulletinBoardFrame_GroupFrame);
-		GroupBulletinBoardFrame_GroupFrame:Hide()
-
+		TabEnum = {
+			ChatRequests = GBB.Tool.AddTab(GroupBulletinBoardFrame, GBB.L.TabRequest, GroupBulletinBoardFrame_ScrollFrame);
+			-- LFGTool = GBB.Tool.AddTab(GroupBulletinBoardFrame, GBB.L.TabLfg, GBB.LfgTool.ScrollContainer);
+			-- RecentPlayers = GBB.Tool.AddTab(GroupBulletinBoardFrame, GBB.L.TabGroup, GroupBulletinBoardFrame_GroupFrame);
+		}
 	end
-	GBB.Tool.SelectTab(GroupBulletinBoardFrame, 1) -- default to requests tab
-	local enableGroupVar = GBB.OptionsBuilder.GetSavedVarHandle(GBB.DB, "EnableGroup")
-	local refreshGroupTab = function(isEnabled) -- previously done in `GBB.OptionsUpdate()`
-		if isEnabled then
-			-- Shows all active tabs.
-			GBB.Tool.TabShow(GroupBulletinBoardFrame)
-		else
-			-- hide the "Remember past group members" aka "EnableGroup" tab should be the last tab
-			GBB.Tool.TabHide(GroupBulletinBoardFrame, isClassicEra and 3 or 2)
+	GBB.Tool.SelectTab(GroupBulletinBoardFrame, TabEnum.ChatRequests) -- default to requests tab
+
+	if TabEnum.LFGTool then
+		GBB.Tool.TabOnSelect(GroupBulletinBoardFrame, TabEnum.LFGTool, function()
+			GBB.LfgTool:UpdateBoardListings() -- optimistic update of listings if any residual search data is present.
+			GBB.LfgTool.RefreshButton:GetScript("OnClick")() -- refresh search results
+		end)
+	else GBB.LfgTool.ScrollContainer:Hide() end;
+
+	if TabEnum.RecentPlayers then
+		GBB.Tool.TabOnSelect(GroupBulletinBoardFrame, TabEnum.RecentPlayers, GBB.UpdateGroupList)
+		-- update visibilty of recent player tab based on addon option.
+		local setting = GBB.OptionsBuilder.GetSavedVarHandle(GBB.DB, "EnableGroup")
+		local manageTabVisibility = function(isSettingEnabled)
+			if isSettingEnabled then -- Reshow all active tabs.
+				GBB.Tool.TabShow(GroupBulletinBoardFrame)
+			else -- hide the "EnableGroup" tab
+				GBB.Tool.TabHide(GroupBulletinBoardFrame, TabEnum.RecentPlayers)
+				GBB.Tool.SelectTab(GroupBulletinBoardFrame, TabEnum.ChatRequests)
+			end
 		end
-	end
-	enableGroupVar:AddUpdateHook(refreshGroupTab)
-	refreshGroupTab(enableGroupVar:GetValue()) -- run once to match the set state.
-	GBB.Tool.TabOnSelect(GroupBulletinBoardFrame,3,GBB.UpdateGroupList)
-	GBB.Tool.TabOnSelect(GroupBulletinBoardFrame,2,function()
-		GBB.LfgTool:UpdateBoardListings() -- optimistic update of listings if any residual search result data is present.
-		GBB.LfgTool.RefreshButton:GetScript("OnClick")() -- refresh search results
-	end)
+		setting:AddUpdateHook(manageTabVisibility)
+		manageTabVisibility(setting:GetValue()) -- run once to match the setting state.
+	else GroupBulletinBoardFrame_GroupFrame:Hide() end;
+
+	---@class AddonEnum
+	local Enum = GBB.Enum; Enum.Tabs = TabEnum
+
 	GameTooltip:HookScript("OnTooltipSetUnit", hooked_createTooltip)
-		
 	print("|cFFFF1C1C Loaded: "..GetAddOnMetadata(TOCNAME, "Title") .." ".. GetAddOnMetadata(TOCNAME, "Version") .." by "..GetAddOnMetadata(TOCNAME, "Author"))
 end
 
@@ -958,6 +965,11 @@ function GBB.OnSizeChanged()
 	end
 end
 
+---@return integer tabID
+function GBB.GetSelectedTab()
+	return GBB.Tool.GetSelectedTab(GroupBulletinBoardFrame);
+end
+
 function GBB.OnUpdate(elapsed)
 	if GBB.Initalized==true then
 		if GBB.LFG_Timer<time() and GBB.LFG_Successfulljoined==false then
@@ -966,7 +978,7 @@ function GBB.OnUpdate(elapsed)
 		end
 
 		if GBB.ElapsedSinceListUpdate > 1 then
-			if GBB.Tool.GetSelectedTab(GroupBulletinBoardFrame)==1 then
+			if GBB.GetSelectedTab() == GBB.Enum.Tabs.ChatRequests then
 				GBB.UpdateList()
 			end
 			GBB.ElapsedSinceListUpdate = 0;
