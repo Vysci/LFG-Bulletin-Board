@@ -621,7 +621,10 @@ function Tool.GetSelectedTab(frame)
 	end
 	return 0
 end
-	
+function Tool.SetTabEnabled(frame, id, shouldEnable)
+	if not (id and frame.Tabs and frame.Tabs[id]) then return end;
+	PanelTemplates_SetTabEnabled(frame, id, shouldEnable)
+end
 function Tool.AddTab(frame,name,tabFrame,combatlockdown)
 	local frameName
 	
