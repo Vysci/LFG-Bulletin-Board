@@ -802,6 +802,17 @@ function GBB.Init()
 			GBB.LfgTool:UpdateBoardListings() -- optimistic update of listings if any residual search data is present.
 			GBB.LfgTool.RefreshButton:GetScript("OnClick")() -- refresh search results
 		end)
+		-- only enable the tool tab whenever the player gains access to blizz LFGTool
+		local isTabEnabledYet = false
+		local trySetEnabled = function()
+			if not isTabEnabledYet then
+				local shouldEnable = C_LFGInfo.CanPlayerUsePremadeGroup();
+				GBB.Tool.SetTabEnabled(GroupBulletinBoardFrame, TabEnum.LFGTool, shouldEnable)
+				isTabEnabledYet = shouldEnable
+			end
+		end
+		GroupBulletinBoardFrame:HookScript("OnShow", trySetEnabled);
+		GBB.Tool.RegisterEvent("PLAYER_LEVEL_CHANGED", trySetEnabled);
 	else GBB.LfgTool.ScrollContainer:Hide() end;
 
 	if TabEnum.RecentPlayers then
