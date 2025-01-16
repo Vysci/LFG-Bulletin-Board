@@ -1130,6 +1130,19 @@ function LFGTool:Load()
 	self.numRequests = 0
 	self.ScrollContainer:OnLoad()
 	self:UpdateRequestList()
+
+	-- register hooks to update the view whenever a relevant dungeon filter setting changes
+	for _, filterKey in ipairs(GBB.GetSortedDungeonKeys()) do
+		local setting = GBB.OptionsBuilder.GetSavedVarHandle(GBB.DBChar, "FilterDungeon"..filterKey)
+		setting:AddUpdateHook(function()
+			for _, request in ipairs(self.requestList) do
+				if filterKey == request.dungeon then
+					updateScrollViewData(self.ScrollContainer.scrollView, self.requestList)
+					return;
+				end
+			end
+		end)
+	end
 end
 function GBB.UpdateLfgTool()
 	-- named differently on cata/era
