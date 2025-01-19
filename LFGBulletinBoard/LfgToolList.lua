@@ -897,6 +897,12 @@ local updateScrollViewData = function(scrollView, requestList)
 				node.parent:Remove(node, DataProviderConsts.SkipInvalidation)
 				shouldUpdate = true
 			end
+			if node:IsCollapsed() ~= sessionCollapsedHeaders[key] then -- update collapsed state
+				node:ToggleCollapsed(DataProviderConsts.ExcludeChildren, DataProviderConsts.SkipInvalidation);
+				-- if the frame for this header is in view, update its text as well.
+				local header = scrollView:FindFrame(node); if header then header:UpdateTextLayout() end
+				shouldUpdate = true
+			end
 			if node.sortComparator ~= requestSortFunc then -- one time setup for headers sort function
 				node:SetSortComparator(requestSortFunc, DataProviderConsts.ExcludeChildren)
 			end
@@ -1014,29 +1020,10 @@ function LFGToolScrollContainer:OnLoad()
 	self.scrollBox:RegisterCallback(ScrollBoxListMixin.Event.OnUpdate, self.scrollBox.Layout, self.scrollBox)
 end
 
--- hack: sync the state of collapsed headers when the container is shown (ie tabbing into the tool frame)
+-- update board when container is shown (ie tabbing into the lfg tool, or re-opening the board)
 LFGToolScrollContainer:HookScript("OnShow", function()
-	local sessionCollapsedHeaders = GBB.FoldedDungeons
-	local shouldInvalidate = false
-	local updatedHeaders = {}
-	LFGToolScrollContainer.scrollView:ForEachElementData(function(node)
-		if node.data.isHeader
-			and node:IsCollapsed() ~= sessionCollapsedHeaders[node.data.dungeon]
-		then
-			node:ToggleCollapsed(DataProviderConsts.ExcludeChildren, DataProviderConsts.SkipInvalidation)
-			updatedHeaders[node.data.dungeon] = true
-			shouldInvalidate = true
-		end
-	end)
-	if shouldInvalidate then
-		-- update the header text for any existing frames
-		LFGToolScrollContainer.scrollView:ForEachFrame(function(frame, node)
-			if node.data.isHeader and updatedHeaders[node.data.dungeon]
-			then frame:UpdateTextLayout() end;
-		end)
-		-- trigger scrollView refresh
-		LFGTool.ScrollContainer.scrollView:GetDataProvider():Invalidate()
-	end
+	LFGTool.UpdateBoardListings()
+	LFGTool.StatusText:UpdateText()
 end)
 --------------------------------------------------------------------------------
 -- Module public functions

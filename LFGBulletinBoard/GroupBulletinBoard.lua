@@ -799,7 +799,6 @@ function GBB.Init()
 
 	if TabEnum.LFGTool then
 		GBB.Tool.TabOnSelect(GroupBulletinBoardFrame, TabEnum.LFGTool, function()
-			GBB.LfgTool:UpdateBoardListings() -- optimistic update of listings if any residual search data is present.
 			GBB.LfgTool.RefreshButton:GetScript("OnClick")() -- refresh search results
 		end)
 		-- only enable the tool tab whenever the player gains access to blizz LFGTool
