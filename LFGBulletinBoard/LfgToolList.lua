@@ -660,6 +660,7 @@ local function InitializeEntryItem(entry, node)
 			-- request message
 			self.Message:SetFontObject(GBB.DB.FontSize)
 			self.Message:SetMaxLines(GBB.DB.DontTrunicate and 99 or 1)
+			self.Message:SetWordWrap(GBB.DB.DontTrunicate and true or false)
 			self.Message:SetJustifyV("MIDDLE")
 			self.Message:ClearAllPoints() -- incase swapped to 2-line mode
 			-- dummy text to calculate normalized line height (icons are the biggest characters in any message)
