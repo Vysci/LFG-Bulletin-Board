@@ -6,6 +6,7 @@
 ## DefaultState: enabled
 ## SavedVariables: GroupBulletinBoardDB
 ## SavedVariablesPerCharacter: GroupBulletinBoardDBChar
+Libs/TaintLess.xml
 LibGPIOptions.lua
 LibGPIMinimapButton.lua
 LibGPIToolBox.lua
