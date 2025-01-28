@@ -289,13 +289,6 @@ hooksecurefunc("SetItemRef", function(link)
 	end
 end)
 
-function GBB.BtnSelectChannel()
-	if UIDROPDOWNMENU_OPEN_MENU ~=  GBB.FramePullDownChannel then 
-		UIDropDownMenu_Initialize( GBB.FramePullDownChannel, GBB.CreateChannelPulldown, "MENU")
-	end
-	ToggleDropDownMenu(nil, nil,  GBB.FramePullDownChannel, GroupBulletinBoardFrameSelectChannel, 0,0)
-end
-
 --gui
 -------------------------------------------------------------------------------------
 
@@ -705,18 +698,31 @@ function GBB.Init()
 			end
 		end,
 		GBB.Title
-	)	
-	
-	GBB.FramePullDownChannel=CreateFrame("Frame", "GBB.PullDownMenu", UIParent, "UIDropDownMenuTemplate")
+	)
 	GroupBulletinBoardFrameTitle:SetFontObject(GBB.DB.FontSize)
+
 	if GBB.DB.AnnounceChannel == nil then
-		if GBB.L["lfg_channel"] ~= "" then
-			GBB.DB.AnnounceChannel = GBB.L["lfg_channel"]
-		else
-			_, GBB.DB.AnnounceChannel = GetChannelList()
-		end
+		if GBB.L["lfg_channel"] ~= "" then GBB.DB.AnnounceChannel = GBB.L["lfg_channel"];
+		else GBB.DB.AnnounceChannel = select(2, GetChannelList()) end;
 	end
-	
+	DropdownSelectionTextMixin.OnLoad(GroupBulletinBoardFrameSelectChannel)
+	GroupBulletinBoardFrameSelectChannel:SetSelectionTranslator(function(selection) return selection.data end)
+	GroupBulletinBoardFrameSelectChannel:SetupMenu(function(frame, rootDescription)
+		---@cast rootDescription RootMenuDescriptionProxy
+		local channelInfo = GBB.PhraseChannelList(GetChannelList())
+		local setting = GBB.OptionsBuilder.GetSavedVarHandle(GBB.DB, "AnnounceChannel");
+		local isSelected = function(channel) return channel == setting:GetValue() end
+		local setSelected = function(channel) setting:SetValue(channel) end
+		for i, channel in pairs(channelInfo) do
+			local button = rootDescription:CreateRadio(i..". "..channel.name, isSelected, setSelected, channel.name)
+			button:SetEnabled(not channel.hidden)
+		end
+	end)
+	--hack: early in addon loading process `GetChannelList` can return nil; re-generate the menu in these cases.
+	GroupBulletinBoardFrameSelectChannel:HookScript("OnShow", function(self)
+		if not self:GetText() then self:GenerateMenu() end;
+	end)
+
 	---@type EditBox # making this local isnt required, just here for the luals linter
 	local GroupBulletinBoardFrameResultsFilter = _G["GroupBulletinBoardFrameResultsFilter"];
 	GroupBulletinBoardFrameResultsFilter:SetParent(GroupBulletinBoardFrame_ScrollFrame)
@@ -740,8 +746,6 @@ function GBB.Init()
 	function GroupBulletinBoardFrameResultsFilter:GetFilters() 
 		return self.filterPatterns
 	end
-
-	GroupBulletinBoardFrameSelectChannel:SetText(GBB.DB.AnnounceChannel)
 
 	GBB.ResizeFrameList()
 	
