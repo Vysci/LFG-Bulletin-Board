@@ -258,8 +258,8 @@ local function GenerateExpansionPanel(expansionID)
 		allFilterSetChecked(false)
 	end)
 
+	GBB.OptionsBuilder.AddRadioDropdownToCurrentPanel(GBB.DB,"InviteRole", "DPS", {"DPS", "Tank", "Healer"})
 	-- Role Filters
-	GBB.OptionsBuilder.AddDropdownToCurrentPanel(GBB.DB,"InviteRole", "DPS", {"DPS", "Tank", "Healer"})
 	GBB.OptionsBuilder.EndInLine()
 	
 	-- Chat Channel Filters (only show for current xpac)
@@ -336,7 +336,7 @@ function GBB.OptionsInit ()
 	CheckBox("HeadersStartFolded",false)
 	GBB.OptionsBuilder.AddSpacerToPanel()
 	GBB.OptionsBuilder.AddTextToCurrentPanel(FONT_SIZE, -20)
-	GBB.OptionsBuilder.AddDropdownToCurrentPanel(GBB.DB,"FontSize", "GameFontNormal", {"GameFontNormalSmall", "GameFontNormal", "GameFontNormalLarge"}) 
+	GBB.OptionsBuilder.AddRadioDropdownToCurrentPanel(GBB.DB,"FontSize", "GameFontNormal", {"GameFontNormalSmall", "GameFontNormal", "GameFontNormalLarge"})
 
 	CheckBox("CombineSubDungeons",false)
 	CheckBox("IsolateTravelServices",true)
