@@ -105,7 +105,10 @@
 			</Button>
 
 			<!-- announcebox -->
-			<Button name="$parentSelectChannel" inherits="UIPanelButtonTemplate" text="channel">
+			<DropdownButton name="$parentSelectChannel" inherits="UIPanelButtonTemplate" text="channel" mixin="WowStyle1DropdownMixin">
+				<KeyValues>
+					<KeyValue key="menuMixin" value="MenuStyle2Mixin" type="global"/>
+				</KeyValues>
 				<Anchors>
 					<Anchor point="BOTTOMLEFT" relativePoint="BOTTOMLEFT" relativeTo="$parent" >
 						<Offset>
@@ -114,12 +117,7 @@
 					</Anchor>
 				</Anchors>
 				<Size><AbsDimension x="150" y="20" /></Size>
-				<Scripts>
-					<OnClick>
-						GroupBulletinBoard_Addon.BtnSelectChannel()
-					</OnClick>
-				</Scripts>
-			</Button>
+			</DropdownButton>
 			
 			<Button name="$parentAnnounce" inherits="UIPanelButtonTemplate" text="Post">
 				<Anchors>

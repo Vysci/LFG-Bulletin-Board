@@ -145,24 +145,3 @@ function GBB.Announce()
 		GroupBulletinBoardFrameAnnounceMsg:ClearFocus()
 	end
 end
-
-function GBB.CreateChannelPulldown (frame, level, menuList)
-	if level~=1 then return end
-	local t= GBB.PhraseChannelList(GetChannelList())
-	
-	local info = UIDropDownMenu_CreateInfo()
- 
-	
-	for i,channel in pairs(t) do
-		info.text =  i..". "..channel.name
-		info.checked = (channel.name == GBB.DB.AnnounceChannel)
-		info.disabled = channel.hidden
-		info.arg1 = i
-		info.arg2 = channel.name
-		info.func = function(self, arg1, arg2, checked)
-				GBB.DB.AnnounceChannel=arg2
-				GroupBulletinBoardFrameSelectChannel:SetText(arg2)
-			end
-		UIDropDownMenu_AddButton(info)
-	end
-end
