@@ -100,6 +100,7 @@ local LFGActivityIDs = {
     ["KAZK"] = isSoD and 1609 or nil, -- Tainted Scar (Kazzak)
     ["CRY"] = isSoD and 1611 or nil, -- Crystal Vale (Thunderaan)
     ["NMG"] = isSoD and 1610 or nil, -- Nightmare Grove (Emerald Dragons)
+    ["KARA"] = isSoD and 1693 or nil, -- Karazhan Crypts
 }
 --see https://wago.tools/db2/GroupFinderCategory?build=1.15.2.54332
 local activityCategoryTypeID  = {
