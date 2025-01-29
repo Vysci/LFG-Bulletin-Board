@@ -321,16 +321,16 @@ local function createMenu(DungeonID,req) -- shared right-click menu for headers 
 		return
 	end
 	if req then
-		GBB.PopupDynamic:AddItem(string.format(GBB.L["BtnWho"],req.name),false,WhoRequest,req.name)
-		GBB.PopupDynamic:AddItem(string.format(GBB.L["BtnWhisper"],req.name),false,WhisperRequest,req.name)
-		GBB.PopupDynamic:AddItem(string.format(GBB.L["BtnInvite"],req.name),false,InviteRequest,req.name)
-		GBB.PopupDynamic:AddItem(string.format(GBB.L["BtnIgnore"],req.name),false,IgnoreRequest,req.name)
+		GBB.PopupDynamic:AddItem(string.format(GBB.L["BtnWho"],req.name),false,WhoRequest,req.name,nil,true)
+		GBB.PopupDynamic:AddItem(string.format(GBB.L["BtnWhisper"],req.name),false,WhisperRequest,req.name,nil,true)
+		GBB.PopupDynamic:AddItem(string.format(GBB.L["BtnInvite"],req.name),false,InviteRequest,req.name,nil,true)
+		GBB.PopupDynamic:AddItem(string.format(GBB.L["BtnIgnore"],req.name),false,IgnoreRequest,req.name,nil,true)
 		GBB.PopupDynamic:AddItem("",true)
 	end
 	if DungeonID then
-		GBB.PopupDynamic:AddItem(GBB.L["BtnFold"], false, toggleHeaderCollapseByKey, DungeonID)
-		GBB.PopupDynamic:AddItem(GBB.L["BtnFoldAll"], false, setAllHeadersCollapsed, true)
-		GBB.PopupDynamic:AddItem(GBB.L["BtnUnFoldAll"], false, setAllHeadersCollapsed, false)
+		GBB.PopupDynamic:AddItem(GBB.L["BtnFold"], false, toggleHeaderCollapseByKey, DungeonID, nil, true)
+		GBB.PopupDynamic:AddItem(GBB.L["BtnFoldAll"], false, setAllHeadersCollapsed, true, nil, true)
+		GBB.PopupDynamic:AddItem(GBB.L["BtnUnFoldAll"], false, setAllHeadersCollapsed, false, nil, true)
 		GBB.PopupDynamic:AddItem("",true)
 	end
 	GBB.PopupDynamic:AddItem(GBB.L["CboxShowTotalTime"],false,GBB.DB,"ShowTotalTime")
@@ -345,7 +345,7 @@ local function createMenu(DungeonID,req) -- shared right-click menu for headers 
 	GBB.PopupDynamic:AddItem(GBB.L["CboxRemoveRealm"],false,GBB.DB,"RemoveRealm")
 	GBB.PopupDynamic:AddItem("",true)
 	GBB.PopupDynamic:AddItem(SETTINGS, false, GBB.OptionsBuilder.OpenCategoryPanel, 1)
-	GBB.PopupDynamic:AddItem(GBB.L["BtnCancel"],false)
+	GBB.PopupDynamic:AddItem(GBB.L["BtnCancel"], false, nil, nil, nil, true)
 	GBB.PopupDynamic:Show()
 end
 --------------------------------------------------------------------------------

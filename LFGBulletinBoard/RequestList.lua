@@ -971,16 +971,16 @@ local function createMenu(DungeonID,req)
 		return
 	end
 	if req then
-		GBB.PopupDynamic:AddItem(string.format(GBB.L["BtnWho"],req.name),false,WhoRequest,req.name)
-		GBB.PopupDynamic:AddItem(string.format(GBB.L["BtnWhisper"],req.name),false,WhisperRequest,req.name)
-		GBB.PopupDynamic:AddItem(string.format(GBB.L["BtnInvite"],req.name),false,InviteRequest,req.name)
-		GBB.PopupDynamic:AddItem(string.format(GBB.L["BtnIgnore"],req.name),false,IgnoreRequest,req.name)
+		GBB.PopupDynamic:AddItem(string.format(GBB.L["BtnWho"],req.name),false,WhoRequest,req.name,nil,true)
+		GBB.PopupDynamic:AddItem(string.format(GBB.L["BtnWhisper"],req.name),false,WhisperRequest,req.name,nil,true)
+		GBB.PopupDynamic:AddItem(string.format(GBB.L["BtnInvite"],req.name),false,InviteRequest,req.name,nil,true)
+		GBB.PopupDynamic:AddItem(string.format(GBB.L["BtnIgnore"],req.name),false,IgnoreRequest,req.name,nil,true)
 		GBB.PopupDynamic:AddItem("",true)
 	end
 	if DungeonID then
-		GBB.PopupDynamic:AddItem(GBB.L["BtnFold"], false,GBB.FoldedDungeons,DungeonID)
-		GBB.PopupDynamic:AddItem(GBB.L["BtnFoldAll"], false,GBB.FoldAllDungeon)
-		GBB.PopupDynamic:AddItem(GBB.L["BtnUnFoldAll"], false,GBB.UnfoldAllDungeon)
+		GBB.PopupDynamic:AddItem(GBB.L["BtnFold"], false,GBB.FoldedDungeons,DungeonID, nil, true)
+		GBB.PopupDynamic:AddItem(GBB.L["BtnFoldAll"], false,GBB.FoldAllDungeon, nil, true)
+		GBB.PopupDynamic:AddItem(GBB.L["BtnUnFoldAll"], false,GBB.UnfoldAllDungeon, nil, true)
 		GBB.PopupDynamic:AddItem("",true)
 	end
 	GBB.PopupDynamic:AddItem(GBB.L["CboxShowTotalTime"],false,GBB.DB,"ShowTotalTime")
@@ -997,7 +997,7 @@ local function createMenu(DungeonID,req)
 	GBB.PopupDynamic:AddItem(SETTINGS, false, GBB.OptionsBuilder.OpenCategoryPanel, 1)
 	-- todo: Open to filter settings to expac related to DungeonID
 	GBB.PopupDynamic:AddItem(FILTERS, false, GBB.OptionsBuilder.OpenCategoryPanel, 2)
-	GBB.PopupDynamic:AddItem(GBB.L["BtnCancel"],false)
+	GBB.PopupDynamic:AddItem(GBB.L["BtnCancel"], false, nil, nil, nil, true)
 	GBB.PopupDynamic:Show()
 end
 

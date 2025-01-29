@@ -350,7 +350,7 @@ function GBB.BtnSettings(button )
 		if shouldOpen then
 			GBB.PopupDynamic:AddItem(FILTERS, false, GBB.OptionsBuilder.OpenCategoryPanel, 2)
 			GBB.PopupDynamic:AddItem(ALL_SETTINGS, false, GBB.OptionsBuilder.OpenCategoryPanel, 1)
-			GBB.PopupDynamic:AddItem(GBB.L["BtnCancel"],false)
+			GBB.PopupDynamic:AddItem(GBB.L["BtnCancel"], false, nil, nil, nil, true)
 			GBB.PopupDynamic:Show(GroupBulletinBoardFrameSettingsButton,0,0)
 		end
 		PlaySound(SOUNDKIT.IG_MAINMENU_OPTION, "SFX")
@@ -532,7 +532,7 @@ function GBB.Popup_Minimap(frame,showMinimapOptions)
 		end
 	end
 	GBB.PopupDynamic:AddItem("",true)
-	GBB.PopupDynamic:AddItem(GBB.L["BtnCancel"],false)
+	GBB.PopupDynamic:AddItem(GBB.L["BtnCancel"], false, nil, nil, nil, true)
 		
 	GBB.PopupDynamic:Show(frame,0,0)
 end

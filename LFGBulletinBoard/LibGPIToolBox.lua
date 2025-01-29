@@ -429,6 +429,22 @@ end
 --------------------------------------------------------------------------------
 
 local PopupDepth
+local addonDropdowns = {} -- # {[dropdownFrame]: popup}
+local touchedButtonInfoKeys = {} -- used to track tainted variables
+
+--- Securely nils variable by hacking the `TextureLoadingGroupMixin.RemoveTexture` framexml function
+local purgeInsecureVariable = function(table, key)
+	TextureLoadingGroupMixin.RemoveTexture({textures = table}, key)
+end
+---@return boolean `true` if mouse is over any DropDownList (including submenus)
+local isMouseOverDropdown = function()
+	for i = 1, UIDROPDOWNMENU_MAXLEVELS or 0 do
+		local dropdown = _G['DropDownList'..i]
+		if dropdown:IsMouseOver() then return true end;
+	end
+	return false
+end
+
 local function PopupClick(self, arg1, arg2, checked)
 	if type(self.value)=="table" then		
 		local handle = Addon.OptionsBuilder.GetSavedVarHandle(self.value, arg1)
@@ -450,13 +466,13 @@ end
 
 ---@param text string
 ---@param disabled boolean
----@param value table|function savedVar db or onclick function
+---@param value table|function|nil savedVar db or onclick function
 ---@param arg1 any? If value is a table, arg1 is the key, else arg1 is the 1st arg for `value`
 ---@param arg2 any? If value is a function arg2 is the 2nd arg
-local function PopupAddItem(self,text,disabled,value,arg1,arg2)
+---@param closeOnClick boolean? If true, the dropdown will close after the button is clicked
+local function PopupAddItem(self,text,disabled,value,arg1,arg2, closeOnClick)
 	local c=self._Frame._GPIPRIVAT_Items.count+1
 	self._Frame._GPIPRIVAT_Items.count=c
-	
 	if not self._Frame._GPIPRIVAT_Items[c] then
 		self._Frame._GPIPRIVAT_Items[c]={}
 	end
@@ -466,6 +482,7 @@ local function PopupAddItem(self,text,disabled,value,arg1,arg2)
 	t.value=value
 	t.arg1=arg1
 	t.arg2=arg2
+	t.closeOnClick = closeOnClick
 	t.MenuDepth=PopupDepth
 end
 
@@ -519,7 +536,7 @@ local function PopupCreate(frame, level, menuList)
 					info.notCheckable = true
 				end
 				info.disabled=(val.disabled==true or val.text=="" )
-				info.keepShownOnClick=(val.disabled=="keep")				
+				info.keepShownOnClick=true
 				info.value=val.value
 				info.arg1=val.arg1
 				if type(val.value)=="table" then			
@@ -527,11 +544,16 @@ local function PopupCreate(frame, level, menuList)
 				elseif type(val.value)=="function" then
 					info.arg2=val.arg2
 				end		
-				info.func=PopupClick
+				info.func=function(...)
+					PopupClick(...);
+					local popup = addonDropdowns[frame]
+					if val.closeOnClick and popup then PopupWipe(popup) end;
+				end
 				info.hasArrow=false
 				info.menuList=nil
 				--info.isNotRadio=true
 			end
+			for key, _ in pairs(info) do touchedButtonInfoKeys[key] = true end
 			UIDropDownMenu_AddButton(info,level)
 		end
 	end
@@ -539,15 +561,12 @@ end
 
 local function PopupShow(self,where,x,y)
 	where=where or "cursor" 
-	if UIDROPDOWNMENU_OPEN_MENU ~= self._Frame then 
-		UIDropDownMenu_Initialize(self._Frame, PopupCreate, "MENU")
-	end
+	UIDropDownMenu_Initialize(self._Frame, PopupCreate, "MENU")
 	ToggleDropDownMenu(nil, nil, self._Frame, where, x,y)
 	self._where=where
 	self._x=x
 	self._y=y
 end
-
 function Tool.CreatePopup(TableCallback)
 	local popup={}
 	popup._Frame=CreateFrame("Frame", nil, UIParent, "UIDropDownMenuTemplate")
@@ -558,9 +577,40 @@ function Tool.CreatePopup(TableCallback)
 	popup.SubMenu=PopupAddSubMenu
 	popup.Show=PopupShow
 	popup.Wipe=PopupWipe
+	addonDropdowns[popup._Frame] = popup
 	return popup
-end	
+end
+-- hack: whenever any of our dropdowns are hidden purge ANY insecure button variables/member
+-- note! I'll refrain from cleaning up taint caused by other addons with this fix mostly because-
+-- 	this fix requires buttonInfo to have the `keepShownOnClick` member set true.
+-- 	Otherwise this hack would clear the button's `.func` handler before it has the chance to be called-
+--	resulting in broken buttons that do nothing when clicked.
+hooksecurefunc("UIDropDownMenu_OnHide", function(listFrame)
+	if not listFrame.dropdown or not addonDropdowns[listFrame.dropdown] then return end;
+	for i = 1, UIDROPDOWNMENU_MAXLEVELS or 0 do
+		for j = 1, UIDROPDOWNMENU_MAXBUTTONS or 0 do
+			local button = _G["DropDownList" .. i .. "Button" .. j]
+			if button then for key, _ in pairs(touchedButtonInfoKeys) do
+				local isSecure, _taintSource = issecurevariable(button, key)
+				if not isSecure then purgeInsecureVariable(button, key) end
+			end; end;
+		end
+	end
+end)
+-- Hide dropdown anytime mouse is clicked outside of the dropdown or its anchor region.
+Tool.RegisterEvent("GLOBAL_MOUSE_DOWN",function(event, buttonName)
+	local dropdown = UIDROPDOWNMENU_OPEN_MENU;
+	if not dropdown or not addonDropdowns[dropdown] then return end;
+	local popup = addonDropdowns[dropdown];
+	local anchorFrame;
+	if type(popup._where) == "table" and popup._where.IsMouseOver then anchorFrame = popup._where;
+	elseif type(popup._where) == "string" then anchorFrame = _G[popup._where] end;
 
+	local shouldHide = true
+	if anchorFrame then shouldHide = not (anchorFrame:IsMouseOver() or isMouseOverDropdown());
+	else shouldHide = not isMouseOverDropdown(); end
+	if shouldHide then PopupWipe(popup);  end
+end)
 --------------------------------------------------------------------------------
 -- TAB
 
