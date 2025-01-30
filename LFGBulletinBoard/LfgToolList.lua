@@ -356,17 +356,12 @@ end
 ---@param clickType mouseButton
 ---@param isMouseDown boolean
 local dungeonHeaderClickHandler = function(self, clickType, isMouseDown)
-	local sessionCollapsedHeaders = GBB.FoldedDungeons
 	if clickType == "LeftButton" then
 		if IsShiftKeyDown() then
 			local shouldCollapse = not self:IsCollapsed()
 			setAllHeadersCollapsed(shouldCollapse)
-			for key, _ in pairs(sessionCollapsedHeaders) do
-				sessionCollapsedHeaders[key] = shouldCollapse
-			end
 		else
 			self:ToggleCollapsed(DataProviderConsts.ExcludeChildren, DataProviderConsts.DoInvalidation)
-			sessionCollapsedHeaders[self:GetData().dungeon] = self:IsCollapsed()
 		end
 	elseif clickType == "RightButton" then
 		createMenu(self:GetData().dungeon)
@@ -382,12 +377,14 @@ setAllHeadersCollapsed = function(shouldCollapse)
 			frame:UpdateTextLayout()
 		end
 	end)
+	-- hack: force set all seen header keys to account for those not in the dataProvider
+	for key, _ in pairs(GBB.FoldedDungeons) do GBB.FoldedDungeons[key] = shouldCollapse end
 	scrollView.dataProvider:Invalidate()
 end
 toggleHeaderCollapseByKey = function(key)
 	LFGTool.ScrollContainer.scrollView:ForEachFrame(function(frame, node)
 		if node.data.isHeader and node.data.dungeon == key then
-			frame:ToggleCollapsed(DataProviderConsts.ExcludeChildren, DataProviderConsts.SkipInvalidation)
+			frame:ToggleCollapsed(DataProviderConsts.ExcludeChildren, DataProviderConsts.DoInvalidation);
 		end
 	end)
 end
@@ -947,6 +944,9 @@ local updateScrollViewData = function(scrollView, requestList)
 				headerNode:SetCollapsed(sessionCollapsedHeaders[key],
 					DataProviderConsts.ExcludeChildren, DataProviderConsts.SkipInvalidation
 				);
+				hooksecurefunc(headerNode, "SetCollapsed", function(self) -- updates cached collapsed state when node is toggled
+					sessionCollapsedHeaders[self:GetData().dungeon] = self:IsCollapsed()
+				end)
 				shouldUpdate = true
 			end
 			for _, req in pairs(requestsByName) do
