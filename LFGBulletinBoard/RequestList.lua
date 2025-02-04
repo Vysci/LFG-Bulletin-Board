@@ -918,7 +918,7 @@ function GBB.ParseMessage(msg,sender,guid,channel)
 			end
 		end
 		if GBB.DB.NotifySound then
-			PlaySound(GBB.NotifySound)
+			PlaySound(GBB.NotifySound, GBB.DB.NotifySoundChannel)
 		end
 	end
 
