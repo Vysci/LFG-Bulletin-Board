@@ -345,7 +345,17 @@ function GBB.OptionsInit ()
 		local notifySound = CheckBox("NotifySound",false)
 		local notifyChat = CheckBox("NotifyChat",false)
 		GBB.OptionsBuilder.Indent(20)
-		local childOpts = {
+		local channelLabel = GBB.OptionsBuilder.AddTextToCurrentPanel(SOUND_CHANNELS, -20)
+		local soundChannel = GBB.OptionsBuilder.AddRadioDropdownToCurrentPanel(
+			GBB.DB, "NotifySoundChannel", "Master", {
+				{value = "Master", text = MASTER_VOLUME},
+				{value = "Music", text = MUSIC_VOLUME},
+				{value = "SFX", text = FX_VOLUME},
+				{value = "Ambience", text = AMBIENCE_VOLUME},
+				{value = "Dialog", text = DIALOG_VOLUME},
+			}
+		)
+		local sharedOpts = {
 			CheckBox("NotfiyInnone",true),
 			CheckBox("NotfiyInpvp",false),
 			CheckBox("NotfiyInparty",true),
@@ -356,12 +366,13 @@ function GBB.OptionsInit ()
 			GBB.DB, "NotifyColor", {r=1,g=1,b=1,a=1}, GBB.L["BtnNotifyColor"]
 		)
 		local updateChildren = function()
-			local notifyChat = notifyChat:GetSavedValue()
-			local isEnabled = notifyChat or notifySound:GetSavedValue()
-			for _, option in ipairs(childOpts) do
-				option:SetEnabled(isEnabled)
+			local notifyChat, notifySound = notifyChat:GetSavedValue(), notifySound:GetSavedValue()
+			for _, option in ipairs(sharedOpts) do
+				option:SetEnabled(notifyChat or notifySound)
 			end
 			chatColor:SetEnabled(notifyChat)
+			channelLabel:SetTextColor((notifySound and NORMAL_FONT_COLOR or DISABLED_FONT_COLOR):GetRGB())
+			soundChannel:SetEnabled(notifySound)
 		end
 		notifyChat:OnSavedVarUpdate(updateChildren)
 		notifySound:OnSavedVarUpdate(updateChildren)
