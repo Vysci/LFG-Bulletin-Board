@@ -245,7 +245,17 @@ local activityRemap = {
 }
 ---@param opts {activityID: number}
 function addon.GetDungeonKeyByID(opts)
-        return idToDungeonKey[activityRemap[opts.activityID] or opts.activityID]
+    local activityId = activityRemap[opts.activityID] or opts.activityID
+    local key = idToDungeonKey[activityId]
+    if key ~= nil then return key end;
+    -- if no key, fallback to a name match
+    local info = C_LFGList.GetActivityInfoTable(activityId)
+    if not info then return end
+    for key, v in pairs(infoByTagKey) do
+        if v.name == info.shortName or v.name == info.fullName then
+            return key
+        end
+    end
 end
 addon.rawClassicDungeonInfo = infoByTagKey
 addon.Enum.DungeonType = DungeonType
