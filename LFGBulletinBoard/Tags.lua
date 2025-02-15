@@ -80,7 +80,7 @@ local heroicTags = {
 --- Dungeon Tags: for identifying dungeons related to messages.
 local dungeonTags = {
 	AQ20 = { -- Ahn'Qiraj Ruins
-		enGB = "ruins aq20",
+		enGB = "ruins aq20 aqr",
 		deDE = nil,
 		ruRU = "руины ра20 ак20 аку20",
 		frFR = nil,
@@ -90,7 +90,7 @@ local dungeonTags = {
 		ptBR = ""
 	},
 	AQ40 = { -- Ahn'Qiraj Temple
-		enGB = "aq40",
+		enGB = "aq40 aqt",
 		deDE = nil,
 		ruRU = "ан40 ак40 аку40",
 		frFR = nil,
@@ -118,12 +118,6 @@ local dungeonTags = {
 	},
 	KAZK = { -- Lord Kazzak
 		enGB = "kazzak kaz",
-	},
-	CRY = { -- Crystal vale (Thunderaan)(SoD only)
-		enGB = "crystal vale thunderan thunderaan",
-	},
-	NMG = { -- Nightmare Grove (Emerald Dragons)(SoD only)
-		enGB = "grove nmg dragons",
 	},
 	AZN = { -- Azjol-Nerub
 		enGB = "azn an nerub",
@@ -205,14 +199,6 @@ local dungeonTags = {
 		zhTW = nil,
 		zhCN = nil,
 	},
-	DFC = { -- Demon Fall Canyon
-		enGB = "demonfall dfc demon fall canyon",
-		deDE = nil,
-		ruRU = nil,
-		frFR = nil,
-		zhTW = nil,
-		zhCN = nil,
-	},
 	DM = { -- Deadmines
 		enGB = "deadmines vc vancleef dead mines mine",
 		deDE = "todesminen todesmine tm",
@@ -221,7 +207,6 @@ local dungeonTags = {
 		zhTW = "死亡礦坑 死況 死礦",
 		zhCN = "死亡矿坑 死矿",
 	},
-
 	-- When changing tag strings for diremaul dungeons make sure to consider
 	-- other versions of the game since the wings might be referred to differently. 
 	DMW = { -- Dire Maul - Capital Gardens (DMW pre-cata)
@@ -1031,6 +1016,36 @@ local dungeonTags = {
 		zhCN = nil,
 	}
 }
+if isSoD then
+	local sodSpecificTags = { -- appended to associated dungeonTags
+		KARA = { -- Karazhan Crypts
+			enGB = "kc crypts",
+		},
+		AQ20 = { -- Ruins of Ahn'Qiraj
+			enGB = "aq10",
+		},
+		CRY = { -- Crystal vale (Thunderaan)
+			enGB = "crystal vale thunderan thunderaan",
+		},
+		NMG = { -- Nightmare Grove (Emerald Dragons)
+			enGB = "grove nmg dragons",
+		},
+		DFC = { -- Demonfall Canyon
+			enGB = "demonfall dfc demon fall canyon",
+		},
+	}
+	for key, tagsByLoc in pairs(sodSpecificTags) do
+		if not dungeonTags[key] then
+			dungeonTags[key] = tagsByLoc
+		else for locale, tag in pairs(tagsByLoc) do
+			if not dungeonTags[key][locale] then
+				dungeonTags[key][locale] = tag
+			else
+				dungeonTags[key][locale] = strjoin(" ", dungeonTags[key][locale], tag)
+			end
+		end end
+	end
+end
 dungeonTags["DEADMINES"] = { enGB = "dm" } -- should normalize "DM" to "DEADMINES" at somepoint.
 
 --- Misc. categeories tags (these are core to the addon) 
