@@ -1,5 +1,13 @@
 Group Bulletin Board
 
+3.43
+ - English keywords added for improved SoD dungeon matching.
+    - "kc" and "crypts" added to Karazhan Crypts
+    - "aqt" for AQ40
+    - "aqr" and "aq10" for AQ20
+ - fixed issue with AQ20 (Ruins) and AQ40 (Temple) requests being categorized backwards in SoD
+ - added option to change the sound output channel for the "Play sound on new request" setting
+
 3.42
  - Adds "Karazhan Crypts" dungeon category for SoD servers.
  - Adds bulletin board support for the new official Group Finder under the "Tool Requests" tab.

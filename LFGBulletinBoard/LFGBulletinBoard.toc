@@ -1,11 +1,14 @@
 ## Interface: 11506, 40401
 ## Title: LFG Bulletin Board
 ## Notes: Sort LFG/LFM Messages
-## Version: 3.42
+## Version: 3.43
 ## Author: Vyscî, Bigsxy
 ## DefaultState: enabled
 ## SavedVariables: GroupBulletinBoardDB
 ## SavedVariablesPerCharacter: GroupBulletinBoardDBChar
+## X-Curse-Project-ID: 484920
+## X-Wago-ID: aN0YWP6j
+
 LibGPIOptions.lua
 LibGPIMinimapButton.lua
 LibGPIToolBox.lua
