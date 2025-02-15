@@ -92,8 +92,8 @@ local LFGActivityIDs = {
     ["ST"] = not isSoD and 810 or 1606,  -- Sunken Temple
     ["ONY"] = not isSoD and 838 or 1612,  -- Onyxia
     ["MC"] = not isSoD and 839 or 1613,  -- Molten Core
-    ["AQ20"] = not isSoD and 842 or 1614,  -- Ahn'Qiraj Ruins
-    ["AQ40"] = not isSoD and 843 or 1615,  -- Ahn'Qiraj Temple
+    ["AQ20"] = not isSoD and 842 or 1615,  -- Ahn'Qiraj Ruins
+    ["AQ40"] = not isSoD and 843 or 1614,  -- Ahn'Qiraj Temple
     -- SoD Specific
     ["DFC"] = isSoD and 1607 or nil, -- Demon Fall Canyon
     ["AZGS"] = isSoD and 1608 or nil, -- Storm Cliffs (Azuregoes)
