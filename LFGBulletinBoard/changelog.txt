@@ -1,12 +1,18 @@
 Group Bulletin Board
 
 3.43
- - English keywords added for improved SoD dungeon matching.
+- General:
+  - added option to change the sound output channel for the "Play sound on new request" setting
+- Season of Discovery:
+  - English keywords added for improved SoD dungeon matching.
     - "kc" and "crypts" added to Karazhan Crypts
     - "aqt" for AQ40
     - "aqr" and "aq10" for AQ20
- - fixed issue with AQ20 (Ruins) and AQ40 (Temple) requests being categorized backwards in SoD
- - added option to change the sound output channel for the "Play sound on new request" setting
+  - fixed issue with AQ20 (Ruins) and AQ40 (Temple) requests being categorized backwards in SoD
+- Cataclysm:
+  - hotfixes for lua errors in the latest cataclysm patch 4.4.2
+  - adds "Dragon Soul" to available raids
+  - Note: for the new Twilight Dungeons users could add the keyword "twilight" to `Random Dungeons` patterns in the "Additional Filters" panel.
 
 3.42
  - Adds "Karazhan Crypts" dungeon category for SoD servers.
