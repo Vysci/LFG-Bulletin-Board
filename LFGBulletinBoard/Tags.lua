@@ -1032,6 +1032,9 @@ if isSoD then
 		DFC = { -- Demonfall Canyon
 			enGB = "demonfall dfc demon fall canyon",
 		},
+		ENCLAVE = { -- Scarlet Enclave
+			enGB = "enclave scarlet se",
+		}
 	}
 	for key, tagsByLoc in pairs(sodSpecificTags) do
 		if not dungeonTags[key] then
