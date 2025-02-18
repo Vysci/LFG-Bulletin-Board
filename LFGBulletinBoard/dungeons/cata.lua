@@ -80,7 +80,7 @@ local LFGDungeonIDs = {
 	DME = 34,	-- Dire Maul - East (Renamed in Cata)
 	DMN = 38,	-- Dire Maul - North (Renamed in Cata)
 	DMW = 36,	-- Dire Maul - West (Renamed in Cata)
-	-- DS = 447,	-- Dragon Soul
+	DS = 447,	-- Dragon Soul
 	DTK = 214,	-- Drak'Tharon Keep
 	-- END_TIME = 435,	-- End Time
 	NULL = 417,	-- Fall of Deathwing (LFR)
@@ -383,6 +383,10 @@ local infoOverrides = {
 	HOLLOW = { expansionID = Expansions.Cataclysm },
 }
 
+local getBestActivityName = function(activityInfo)
+	return (activityInfo.shortName and activityInfo.shortName ~= "" and activityInfo.shortName)
+		or activityInfo.fullName
+end
 ---@type {[DungeonID]: DungeonInfo}
 local dungeonInfoCache = {}
 local infoByTagKey = {}
@@ -394,7 +398,7 @@ do
 		if activityInfo then -- spoofied entries will be nil
 			local additionalInfo = groupIDAdditionalInfo[activityInfo.groupFinderActivityGroupID]
 			cached = {
-				name = activityInfo.shortName or activityInfo.fullName,
+				name = getBestActivityName(activityInfo),
 				minLevel = activityInfo.minLevel,
 				maxLevel = activityInfo.maxLevel,
 				expansionID = additionalInfo.expansionID,

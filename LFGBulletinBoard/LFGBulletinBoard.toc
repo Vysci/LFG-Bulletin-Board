@@ -1,4 +1,4 @@
-## Interface: 11506, 40401
+## Interface: 11506, 40402
 ## Title: LFG Bulletin Board
 ## Notes: Sort LFG/LFM Messages
 ## Version: 3.43
