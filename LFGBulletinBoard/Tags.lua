@@ -233,9 +233,8 @@ local dungeonTags = {
 		zhTW = "厄東 惡東 噩東",
 		zhCN = "厄运东",
 	},
-
-	NULL = { -- Dragon Soul
-
+	DS = { -- Dragon Soul
+		enGB = "ds deathwing",
 	},
 	DTK = { -- Drak'Tharon Keep
 		enGB = "dtk drak draktharon drak'tharon",
@@ -606,7 +605,7 @@ local dungeonTags = {
 		zhCN = "禁魔监狱",
 	},	
 	BOT2 = { -- The Bastion of Twilight
-		enGB = "bot bastion twilight bot10 bot25",
+		enGB = "bot bastion bot10 bot25",
 		deDE = nil,
 		ruRU = "сб",
 		frFR = nil,
