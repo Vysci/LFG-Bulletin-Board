@@ -48,10 +48,7 @@ local LFGTool = {
 ---@param name? string
 ---@param id number
 local getActivityDungeonKey = function(name, id)
-	local dungeonKey
-	if isClassicEra then
-		dungeonKey = GBB.GetDungeonKeyByID({activityID = id})
-	end
+	local dungeonKey = GBB.GetDungeonKeyByID({activityID = id})
 	if not dungeonKey then
 		-- print("Dungeon key not found for activity: " .. name .. id)
 		-- DevTool:AddData(C_LFGList.GetActivityInfoTable(id), id)
@@ -1041,8 +1038,12 @@ function LFGTool:UpdateRequestList()
 			local isSelf = leaderInfo.name == UnitNameUnmodified("player")
             local listingTimestamp = time() - searchResultData.age
             local message = ""
+			-- only cata has lfg listing titles in the `name` field
+			if isCata and searchResultData.name and string.len(searchResultData.name) > 2 then
+				message = searchResultData.name;
+			end
             if searchResultData.comment ~= nil and string.len(searchResultData.comment) > 2 then
-                message = searchResultData.comment
+                message = (message ~= "" and strjoin(" ", message, searchResultData.comment)) or searchResultData.comment
             end
 			GBB.RealLevel[leaderInfo.name] = leaderInfo.level
 			for _, activityID in pairs(searchResultData.activityIDs) do
@@ -1134,23 +1135,8 @@ function LFGTool:Load()
 end
 function GBB.UpdateLfgTool()
 	-- named differently on cata/era
-	local LFGListFrame = isCata and _G.LFGListFrame or _G.LFGBrowseFrame
-	if LFGListFrame and LFGListFrame.searching then return end
-	if isCata then -- todo, revise cataclysm support
-		if LFGListFrame and LFGListFrame.CategorySelection.selectedCategory == 120 then return end
-		if  LFGListFrame and LFGListFrame.CategorySelection.selectedCategory == nil then
-			LFGListFrame.CategorySelection.selectedCategory = 2
-		end
-
-		lastUpdateTime = time()
-
-		local category = 2
-		if LFGListFrame and LFGListFrame.CategorySelection.selectedCategory ~= nil then
-			category = LFGListFrame.CategorySelection.selectedCategory
-		end
-
-		local activities = C_LFGList.GetAvailableActivities(category)
-	end
+	local LFGBrowseFrame = isCata and _G.LFGListFrame.SearchPanel or _G.LFGBrowseFrame
+	if LFGBrowseFrame and LFGBrowseFrame.searching then return end
 	LFGTool:UpdateBoardListings()
 end
 
