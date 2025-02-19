@@ -8,6 +8,7 @@ local lastUpdateTime = time()
 local requestNil={dungeon="NIL",start=0,last=0,name=""}
 local isCata = WOW_PROJECT_ID == WOW_PROJECT_CATACLYSM_CLASSIC
 local isClassicEra = WOW_PROJECT_ID == WOW_PROJECT_CLASSIC
+local CUSTOM_ACTIVITY_PREFIX = "ACTIVITY_" -- prefix for unrecognized activity headers
 local ROLE_ATLASES = { -- for using with Textures
 	-- see Interface\AddOns\Blizzard_GroupFinder_VanillaStyle\Blizzard_LFGVanilla_Browse.lua
 	TANK = "groupfinder-icon-role-large-tank",
@@ -45,16 +46,59 @@ local LFGTool = {
 	StatusText = GroupBulletinBoardFrameStatusText, ---@type FontString
 }
 
+local addCustomActivityToDungeonTables do
+	local currentSorted = {}
+	local infoCache = {}
+	local getBestActivityLevelRange = function(activityInfo)
+		local min = activityInfo.minLevelSuggestion or activityInfo.minLevel or 0
+		local max = activityInfo.maxLevelSuggestion or activityInfo.maxLevel or 0
+		if min == 0 then min = max end
+		return min, max
+	end
+	local aInfo, bInfo; -- variables for sort cmp fn
+	addCustomActivityToDungeonTables = function(tableKey, activityID, activityInfo)
+		if not infoCache[activityID] then infoCache[activityID] = activityInfo end;
+		if not tContains(currentSorted, activityID) then
+			tinsert(currentSorted, activityID)
+			sort(currentSorted, function(a, b)
+				aInfo = infoCache[a] or rawset(infoCache, a, C_LFGList.GetActivityInfoTable(a))[a]
+				bInfo = infoCache[b] or rawset(infoCache, b, C_LFGList.GetActivityInfoTable(b))[b]
+				if not aInfo or not bInfo then return a < b end
+				if aInfo.minLevelSuggestion ~= bInfo.minLevelSuggestion then
+					return aInfo.minLevelSuggestion < bInfo.minLevelSuggestion
+				end
+				if aInfo.maxLevelSuggestion ~= bInfo.maxLevelSuggestion then
+					return aInfo.maxLevelSuggestion < bInfo.maxLevelSuggestion
+				end
+				if aInfo.minLevel ~= bInfo.minLevel then return aInfo.minLevel < bInfo.minLevel end
+				if aInfo.maxLevel ~= bInfo.maxLevel then return aInfo.maxLevel < bInfo.maxLevel end
+				return a < b
+			end)
+			for sortIdx, activity in ipairs(currentSorted) do
+				GBB.dungeonSort[CUSTOM_ACTIVITY_PREFIX..activity] = sortIdx + 1000
+			end
+		end
+		GBB.dungeonNames[tableKey] = activityInfo.fullName
+		GBB.dungeonLevel[tableKey] = { getBestActivityLevelRange(activityInfo) }
+	end
+end
 ---@param name? string
 ---@param id number
 local getActivityDungeonKey = function(name, id)
 	local dungeonKey = GBB.GetDungeonKeyByID({activityID = id})
+	local isCustomActivity = false
 	if not dungeonKey then
-		-- print("Dungeon key not found for activity: " .. name .. id)
-		-- DevTool:AddData(C_LFGList.GetActivityInfoTable(id), id)
-		dungeonKey = "MISC"
+		local activityInfo = C_LFGList.GetActivityInfoTable(id)
+		local categoryID = activityInfo.categoryID
+		if categoryID == LFGListCategoryEnum.Custom
+		or categoryID == LFGListCategoryEnum.QuestsAndZones
+		then
+			isCustomActivity = true
+			dungeonKey = CUSTOM_ACTIVITY_PREFIX..id
+			addCustomActivityToDungeonTables(dungeonKey, id, activityInfo)
+		else dungeonKey = "MISC" end
 	end
-	return dungeonKey
+	return dungeonKey, isCustomActivity
 end
 
 ---@param categoryID number
@@ -62,10 +106,10 @@ local function getFilteredActivitiesForCategory(categoryID)
 	local available = C_LFGList.GetAvailableActivities(categoryID)
 	local activityIDs = {}
 	for _, activityID in ipairs(available) do
-		local dungeonKey = getActivityDungeonKey(_, activityID)
-		if dungeonKey and GBB.FilterDungeon(dungeonKey) then
+		local dungeonKey, isCustomActivity = getActivityDungeonKey(_, activityID)
+		if not isCustomActivity and dungeonKey and GBB.FilterDungeon(dungeonKey) then
 			table.insert(activityIDs, activityID)
-		end
+		elseif isCustomActivity then table.insert(activityIDs, activityID) end
 	end
 	if activityIDs[1] == nil then return nil
 	else return activityIDs end;
@@ -858,6 +902,9 @@ local updateScrollViewData = function(scrollView, requestList)
 	local userPlayerName = UnitNameUnmodified("player")
 	local sessionCollapsedHeaders = GBB.FoldedDungeons
 	local shouldShowRequest = function(request) ---@param request LFGToolRequestData
+		-- hack: force show unknown/misc headers just for the request list.
+		if request.dungeon == "MISC" or request.dungeon:find(CUSTOM_ACTIVITY_PREFIX, 1, true)
+		then return true end;
 		local hasFilterEnabled = GBB.FilterDungeon(request.dungeon, request.isHeroic, request.isRaid)
 		-- the `DontFilterOwn` option == "always show own requests". The var name is very confusing.
 		if not hasFilterEnabled and GBB.DBChar.DontFilterOwn then
@@ -1050,7 +1097,7 @@ function LFGTool:UpdateRequestList()
 				local activityInfo = C_LFGList.GetActivityInfoTable(activityID)
 				-- DevTool:AddData(activityInfo, resultID)
 				local dungeonKey = getActivityDungeonKey(activityInfo.fullName, activityID)
-				if dungeonKey == "MISC" then message = message .. " " .. activityInfo.fullName end
+				if dungeonKey == "MISC" then message = message..' | '..activityInfo.fullName end
 				local partyInfo = {};
 				for i = 1, searchResultData.numMembers do
 					partyInfo[i] = C_LFGList.GetSearchResultPlayerInfo(searchResultData.searchResultID, i);
