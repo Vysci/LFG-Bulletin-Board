@@ -867,6 +867,19 @@ function addon.GetDungeonLevelRanges(expansionID, typeID)
 	return ranges
 end
 
+---@param opts {activityID: number}
+function addon.GetDungeonKeyByID(opts)
+    local key = activityIDToKey[opts.activityID]
+    if key ~= nil then return key end;
+    -- if no key, fallback to a name match
+    local activityInfo = C_LFGList.GetActivityInfoTable(opts.activityID)
+    if not activityInfo then return end
+	local auxInfo = groupIDAdditionalInfo[activityInfo.groupFinderActivityGroupID] or {}
+	local name = getBestActivityName(activityInfo, auxInfo.typeID, auxInfo.expansionID)
+    for key, cacheInfo in pairs(infoByTagKey) do
+        if cacheInfo.name == name then return key; end
+    end
+end
 addon.cataRawDungeonInfo = dungeonInfoCache
 addon.Enum.Expansions = Expansions
 addon.Enum.DungeonType = DungeonType
