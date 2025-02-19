@@ -466,7 +466,7 @@ do
 		frame.Level:SetPoint("LEFT", frame.Name, "RIGHT", 2, 0)
 		frame.Level:SetJustifyH("CENTER")
 		frame.Level:SetJustifyV("MIDDLE")
-		frame.Level:SetWidth(26)
+		frame.Level:SetWidth(28)
 		frame.RoleIcon = frame:CreateTexture(nil, "ARTWORK")
 		frame.RoleIcon:SetSize(13, 13)
 		frame.RoleIcon:SetPoint("LEFT", frame.Level, "RIGHT", 2, 0)
