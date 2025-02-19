@@ -676,7 +676,12 @@ local infoOverrides = {
 	HOLLOW = { expansionID = Expansions.Cataclysm, isHoliday = true },
 }
 
-local getBestActivityName = function(activityInfo)
+local getBestActivityName = function(activityInfo, typeID, expansionID)
+	if typeID == DungeonType.Battleground -- battlegrounds and pre-Wotlk raids use fullname for tranlsations
+	or ((expansionID and expansionID < Expansions.Wrath) and typeID == DungeonType.Raid) then
+		return (activityInfo.fullName and activityInfo.fullName ~= "" and activityInfo.fullName)
+			or activityInfo.shortName
+	end
 	return (activityInfo.shortName and activityInfo.shortName ~= "" and activityInfo.shortName)
 		or activityInfo.fullName
 end
@@ -701,7 +706,7 @@ do
 			local additionalInfo = groupIDAdditionalInfo[activityInfo.groupFinderActivityGroupID]
 			local minLevel, maxLevel = getBestActivityLevelRange(tagKey, activityInfo)
 			cached = {
-				name = getBestActivityName(activityInfo),
+				name = getBestActivityName(activityInfo, additionalInfo.typeID, additionalInfo.expansionID),
 				minLevel = minLevel,
 				maxLevel = maxLevel,
 				expansionID = additionalInfo.expansionID,
