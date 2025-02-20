@@ -690,7 +690,7 @@ local getBestActivityLevelRange = function(tagKey, activityInfo)
 	local min = (override and override.minLevel) or activityInfo.minLevelSuggestion or activityInfo.minLevel
 	local max = (override and override.maxLevel) or activityInfo.maxLevelSuggestion or activityInfo.maxLevel
 	if min == 0 then min = max end
-	return min, math.max(max, cataMaxLevel)
+	return min, Clamp(max, 0, cataMaxLevel)
 end
 
 ---@type {[DungeonID]: DungeonInfo}
