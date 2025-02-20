@@ -92,6 +92,7 @@ local getActivityDungeonKey = function(name, id)
 		local categoryID = activityInfo.categoryID
 		if categoryID == LFGListCategoryEnum.Custom
 		or categoryID == LFGListCategoryEnum.QuestsAndZones
+		or categoryID == LFGListCategoryEnum.PvP
 		then
 			isCustomActivity = true
 			dungeonKey = CUSTOM_ACTIVITY_PREFIX..id
@@ -450,16 +451,8 @@ local function InitializeHeader(header, node)
 			local levelRange = GRAY_FONT_COLOR:WrapTextInColorCode(GBB.LevelRange(dungeon))
 			local categoryColor = NORMAL_FONT_COLOR
 			if self:IsMouseOver() then categoryColor = HIGHLIGHT_FONT_COLOR
-			elseif GBB.DB.ColorOnLevel then
-				if GBB.dungeonLevel[dungeon][1] == 0 then
-					-- skip
-				elseif GBB.dungeonLevel[dungeon][2] < GBB.UserLevel then
-					categoryColor = TRIVIAL_DIFFICULTY_COLOR
-				elseif GBB.UserLevel<GBB.dungeonLevel[dungeon][1] then
-					categoryColor = IMPOSSIBLE_DIFFICULTY_COLOR
-				else
-					categoryColor = EASY_DIFFICULTY_COLOR
-				end
+			elseif GBB.DB.ColorOnLevel and GBB.dungeonLevel[dungeon][1] > 0 then
+				categoryColor = GBB.Tool.GetDungeonDifficultyColor(dungeon)
 			end
 			categoryName = categoryColor:WrapTextInColorCode(categoryName)
 			self.Name:SetFontObject(GBB.DB.FontSize)

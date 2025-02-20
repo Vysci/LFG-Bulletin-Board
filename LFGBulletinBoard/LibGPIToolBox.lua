@@ -2,6 +2,8 @@ local TOCNAME,
 	---@class Addon_Tool	
 	Addon = ...;
 
+local MAX_PLAYER_LEVEL = GetMaxPlayerLevel()
+
 ---@class ToolBox
 local Tool = {}
 Addon.Tool = Tool
@@ -173,6 +175,65 @@ function Tool.EnableMoving(frame,callback)
 end
 
 -- misc tools
+
+---@param playerLevel number
+---@param targetLevel number|number[] # exact `targetLevel` or `[targetLevelMin, targetLevelMax]` level range
+function Tool.GetDifficultyColor(playerLevel, targetLevel)
+	if type(targetLevel) == "table" then -- level range provided
+		local targetLevelMin, targetLevelMax = targetLevel[1], targetLevel[2];
+		if playerLevel == MAX_PLAYER_LEVEL and targetLevelMax == MAX_PLAYER_LEVEL then
+		return NORMAL_FONT_COLOR end; -- max level dungeon and max level player is normal
+		if playerLevel > targetLevelMax then
+			return TRIVIAL_DIFFICULTY_COLOR; -- player above max level is trivial
+		elseif playerLevel + 3 < targetLevelMin then
+			return IMPOSSIBLE_DIFFICULTY_COLOR; -- more than 3 levels below min is impossible
+		elseif abs(playerLevel - targetLevelMin) <= 2 then
+			return DIFFICULT_DIFFICULTY_COLOR; -- within 2 levels of min is difficult
+		elseif targetLevelMax - playerLevel <= 2 then
+			return EASY_DIFFICULTY_COLOR; -- within 2 levels of max is easy
+		else return NORMAL_FONT_COLOR end;-- anything else is normal
+	else -- single level provided
+		local targetLevelDiff = targetLevel - playerLevel;
+		if targetLevelDiff >= 5 then
+			return IMPOSSIBLE_DIFFICULTY_COLOR;
+		elseif targetLevelDiff >= 3 then
+			return DIFFICULT_DIFFICULTY_COLOR;
+		elseif targetLevelDiff >= -3 then
+			return EASY_DIFFICULTY_COLOR;
+		elseif targetLevelDiff >= -6 then
+			return TRIVIAL_DIFFICULTY_COLOR;
+		else return NORMAL_FONT_COLOR end;
+	end
+end
+
+local activityDifficultyColorCache do
+	local playerLevel = UnitLevel("player")
+	activityDifficultyColorCache = setmetatable({}, {
+		__index = function(self, key)
+			local info = Addon.GetDungeonInfo(key, true)
+			-- edge case: use binary color for battlegrounds (can either queue or cant)
+			if info and info.typeID and info.typeID == Addon.Enum.DungeonType.Battleground then
+				local color = (playerLevel >= Addon.dungeonLevel[key][1])
+					and NORMAL_FONT_COLOR or IMPOSSIBLE_DIFFICULTY_COLOR;
+				rawset(self, key, color)
+				return color
+			end
+			local color = Addon.Tool.GetDifficultyColor(playerLevel, Addon.dungeonLevel[key])
+			rawset(self, key, color)
+			return color
+		end
+	})
+	Tool.RegisterEvent("PLAYER_LEVEL_UP", function()
+		playerLevel = UnitLevel("player")
+		wipe(activityDifficultyColorCache)
+	end)
+end
+---@param dungeonKey string key for entry in `GBB.dungeonLevel`
+Tool.GetDungeonDifficultyColor = function(dungeonKey)
+	assert(type(dungeonKey) == "string", "Usage: Tool.GetDungeonDifficultyColor(dungeonKey: string)", dungeonKey)
+	assert(Addon.dungeonLevel[dungeonKey], "No entry in GBB.dungeonLevel table for given key", dungeonKey)
+	return activityDifficultyColorCache[dungeonKey]
+end
 
 function Tool.GuildNameToIndex(name, searchOffline)
 	name = string.lower(name)

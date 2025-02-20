@@ -143,16 +143,10 @@ local function CreateHeader(scrollPos, dungeon)
 		categoryName = "[+] "..categoryName
 	end
 	
-	if GBB.DB.ColorOnLevel then
-		if GBB.dungeonLevel[dungeon][1] == 0 then
-			-- skip
-		elseif GBB.dungeonLevel[dungeon][2] < GBB.UserLevel then
-			categoryName = TRIVIAL_DIFFICULTY_COLOR:WrapTextInColorCode(categoryName)
-		elseif GBB.UserLevel<GBB.dungeonLevel[dungeon][1] then
-			categoryName = IMPOSSIBLE_DIFFICULTY_COLOR:WrapTextInColorCode(categoryName)
-		else
-			categoryName = EASY_DIFFICULTY_COLOR:WrapTextInColorCode(categoryName)
-		end
+	if GBB.DB.ColorOnLevel and GBB.dungeonLevel[dungeon][1]
+	and GBB.dungeonLevel[dungeon][1] > 0
+	then
+		categoryName = GBB.Tool.GetDungeonDifficultyColor(dungeon):WrapTextInColorCode(categoryName)
 	end
 
 	header.Name:SetText(("%s %s"):format(categoryName, levelRange))
