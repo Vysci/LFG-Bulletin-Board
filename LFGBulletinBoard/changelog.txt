@@ -1,5 +1,19 @@
 Group Bulletin Board
 
+3.44
+  - General:
+    - Added settings for Locking, Changing Opacity, and Disabling Interactivity of the Bulletin Board window
+      - Accessed via the settings button in the top right corner of the main window.
+    - Added settings for changing the position of the addon tabs on the bulletin board (between the top and bottom).
+      - Accessed via a new tooltip menu when right-clicking on the tab buttons.
+    - Improved request grouping for the "Quests & Zones" category in the "Tool Requests" tab. (useful for hardcore servers)
+    - Improved translations of dungeon names in headers and settings for non-english addon users.
+    - Fix minor issue with the group member player levels, for the Tool Request tooltips, being truncated.
+  SoD:
+    - Added filter for new "Scarlet Enclave" raid
+  Cataclysm:
+    - Added "Tool Requests" tab support for cataclysm group finder.
+
 3.43
 - General:
   - added option to change the sound output channel for the "Play sound on new request" setting
