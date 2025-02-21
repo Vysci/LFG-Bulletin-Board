@@ -26,6 +26,15 @@ LFG Bulletin Board has pre-set categories for all classic dungeons up to catacly
 - `Ctrl + Left-Click` - Sends a group invite to the author.
 - `Alt + Left-Click` - Sends a templated message requesting to join the post author's group.
 
+### Window Settings
+_Accessed via the settings button on the main bulletin board window._
+- **Lock/Unlock Window** - Allows you to move the window around by dragging the header/footer/tabs on the bulletin board.
+- **Make Non-Interactive** - Enables a limited* click-through mode for the bulletin board.
+  - \* Request and category names will still be interactive.
+- **Opacity** - Changes the opacity of the bulletin board.
+- **Tab Position** - Change the position of the tabs between the top and bottom of the main window.
+  - _Accessed via a right-click tooltip menu on the tabs themselves._
+
 ### Slash Commands
 
 **Note**: `value` can be one of - `true`, `1`, `enable`, `false`, `0`, `disable`.
@@ -65,6 +74,11 @@ Additional Filters
 
 ![request_message](https://i.imgur.com/z1JFZpN.png)
 ![request_message_replacements](https://i.imgur.com/dIgRxaT.png)
+
+Window Settings
+
+![settings_button_menu](https://i.imgur.com/0qhThzj.png)
+![tab_button_menu](https://i.imgur.com/0hVTv5o.png)
 
 ## Additional Language Support
 
