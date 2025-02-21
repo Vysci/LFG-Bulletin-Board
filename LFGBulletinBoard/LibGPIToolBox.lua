@@ -185,13 +185,13 @@ function Tool.GetDifficultyColor(playerLevel, targetLevel)
 		return NORMAL_FONT_COLOR end; -- max level dungeon and max level player is normal
 		if playerLevel > targetLevelMax then
 			return TRIVIAL_DIFFICULTY_COLOR; -- player above max level is trivial
-		elseif playerLevel + 3 < targetLevelMin then
-			return IMPOSSIBLE_DIFFICULTY_COLOR; -- more than 3 levels below min is impossible
-		elseif abs(playerLevel - targetLevelMin) <= 2 then
-			return DIFFICULT_DIFFICULTY_COLOR; -- within 2 levels of min is difficult
+		elseif targetLevelMin - playerLevel > 3 then
+			return IMPOSSIBLE_DIFFICULTY_COLOR; -- player > 3 levels below min is impossible
+		elseif targetLevelMin - playerLevel >= 0 then
+			return DIFFICULT_DIFFICULTY_COLOR; -- player @ or below min is difficult
 		elseif targetLevelMax - playerLevel <= 2 then
-			return EASY_DIFFICULTY_COLOR; -- within 2 levels of max is easy
-		else return NORMAL_FONT_COLOR end;-- anything else is normal
+			return EASY_DIFFICULTY_COLOR; -- player 2 or less levels from max is easy
+		else return NORMAL_FONT_COLOR end;-- and anything else is normal
 	else -- single level provided
 		local targetLevelDiff = targetLevel - playerLevel;
 		if targetLevelDiff >= 5 then
