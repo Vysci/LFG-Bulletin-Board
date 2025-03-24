@@ -297,20 +297,26 @@ function Tool.Merge(t1,...)
 	return t1
 end
 
-function Tool.iMerge(t1,...)
-	for index=1 , select("#",...) do 
-		local var=select(index,...)
-		if type(var)=="table" then 
-			for i,v in ipairs(var) do 
-				if tContains(t1,v)==false then
-					tinsert(t1,v)
+-- Uniquely _inner_ merge provided table arrays.
+---@param ...table
+---@return table merged
+function Tool.iMerge(...)
+	local seen, merged = {}, {}
+	for i, table in ipairs({...}) do
+		assert(type(table) == "table", "Expected table, got " .. type(table) .. " for argument " .. i)
+		if i == 1 then
+			merged = table
+			for _, value in ipairs(table) do seen[value] = true end;
+		else
+			for _, value in ipairs(table) do
+				if not seen[value] then
+					tinsert(merged, value)
+					seen[value] = true
 				end
 			end
-		else
-			tinsert(t1,var)
 		end
 	end
-	return t1
+	return merged
 end
 
 ---Replaces special characters and characters with accents from a given string.
