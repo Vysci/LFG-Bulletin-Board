@@ -44,6 +44,7 @@ GBB.MAXCOMPACTWIDTH=350
 GBB.ShouldReset = false
 
 local isClassicEra = WOW_PROJECT_ID == WOW_PROJECT_CLASSIC
+local OptionsUtil = GBB.OptionsBuilder
 -- Tools
 -------------------------------------------------------------------------------------
 local debug = false -- dev override
@@ -344,19 +345,80 @@ function GBB.BtnClose()
 	GBB.HideWindow()
 end
 
-function GBB.BtnSettings(button )
-	if button == "LeftButton" then
-		local shouldOpen = GBB.PopupDynamic:Wipe("SettingsButtonMenu");
-		if shouldOpen then
-			GBB.PopupDynamic:AddItem(FILTERS, false, GBB.OptionsBuilder.OpenCategoryPanel, 2)
-			GBB.PopupDynamic:AddItem(ALL_SETTINGS, false, GBB.OptionsBuilder.OpenCategoryPanel, 1)
-			GBB.PopupDynamic:AddItem(GBB.L["BtnCancel"], false, nil, nil, nil, true)
-			GBB.PopupDynamic:Show(GroupBulletinBoardFrameSettingsButton,0,0)
-		end
-		PlaySound(SOUNDKIT.IG_MAINMENU_OPTION, "SFX")
-	else
-		GBB.Popup_Minimap("cursor",false)
+--------------------------------------------------------------------------------
+-- Bulletin Board Settings Button Setup
+--------------------------------------------------------------------------------
+
+local getSettingsButtonMenuDescription do
+	local isSavedVarSelected = function(table, var)
+		return function() return table[var] end;
 	end
+	local toggleSavedVar = function(table, var)
+		return function() table[var] = (not table[var]) end;
+	end
+	local getSavedVarCheckBoxArgs = function(table, var)
+		return GBB.L["Cbox"..var], isSavedVarSelected(table, var), toggleSavedVar(table, var)
+	end
+	getSettingsButtonMenuDescription = function(clickType)
+		local description = MenuUtil.CreateRootMenuDescription(MenuStyle2Mixin)
+		---@cast description RootMenuDescriptionProxy
+		description:CreateButton(FILTERS, function() OptionsUtil.OpenCategoryPanel(2) end)
+		if clickType == "RightButton" then
+			do -- Notification Settings
+				local submenu = description:CreateButton(COMMUNITIES_NOTIFICATION_SETTINGS)
+				-- sound
+				submenu:CreateCheckbox(getSavedVarCheckBoxArgs(GBB.DB, "NotifySound"))
+				-- chat
+				submenu:CreateCheckbox(getSavedVarCheckBoxArgs(GBB.DB, "NotifyChat"))
+			end
+		end
+		description:CreateButton(ALL_SETTINGS, function() OptionsUtil.OpenCategoryPanel(1) end)
+        description:CreateButton(GBB.L.BtnCancel, nop):SetResponse(MenuResponse.CloseMenu)
+        return description
+	end
+end
+-- note: mostly lazily loaded until after first click because button doesnt exist until after ADDON_LOADED
+-- todo: move load order in .toc
+local settingsButtonMenuContext = {
+	menuAnchor = nil, ---@type AnchorMixin?
+	lastDescription = nil, ---@type RootMenuDescriptionProxy?
+	clickDescriptions = {
+		LeftButton = nil, ---@type RootMenuDescriptionProxy?
+		RightButton = nil, ---@type RootMenuDescriptionProxy?
+	},
+	OpenMenu = function(self, owner, menuDescription)
+		local menu = Menu.GetManager():OpenMenu(owner, menuDescription, self.menuAnchor)
+		owner.HandlesGlobalMouseEvent = function() return true end
+		menu:SetClosedCallback(function() self.lastDescription = nil end)
+		self.lastDescription = menuDescription
+		return menu
+	end,
+    Initialize = function(self, owner)
+        self.clickDescriptions.RightButton = getSettingsButtonMenuDescription("RightButton")
+        self.clickDescriptions.LeftButton = getSettingsButtonMenuDescription("LeftButton")
+        self.menuAnchor = AnchorUtil.CreateAnchor("TOPRIGHT", owner, "BOTTOMRIGHT")
+    end,
+    CloseMenu = function(self, menu)
+        assert(menu, "CloseMenu: menu is nil")
+        Menu.GetManager():CloseMenu(menu)
+    end
+}
+
+-- Toggles a quick settings dropdown menu depending on the click type.
+local function SettingsButton_OnMouseDown(self, clickType)
+	if not settingsButtonMenuContext.menuAnchor then -- first click
+		settingsButtonMenuContext:Initialize(self)
+	end
+	local currentOpenMenu = Menu.GetManager():GetOpenMenu()
+    local incomingDescription = settingsButtonMenuContext.clickDescriptions[clickType]
+                                or settingsButtonMenuContext.clickDescriptions.LeftButton -- default to left click
+    -- Simmulate a toggle button:
+	-- Close menu curently open click menu if it exists
+	if currentOpenMenu and incomingDescription == settingsButtonMenuContext.lastDescription then
+		settingsButtonMenuContext:CloseMenu(currentOpenMenu)
+    else  -- open menu when: No menu is currently open, or switching click menus
+        settingsButtonMenuContext:OpenMenu(self, incomingDescription)
+    end
 end
 --------------------------------------------------------------------------------
 -- Tag Lists
@@ -512,7 +574,7 @@ function GBB.Popup_Minimap(frame,showMinimapOptions)
 		return
 	end
 
-	GBB.PopupDynamic:AddItem(GBB.L["HeaderSettings"],false, GBB.OptionsBuilder.OpenCategoryPanel, 1)
+	GBB.PopupDynamic:AddItem(GBB.L["HeaderSettings"],false, OptionsUtil.OpenCategoryPanel, 1)
 	
 	GBB.PopupDynamic:AddItem("",true)
 	GBB.PopupDynamic:AddItem(GBB.L["CboxFilterTravel"],false,GBB.DBChar,"FilterDungeonTRAVEL")
@@ -672,8 +734,8 @@ function GBB.Init()
 				GBB.ResetWindow()
 				GBB.ShowWindow()
 			end},
-		{{"config","setup","options"},GBB.L["SlashConfig"],GBB.OptionsBuilder.OpenCategoryPanel,1},
-		{"about",GBB.L["SlashAbout"],GBB.OptionsBuilder.OpenCategoryPanel, 6},
+		{{"config","setup","options"},GBB.L["SlashConfig"],OptionsUtil.OpenCategoryPanel,1},
+		{"about",GBB.L["SlashAbout"],OptionsUtil.OpenCategoryPanel, 6},
 		{"",GBB.L["SlashDefault"],GBB.ToggleWindow},
 		{"chat","",{
 			{{"organize", "clean"},GBB.L["SlashChatOrganizer"],function()
@@ -710,7 +772,7 @@ function GBB.Init()
 	GroupBulletinBoardFrameSelectChannel:SetupMenu(function(frame, rootDescription)
 		---@cast rootDescription RootMenuDescriptionProxy
 		local channelInfo = GBB.PhraseChannelList(GetChannelList())
-		local setting = GBB.OptionsBuilder.GetSavedVarHandle(GBB.DB, "AnnounceChannel");
+		local setting = OptionsUtil.GetSavedVarHandle(GBB.DB, "AnnounceChannel");
 		local isSelected = function(channel) return channel == setting:GetValue() end
 		local setSelected = function(channel) setting:SetValue(channel) end
 		for i, channel in pairs(channelInfo) do
@@ -746,7 +808,7 @@ function GBB.Init()
 	function GroupBulletinBoardFrameResultsFilter:GetFilters() 
 		return self.filterPatterns
 	end
-
+	GroupBulletinBoardFrameSettingsButton:SetScript("OnMouseDown", SettingsButton_OnMouseDown)
 	GBB.ResizeFrameList()
 	
 	if GBB.DB.EscapeQuit then 
@@ -821,7 +883,7 @@ function GBB.Init()
 	if TabEnum.RecentPlayers then
 		GBB.Tool.TabOnSelect(GroupBulletinBoardFrame, TabEnum.RecentPlayers, GBB.UpdateGroupList)
 		-- update visibilty of recent player tab based on addon option.
-		local setting = GBB.OptionsBuilder.GetSavedVarHandle(GBB.DB, "EnableGroup")
+		local setting = OptionsUtil.GetSavedVarHandle(GBB.DB, "EnableGroup")
 		local manageTabVisibility = function(isSettingEnabled)
 			if isSettingEnabled then -- Reshow all active tabs.
 				GBB.Tool.TabShow(GroupBulletinBoardFrame)

@@ -88,11 +88,6 @@
 				<Anchors>
 					<Anchor point="RIGHT" relativeTo="$parentCloseButton" relativePoint="LEFT"/>
 				</Anchors>
-				<Scripts>
-					<OnMouseDown>
-						GroupBulletinBoard_Addon.BtnSettings(button )
-					</OnMouseDown>
-				</Scripts>
 			</Button>
 
 			<Button name="$parentRefreshButton" inherits="GroupBulletinBoard_MiniButton" Text="|TInterface\Buttons\UI-RefreshButton:0|t">
