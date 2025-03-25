@@ -345,6 +345,26 @@ function GBB.BtnClose()
 	GBB.HideWindow()
 end
 
+local BulletinBoardFrame_StopMovingAndSetAnchors = function()
+    GroupBulletinBoardFrame:StopMovingOrSizing()
+    GBB.SaveAnchors()
+end
+local function setBulletinBoardMovableState(isMovable)
+    local Header, Footer = GroupBulletinBoardFrameHeaderContainer, GroupBulletinBoardFrameFooterContainer
+    local RequestListScroll, LFGToolScroll = GroupBulletinBoardFrame_ScrollFrame, GBB.LfgTool.ScrollContainer
+    -- register the header/footer/scroll containers for dragging the board frame
+    for _, container in ipairs({Header, Footer, RequestListScroll, LFGToolScroll}) do
+        container:EnableMouse(isMovable)
+        if isMovable then container:RegisterForDrag("LeftButton")
+        else container:RegisterForDrag() end
+        container:SetScript("OnDragStart", isMovable and function() GroupBulletinBoardFrame:StartMoving() end or nil)
+        container:SetScript("OnDragStop", isMovable and BulletinBoardFrame_StopMovingAndSetAnchors or nil)
+        if container == Header or container == Footer then
+            -- darken the header/footer backgrounds slightly when they handle dragging
+            container.Background:SetColorTexture(0, 0, 0, (isMovable and 0.17 or 0))
+        end
+    end
+end
 --------------------------------------------------------------------------------
 -- Bulletin Board Settings Button Setup
 --------------------------------------------------------------------------------
@@ -359,6 +379,17 @@ local getSettingsButtonMenuDescription do
 	local getSavedVarCheckBoxArgs = function(table, var)
 		return GBB.L["Cbox"..var], isSavedVarSelected(table, var), toggleSavedVar(table, var)
 	end
+    local windowSettings = setmetatable({}, { ---@type table<string, SavedVarHandle>
+        __index = function(t, k)
+            local value = OptionsUtil.GetSavedVarHandle(GBB.DB.WindowSettings, k)
+            assert(value, "windowSettings: handle is nil. Don't index table until after ADDON_LOADED", k)
+            rawset(t, k, value); return value;
+        end
+    })
+    local isBoardFrameLocked = function() return not windowSettings.isMovable:GetValue() end
+    local toggleBoardFrameLock = function()
+        windowSettings.isMovable:SetValue(not windowSettings.isMovable:GetValue())
+    end
 	getSettingsButtonMenuDescription = function(clickType)
 		local description = MenuUtil.CreateRootMenuDescription(MenuStyle2Mixin)
 		---@cast description RootMenuDescriptionProxy
@@ -372,6 +403,7 @@ local getSettingsButtonMenuDescription do
 				submenu:CreateCheckbox(getSavedVarCheckBoxArgs(GBB.DB, "NotifyChat"))
 			end
 		end
+        description:CreateCheckbox(LOCK_WINDOW, isBoardFrameLocked, toggleBoardFrameLock)
 		description:CreateButton(ALL_SETTINGS, function() OptionsUtil.OpenCategoryPanel(1) end)
         description:CreateButton(GBB.L.BtnCancel, nop):SetResponse(MenuResponse.CloseMenu)
         return description
@@ -600,7 +632,9 @@ function GBB.Popup_Minimap(frame,showMinimapOptions)
 end
 
 function GBB.Init()
-	GroupBulletinBoardFrame:SetResizeBounds(400,170)	
+    ---@class BulletinBoardFrame: Frame
+    local GroupBulletinBoardFrame = GroupBulletinBoardFrame
+	GroupBulletinBoardFrame:SetResizeBounds(400,170)
 	GroupBulletinBoardFrame:SetClampedToScreen(true)
 	GBB.UserLevel=UnitLevel("player")
 	GBB.UserName=(UnitFullName("player"))
@@ -627,6 +661,8 @@ function GBB.Init()
 	if not GBB.DB.CustomLocalesDungeon then GBB.DB.CustomLocalesDungeon={} end
 	if not GBB.DB.FontSize then GBB.DB.FontSize = "GameFontNormal" end
 	if not GBB.DB.DisplayLFG then GBB.DB.DisplayLFG = false end
+    if not GBB.DB.WindowSettings then GBB.DB.WindowSettings = {} end
+
 	GBB.DB.Server=nil -- old settings
 	
 	if GBB.DB.OnDebug == nil then GBB.DB.OnDebug=false end
@@ -864,8 +900,13 @@ function GBB.Init()
 		GBB.LfgTool.OnFrameResized()
 		end
 	)
-	GBB.Tool.EnableMoving(GroupBulletinBoardFrame,GBB.SaveAnchors)
 
+    do --- Setup Bulletin Board Window Mouse Interactions
+        -- isMovable: true if the board can be dragged around
+        local isMovable = OptionsUtil.GetSavedVarHandle(GBB.DB.WindowSettings, "isMovable", true) -- default to true
+        isMovable:AddUpdateHook(setBulletinBoardMovableState)
+        setBulletinBoardMovableState(isMovable:GetValue()) -- initialize the state
+    end
 	GBB.PatternWho1=GBB.Tool.CreatePattern(WHO_LIST_FORMAT )
 	GBB.PatternWho2=GBB.Tool.CreatePattern(WHO_LIST_GUILD_FORMAT )
 	GBB.PatternOnline=GBB.Tool.CreatePattern(ERR_FRIEND_ONLINE_SS)

@@ -249,6 +249,7 @@
 				GroupBulletinBoard_Addon.OnSizeChanged()
 			</OnSizeChanged>
 			<OnLoad>
+				CallbackRegistryMixin.OnLoad(self)
 				GroupBulletinBoard_Addon.OnLoad()
 			</OnLoad>
 			<OnEvent>

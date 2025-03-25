@@ -152,28 +152,6 @@ function Tool.OnUpdate(func)
 	tinsert(eventFrame._GPIPRIVAT_updates,func)
 end
 
--- move frame
-
-local function MovingStart(self)
-	self:StartMoving()
-end
-
-local function MovingStop(self)
-	self:StopMovingOrSizing()
-	if self._GPIPRIVAT_MovingStopCallback then
-		self._GPIPRIVAT_MovingStopCallback(self)
-	end
-end
-
-function Tool.EnableMoving(frame,callback)
-	frame:SetMovable(true)	
-	frame:EnableMouse(true)
-	frame:RegisterForDrag("LeftButton")
-	frame:SetScript("OnDragStart",MovingStart)
-	frame:SetScript("OnDragStop",MovingStop)
-	frame._GPIPRIVAT_MovingStopCallback=callback
-end
-
 -- misc tools
 
 ---@param playerLevel number
