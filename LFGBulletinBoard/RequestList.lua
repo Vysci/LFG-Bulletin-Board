@@ -595,7 +595,7 @@ function GBB.UpdateList()
 	scrollHeight=scrollHeight+GroupBulletinBoardFrame_ScrollFrame:GetHeight()-20
 
 	GroupBulletinBoardFrame_ScrollChildFrame:SetHeight(scrollHeight)
-	GroupBulletinBoardFrameStatusText:SetText(string.format(GBB.L["msgNbRequest"], count))
+	GroupBulletinBoardFrameFooterContainer.StatusText:SetText(string.format(GBB.L["msgNbRequest"], count))
 end
 
 function GBB.GetDungeons(msg,name)
