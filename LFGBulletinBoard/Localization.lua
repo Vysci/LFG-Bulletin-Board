@@ -107,6 +107,16 @@ local localizedAddonDisplayStrings = {
 		zhCN = "显示寻求组队公告栏",
 		zhTW = "顯示尋求組隊公告欄",
 	},
+	WINDOW_SETTINGS = {
+		enUS = "Window Settings",
+		deDE = "Fenster Einstellungen",
+		esMX = "Configuración de ventana",
+		frFR = "Paramètres de la fenêtre",
+		ptBR = "Configurações da janela",
+		ruRU = "Настройки окна",
+		zhCN = "窗口设置",
+		zhTW = "視窗設定",
+	},
 	WORLD_BOSSES = {
 		enUS = "World Bosses",
         deDE = "Weltbosse",

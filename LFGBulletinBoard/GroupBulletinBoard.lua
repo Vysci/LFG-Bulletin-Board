@@ -345,22 +345,23 @@ function GBB.BtnClose()
 	GBB.HideWindow()
 end
 
-local BulletinBoardFrame_StopMovingAndSetAnchors = function()
-    GroupBulletinBoardFrame:StopMovingOrSizing()
-    GBB.SaveAnchors()
-end
 local function setBulletinBoardMovableState(isMovable)
     local Header, Footer = GroupBulletinBoardFrameHeaderContainer, GroupBulletinBoardFrameFooterContainer
     local RequestListScroll, LFGToolScroll = GroupBulletinBoardFrame_ScrollFrame, GBB.LfgTool.ScrollContainer
-    -- register the header/footer/scroll containers for dragging the board frame
-    for _, container in ipairs({Header, Footer, RequestListScroll, LFGToolScroll}) do
-        container:EnableMouse(isMovable)
+    local isInteractive = GBB.DB.WindowSettings.isInteractive
+    local containers = {Header, Footer, RequestListScroll, LFGToolScroll}
+    for _, container in ipairs(containers) do
+        local isScrollFrame = container == LFGToolScroll or container == RequestListScroll
+        local shouldEnableMouse = (not isScrollFrame or isInteractive) and isMovable
+        container:EnableMouse(shouldEnableMouse)
         if isMovable then container:RegisterForDrag("LeftButton")
         else container:RegisterForDrag() end
-        container:SetScript("OnDragStart", isMovable and function() GroupBulletinBoardFrame:StartMoving() end or nil)
-        container:SetScript("OnDragStop", isMovable and BulletinBoardFrame_StopMovingAndSetAnchors or nil)
+        if not isScrollFrame or isInteractive then
+            container:SetScript("OnDragStart", isMovable and function() GroupBulletinBoardFrame:StartMoving() end or nil)
+            container:SetScript("OnDragStop", isMovable and function() GroupBulletinBoardFrame:StopMovingAndSaveAnchors() end or nil)
+        end
         if container == Header or container == Footer then
-            -- darken the header/footer backgrounds slightly when they handle dragging
+            -- Darken the header/footer backgrounds slightly when they handle dragging
             container.Background:SetColorTexture(0, 0, 0, (isMovable and 0.17 or 0))
         end
     end
@@ -390,6 +391,10 @@ local getSettingsButtonMenuDescription do
     local toggleBoardFrameLock = function()
         windowSettings.isMovable:SetValue(not windowSettings.isMovable:GetValue())
     end
+    local isBoardFrameNonInteractive = function() return not windowSettings.isInteractive:GetValue() end
+    local setBoardFrameNonInteractive = function()
+        windowSettings.isInteractive:SetValue(not windowSettings.isInteractive:GetValue())
+    end
 	getSettingsButtonMenuDescription = function(clickType)
 		local description = MenuUtil.CreateRootMenuDescription(MenuStyle2Mixin)
 		---@cast description RootMenuDescriptionProxy
@@ -403,7 +408,13 @@ local getSettingsButtonMenuDescription do
 				submenu:CreateCheckbox(getSavedVarCheckBoxArgs(GBB.DB, "NotifyChat"))
 			end
 		end
-        description:CreateCheckbox(LOCK_WINDOW, isBoardFrameLocked, toggleBoardFrameLock)
+        do -- Board window/frame settings
+            description:CreateDivider()
+            description:CreateTitle(GBB.L.WINDOW_SETTINGS)
+            description:CreateCheckbox(LOCK_WINDOW, isBoardFrameLocked, toggleBoardFrameLock)
+            description:CreateCheckbox(MAKE_UNINTERACTABLE, isBoardFrameNonInteractive, setBoardFrameNonInteractive)
+            description:CreateDivider()
+        end
 		description:CreateButton(ALL_SETTINGS, function() OptionsUtil.OpenCategoryPanel(1) end)
         description:CreateButton(GBB.L.BtnCancel, nop):SetResponse(MenuResponse.CloseMenu)
         return description
@@ -901,12 +912,29 @@ function GBB.Init()
 		end
 	)
 
-    do --- Setup Bulletin Board Window Mouse Interactions
-        -- isMovable: true if the board can be dragged around
-        local isMovable = OptionsUtil.GetSavedVarHandle(GBB.DB.WindowSettings, "isMovable", true) -- default to true
-        isMovable:AddUpdateHook(setBulletinBoardMovableState)
-        setBulletinBoardMovableState(isMovable:GetValue()) -- initialize the state
+    function GroupBulletinBoardFrame:StopMovingAndSaveAnchors()
+        GroupBulletinBoardFrame:StopMovingOrSizing()
+        GBB.SaveAnchors()
     end
+
+    do --- Setup Bulletin Board Window Mouse Interactions
+        local windowSettings = {
+            --- `true` if the board can be dragged around (aka not locked); default=`true`
+            isMovable = OptionsUtil.GetSavedVarHandle(GBB.DB.WindowSettings, "isMovable", true),
+            --- `false` if the board is **not** interactive (aka click-through); default=`true`
+            isInteractive = OptionsUtil.GetSavedVarHandle(GBB.DB.WindowSettings, "isInteractive", true),
+        }
+        windowSettings.isMovable:AddUpdateHook(setBulletinBoardMovableState)
+        setBulletinBoardMovableState(windowSettings.isMovable:GetValue())
+        local setBulletinBoardInteractiveState = function(isInteractive)
+            GBB.UpdateRequestListInteractiveState()
+            GBB.LfgTool:UpdateInteractiveState()
+            GroupBulletinBoardFrame:EnableMouse(isInteractive and windowSettings.isMovable:GetValue())
+        end
+        windowSettings.isInteractive:AddUpdateHook(setBulletinBoardInteractiveState)
+        setBulletinBoardInteractiveState(windowSettings.isInteractive:GetValue())
+    end
+
 	GBB.PatternWho1=GBB.Tool.CreatePattern(WHO_LIST_FORMAT )
 	GBB.PatternWho2=GBB.Tool.CreatePattern(WHO_LIST_GUILD_FORMAT )
 	GBB.PatternOnline=GBB.Tool.CreatePattern(ERR_FRIEND_ONLINE_SS)
