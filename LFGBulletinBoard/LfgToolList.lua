@@ -439,7 +439,8 @@ local function InitializeHeader(header, node)
 		header.created = true
 		header:RegisterForClicks("AnyDown")
 		header.Name = header:CreateFontString(nil, "ARTWORK", "GameFontNormal")
-		header.Name:SetAllPoints()
+		header.Name:SetPoint("TOPLEFT", header, "TOPLEFT", 0, 0)
+		header.Name:SetPoint("BOTTOMLEFT", header, "BOTTOMLEFT", 0, 0)
 		header.Name:SetFontObject(GBB.DB.FontSize)
 		header.Name:SetJustifyH("LEFT")
 		header.Name:SetJustifyV("MIDDLE")
@@ -465,6 +466,20 @@ local function InitializeHeader(header, node)
 			header:GetElementData():ToggleCollapsed(...)
 			header:UpdateTextLayout()
 		end
+		function header:UpdateInteractiveState()
+			-- Disable mouse interaction on header when frame is non-interactive
+			local isInteractive = GBB.DB.WindowSettings.isInteractive
+			self:EnableMouse(isInteractive)
+			self.Name:EnableMouse(not isInteractive)
+			self.Name:SetScript("OnMouseDown", not isInteractive and function(_, button)
+				dungeonHeaderClickHandler(self, button)
+			end or nil)
+			self.Name:SetScript("OnEnter", not isInteractive and function() self:UpdateTextLayout() end or nil)
+			self.Name:SetScript("OnLeave", not isInteractive and function() self:UpdateTextLayout() end or nil)
+			self:SetScript("OnClick", isInteractive and dungeonHeaderClickHandler or nil)
+			self:SetScript("OnEnter", isInteractive and self.UpdateTextLayout or nil)
+			self:SetScript("OnLeave", isInteractive and self.UpdateTextLayout or nil)
+		end
 		-- update highlight color on header hover
 		header:SetScript("OnEnter", header.UpdateTextLayout)
 		header:SetScript("OnLeave", header.UpdateTextLayout)
@@ -472,6 +487,7 @@ local function InitializeHeader(header, node)
 	end
 	-- regular inits
 	header:UpdateTextLayout()
+	header:UpdateInteractiveState()
 	header:Show()
 end
 
@@ -869,10 +885,29 @@ local function InitializeEntryItem(entry, node)
 			if not self:IsVisible() then return end;
 			self.Time:SetText(GBB.formatTime(time() - self:GetData().req.last))
 		end
+		function entry:UpdateInteractiveState()
+			-- Disable mouse interaction on message text when frame is non-interactive (only name remains clickable)
+			local isInteractive = GBB.DB.WindowSettings.isInteractive
+			self:EnableMouse(isInteractive)
+			self.Name:EnableMouse(not isInteractive)
+			self.Name:SetScript("OnMouseDown", not isInteractive and function(_, button)
+				requestEntryClickHandler(self, button)
+			end or nil)
+			self.Name:SetScript("OnEnter", not isInteractive and function(_)
+				onEntryMouseover(self, true)
+			end or nil)
+			self.Name:SetScript("OnLeave", not isInteractive and function(_)
+				onEntryMouseover(self, false)
+			end or nil)
+			self:SetScript("OnMouseDown", isInteractive and requestEntryClickHandler or nil)
+			self:SetScript("OnEnter", isInteractive and GenerateClosure(onEntryMouseover, self, true) or nil)
+			self:SetScript("OnLeave", isInteractive and GenerateClosure(onEntryMouseover, self, false) or nil)
+		end
 		entry.created = true
 	end
 	-- regular inits, called when frame is acquired by the scroll view
 	entry:UpdateTextLayout()
+	entry:UpdateInteractiveState()
 	CountdownTimer:RegisterFrameMethod(entry, "UpdateTime")
 end
 
@@ -1152,6 +1187,27 @@ function LFGTool.OnFrameResized()
 	-- Update scrollbox so that extents are set to match any new frame sizes
 	local immediately = false
 	LFGToolScrollContainer.scrollBox:FullUpdate(immediately)
+end
+
+function LFGTool:UpdateInteractiveState()
+	local isInteractive = GBB.DB.WindowSettings.isInteractive
+	local isMovable = GBB.DB.WindowSettings.isMovable
+	if isInteractive and isMovable then
+		self.ScrollContainer:RegisterForDrag("LeftButton")
+		self.ScrollContainer:EnableMouse(true)
+		self.ScrollContainer:SetScript("OnDragStart", function() GroupBulletinBoardFrame:StartMoving() end)
+		self.ScrollContainer:SetScript("OnDragStop", function() GroupBulletinBoardFrame:StopMovingAndSaveAnchors() end)
+		self.ScrollContainer.scrollBox.ScrollTarget:EnableMouse(true)
+	else
+		self.ScrollContainer:RegisterForDrag()
+		self.ScrollContainer:SetScript("OnDragStart", nil)
+		self.ScrollContainer:SetScript("OnDragStop", nil)
+		self.ScrollContainer.scrollBox.ScrollTarget:EnableMouse(false)
+		self.ScrollContainer:EnableMouse(false)
+	end
+    self.ScrollContainer.scrollView:ForEachFrame(function(frame, node)
+        if frame.UpdateInteractiveState then frame:UpdateInteractiveState() end
+    end)
 end
 
 function LFGTool:Load()
