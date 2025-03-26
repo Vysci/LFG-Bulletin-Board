@@ -444,7 +444,8 @@ local CreateSizeBorder=function(frame,name,a1,x1,y1,a2,x2,y2,cursor,rot,OnStart,
 	FrameSizeBorder:SetScript("OnMouseDown", SizingStart)
 	FrameSizeBorder:SetScript("OnMouseUp", SizingStop)
 	FrameSizeBorder:SetScript("OnEnter", SizingEnter)
-	FrameSizeBorder:SetScript("OnLeave", SizingLeave)	
+	FrameSizeBorder:SetScript("OnLeave", SizingLeave)
+	FrameSizeBorder:SetFrameLevel(frame:GetFrameLevel() + 10) -- make sure its above child frames
 	return FrameSizeBorder
 end
 

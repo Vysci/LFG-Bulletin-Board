@@ -17,34 +17,6 @@
 				<Texture>
 					<Color a=".7" r="0" g="0" b="0" />
 				</Texture>
-			
-				<FontString name="$parentTitle" inherits="GameFontNormal" text="Group Bulletin Board" maxLines="1" justifyH="LEFT" justifyV="TOP">
-					<Anchors>
-						<Anchor point="TOPLEFT">
-							<Offset>
-								<AbsDimension x="10" y="-10"/>
-							</Offset>
-						</Anchor>
-					</Anchors>
-				</FontString>
-
-				<FontString name="$parentStatusText" inherits="GameFontNormalSmall" text="status - when you can read this, try /reload" maxLines="1" justifyH="LEFT" justifyV="BOTTOM">
-					<Color r="0.5" g="0.5" b="1.0"/>
-					<Anchors>
-						<Anchor point="BOTTOMLEFT">
-							<Offset>
-								<AbsDimension x="10" y="10"/>
-							</Offset>
-						</Anchor>
-						<Anchor point="BOTTOMRIGHT">
-							<Offset>
-								<AbsDimension x="-10" y="10"/>
-							</Offset>
-						</Anchor>
-					</Anchors>
-					
-				</FontString>	
-				
 			</Layer>
 		</Layers>
 		<Frames>
@@ -68,97 +40,131 @@
 					</OnLoad>
 				</Scripts>
 			</Frame>
-			<!-- default gui elements -->
-			<Button name="$parentCloseButton" inherits="GroupBulletinBoard_MiniButton" Text="|TInterface\Buttons\UI-StopButton:0|t">
+			<!-- Header bar with the BulletinBoard's control buttons and title -->
+			<Frame name="$parentHeaderContainer">
 				<Anchors>
-					<Anchor point="TOPRIGHT" relativeTo="$parent" relativePoint="TOPRIGHT">
-						<Offset>
-							<AbsDimension x="-6" y="-6"/>
-						</Offset>
-					</Anchor>
+					<Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT"></Anchor>
+					<Anchor point="TOPRIGHT" relativeTo="$parent" relativePoint="TOPRIGHT"></Anchor>
 				</Anchors>
-				<Scripts>
-					<OnClick>
-						 GroupBulletinBoard_Addon.BtnClose()
-					</OnClick>
-				</Scripts>
-			</Button>
-			
-			<Button name="$parentSettingsButton" inherits="GroupBulletinBoard_MiniButton" Text="|TInterface\Buttons\UI-OptionsButton:0|t">
+				<Size><AbsDimension y="30"/></Size>
+				<Layers>
+					<Layer level="ARTWORK">
+						<FontString name="$parentTitle" parentKey="Title" inherits="GameFontNormal" text="LFG Bulletin Board" maxLines="1" justifyH="LEFT" justifyV="TOP" >
+							<Anchors>
+								<Anchor point="LEFT">
+									<Offset><AbsDimension x="10" y="0"/></Offset>
+								</Anchor>
+							</Anchors>
+						</FontString>
+					</Layer>
+					<Layer level="BACKGROUND">
+						<Texture parentKey="Background" setAllPoints="true"  />
+					</Layer>
+				</Layers>
+				<Frames>
+					<Button name="$parentCloseButton" parentKey="CloseButton" inherits="GroupBulletinBoard_MiniButton" Text="|TInterface\Buttons\UI-StopButton:0|t">
+						<Anchors>
+							<Anchor point="TOPRIGHT" relativeTo="$parent" relativePoint="TOPRIGHT">
+								<Offset><AbsDimension x="-6" y="-6"/></Offset>	
+							</Anchor>
+						</Anchors>
+						<Scripts> <!-- see GBB.Init() --> </Scripts>
+					</Button>
+					<Button name="$parentSettingsButton" parentKey="SettingsButton" inherits="GroupBulletinBoard_MiniButton" Text="|TInterface\Buttons\UI-OptionsButton:0|t">
+						<Anchors>
+							<Anchor point="RIGHT" relativeTo="$parentCloseButton" relativePoint="LEFT"/>
+						</Anchors>
+						<Scripts> <!-- see settingsButtonMenuMixin in GroupBulletinBoard.lua --> </Scripts>
+					</Button>
+					<!-- Used only for the LFGList tool -->
+					<Button name="$parentRefreshButton" parentKey="RefreshButton" inherits="GroupBulletinBoard_MiniButton" Text="|TInterface\Buttons\UI-RefreshButton:0|t">
+						<Anchors>
+							<Anchor point="RIGHT" relativeTo="$parentSettingsButton" relativePoint="LEFT"/>
+						</Anchors>
+						<Scripts> <!-- see LfgToolList.lua --> </Scripts>
+					</Button>
+				</Frames>
+			</Frame>
+			<!-- Footer bar with the BulletinBoard's "announce box" and status text -->
+			<Frame name="$parentFooterContainer">
 				<Anchors>
-					<Anchor point="RIGHT" relativeTo="$parentCloseButton" relativePoint="LEFT"/>
+					<Anchor point="BOTTOMLEFT" relativeTo="$parent" relativePoint="BOTTOMLEFT"></Anchor>
+					<Anchor point="BOTTOMRIGHT" relativeTo="$parent" relativePoint="BOTTOMRIGHT"></Anchor>
 				</Anchors>
-			</Button>
+				<Size><AbsDimension y="44"/></Size>
+				<Layers>
+					<Layer level="ARTWORK">
+						<FontString name="$parentStatusText" parentKey="StatusText" inherits="GameFontNormalSmall" text="status - when you can read this, try /reload" maxLines="1" justifyH="LEFT" justifyV="BOTTOM">
+							<Color r="0.5" g="0.5" b="1.0"/>
+							<Anchors>
+								<Anchor point="BOTTOMLEFT">
+									<Offset><AbsDimension x="10" y="12"/></Offset>
+								</Anchor>
+								<Anchor point="BOTTOMRIGHT">
+									<Offset><AbsDimension x="-10" y="12"/></Offset>
+								</Anchor>
+							</Anchors>
+						</FontString>
+					</Layer>
+					<Layer level="BACKGROUND">
+						<Texture parentKey="Background" setAllPoints="true" />
+					</Layer>
+				</Layers>
+				<Frames>
+					<!-- Announce message frames, setup in GBB.Init() -->
+					<DropdownButton name="$parentAnnounceChannelSelect" parentKey="AnnounceChannelSelect" inherits="UIPanelButtonTemplate" text="channel" mixin="WowStyle1DropdownMixin">
+					<KeyValues>
+						<KeyValue key="menuMixin" value="MenuStyle2Mixin" type="global"/>
+					</KeyValues>
+					<Anchors>
+						<Anchor point="BOTTOMLEFT" relativePoint="BOTTOMLEFT" relativeTo="$parent" >
+							<Offset>
+								<AbsDimension x="10" y="24"/>
+							</Offset>
+						</Anchor>
+					</Anchors>
+					<Scripts>
+						<OnLoad> DropdownSelectionTextMixin.OnLoad(self) </OnLoad>
+					</Scripts>
+					<Size><AbsDimension x="150" y="20" /></Size>
+					</DropdownButton>
 
-			<Button name="$parentRefreshButton" inherits="GroupBulletinBoard_MiniButton" Text="|TInterface\Buttons\UI-RefreshButton:0|t">
-				<Anchors>
-					<Anchor point="RIGHT" relativeTo="$parentSettingsButton" relativePoint="LEFT"/>
-				</Anchors>
-				<Scripts>
-					<!-- see LfgToolList.lua -->
-				</Scripts>
-			</Button>
+					<Button name="$parentAnnounceButton" parentKey="AnnounceButton" inherits="UIPanelButtonTemplate" text="Post">
+						<Anchors>
+							<Anchor point="BOTTOMRIGHT" relativePoint="BOTTOMRIGHT" relativeTo="$parent" >
+								<Offset>
+									<AbsDimension x="-40" y="24"/>
+								</Offset>
+							</Anchor>
+						</Anchors>
+						<Size><AbsDimension x="100" y="20" /></Size>
+						<Scripts> <!-- see GBB.Init in GroupBulletinBoard.lua --> </Scripts>
+					</Button>
 
-			<!-- announcebox -->
-			<DropdownButton name="$parentSelectChannel" inherits="UIPanelButtonTemplate" text="channel" mixin="WowStyle1DropdownMixin">
-				<KeyValues>
-					<KeyValue key="menuMixin" value="MenuStyle2Mixin" type="global"/>
-				</KeyValues>
-				<Anchors>
-					<Anchor point="BOTTOMLEFT" relativePoint="BOTTOMLEFT" relativeTo="$parent" >
-						<Offset>
-							<AbsDimension x="10" y="22"/>
-						</Offset>
-					</Anchor>
-				</Anchors>
-				<Size><AbsDimension x="150" y="20" /></Size>
-			</DropdownButton>
-			
-			<Button name="$parentAnnounce" inherits="UIPanelButtonTemplate" text="Post">
-				<Anchors>
-					<Anchor point="BOTTOMRIGHT" relativePoint="BOTTOMRIGHT" relativeTo="$parent" >
-						<Offset>
-							<AbsDimension x="-40" y="22"/>
-						</Offset>
-					</Anchor>
-				</Anchors>
-				<Size><AbsDimension x="100" y="20" /></Size>
-				<Scripts>
-					<OnClick>
-						GroupBulletinBoard_Addon.Announce()
-					</OnClick>
-				</Scripts>
-			</Button>
-			
-			<EditBox name="$parentAnnounceMsg" letters="255" autoFocus="false" inherits="InputBoxTemplate">
-				<Anchors>
-					<Anchor point="TOPLEFT" relativePoint="TOPRIGHT" relativeTo="$parentSelectChannel" >
-						<Offset>
-							<AbsDimension x="8" y="0"/>
-						</Offset>
-					</Anchor>
-					<Anchor point="BOTTOMRIGHT" relativePoint="BOTTOMLEFT" relativeTo="$parentAnnounce" >
-						<Offset>
-							<AbsDimension x="-4" y="0"/>
-						</Offset>
-					</Anchor>
-				</Anchors>
-				<Size><AbsDimension x="100" y="20"/></Size>
-				<Scripts>
-					<OnEditFocusGained>
-						GroupBulletinBoard_Addon.GetFocus()
-					</OnEditFocusGained>
-					<OnTextChanged>
-						GroupBulletinBoard_Addon.EditAnnounceMessage_Changed()
-					</OnTextChanged>
-				</Scripts>
-			</EditBox>
+					<EditBox name="$parentAnnounceInput" parentKey="AnnounceInput" letters="255" autoFocus="false" inherits="InputBoxTemplate">
+						<Anchors>
+							<Anchor point="TOPLEFT" relativePoint="TOPRIGHT" relativeTo="$parentAnnounceChannelSelect" >
+								<Offset>
+									<AbsDimension x="8" y="0"/>
+								</Offset>
+							</Anchor>
+							<Anchor point="BOTTOMRIGHT" relativePoint="BOTTOMLEFT" relativeTo="$parentAnnounceButton" >
+								<Offset>
+									<AbsDimension x="-4" y="0"/>
+								</Offset>
+							</Anchor>
+						</Anchors>
+						<Size><AbsDimension x="100" y="20"/></Size>
+						<Scripts> <!-- see GBB.Init in GroupBulletinBoard.lua --> </Scripts>
+					</EditBox>
+				</Frames>
+			</Frame>
 
-			<!-- filter results editbox -->
+			<!-- RequestList Search Box. Lives in header container -->
 			<EditBox name="$parentResultsFilter" inherits="SearchBoxTemplate" letters="40">
 				<Size x="165" y="10"/> 
 				<Anchors>
-					<Anchor point="TOPLEFT" relativeTo="$parentTitle" relativePoint="TOPRIGHT">
+					<Anchor point="LEFT" relativeTo="$parentHeaderContainerTitle" relativePoint="RIGHT">
 						<Offset>
 							<AbsDimension x="20" y="0"/>
 						</Offset>
@@ -191,8 +197,13 @@
 					<Anchor point="TOPLEFT">
 						<Offset>
 							<AbsDimension x="10" y="-30"/>
-						</Offset>						
-					</Anchor>				
+						</Offset>
+					</Anchor>
+					<Anchor point="BOTTOMLEFT" relativeTo="$parentFooterContainer" relativePoint="TOPLEFT">
+						<Offset>
+							<AbsDimension x="10" y="4"/>
+						</Offset>
+					</Anchor>
 				</Anchors>
 				<Size>
 					<AbsDimension x="100" y="100"/>

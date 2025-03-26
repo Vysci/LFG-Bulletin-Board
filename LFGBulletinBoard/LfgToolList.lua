@@ -42,8 +42,8 @@ local LFGTool = {
 	requestList = {},
 	---@type LFGToolScrollFrame|Frame
 	ScrollContainer = CreateFrame("Frame", TOCNAME.."LFGToolFrame", GroupBulletinBoardFrame),
-	RefreshButton = GroupBulletinBoardFrameRefreshButton, ---@type Button
-	StatusText = GroupBulletinBoardFrameStatusText, ---@type FontString
+	RefreshButton = GroupBulletinBoardFrameHeaderContainer.RefreshButton, ---@type Button
+	StatusText = GroupBulletinBoardFrameFooterContainer.StatusText, ---@type FontString
 }
 
 local addCustomActivityToDungeonTables do
@@ -117,7 +117,7 @@ local function getFilteredActivitiesForCategory(categoryID)
 end
 
 LFGTool.CategoryButton = CreateFrame("Frame", nil, LFGTool.ScrollContainer, "Metal2DropdownWithSteppersAndLabelTemplate")
-LFGTool.CategoryButton:SetPoint("LEFT", GroupBulletinBoardFrameTitle, "RIGHT", 20, 0)
+LFGTool.CategoryButton:SetPoint("LEFT", GroupBulletinBoardFrameHeaderContainerTitle, "RIGHT", 20, 0)
 LFGTool.CategoryButton:SetSize(150, 15)
 LFGTool.CategoryButton.Dropdown:SetAllPoints()
 LFGTool.CategoryButton.Dropdown.Text:SetFontObject("GameFontNormalSmall")
@@ -1012,7 +1012,7 @@ LFGToolScrollContainer:SetSize(400, 400)
 LFGToolScrollContainer:SetPoint("LEFT")
 LFGToolScrollContainer:SetPoint("RIGHT")
 LFGToolScrollContainer:SetPoint("TOP", 0, -30)
-LFGToolScrollContainer:SetPoint("BOTTOM", 0, 45)
+LFGToolScrollContainer:SetPoint("BOTTOM", GroupBulletinBoardFrameFooterContainer, "TOP", 0, 4)
 
 function LFGToolScrollContainer:OnLoad()
 	---@type ScrollBoxListTreeListViewMixin

@@ -638,7 +638,7 @@ function GBB.Init()
 	--delete outdated
 	GBB.DB.showminimapbutton=nil
 	GBB.DB.minimapPos=nil
-	
+
 	GBB.InitializeCustomFilters();
 	
 	-- Get localize and Dungeon-Information
@@ -681,14 +681,80 @@ function GBB.Init()
 	
 	GBB.LFG_Timer=time()+GBB.LFG_UPDATETIME
 	GBB.LFG_Successfulljoined=false
-	
-	GBB.AnnounceInit()
-	if GBB.DB.DisplayLFG == false then
-		GroupBulletinBoardFrameAnnounce:Hide()
-		GroupBulletinBoardFrameAnnounceMsg:Hide()
-		GroupBulletinBoardFrameSelectChannel:Hide()
-	end
 
+    local HeaderContainer = GroupBulletinBoardFrameHeaderContainer
+    do -- setup the header "Title"/"Close"/ "Settings" buttons
+        HeaderContainer.Title:SetText(string.format(GBB.TxtEscapePicture,GBB.MiniIcon).." ".. GBB.Title)
+        HeaderContainer.CloseButton:SetScript("OnClick", GBB.HideWindow)
+        HeaderContainer.SettingsButton:SetScript("OnMouseDown", SettingsButton_OnMouseDown)
+        -- hack: hide settings button popup whenever the board frame is hidden
+        HeaderContainer.SettingsButton:HookScript("OnHide", function() GBB.PopupDynamic:Wipe("SettingsButtonMenu") end)
+        -- HeaderContainerRefreshButton setup in LFGToolList.lua (only because its loaded after xml)
+    end
+
+    local FooterContainer = GroupBulletinBoardFrameFooterContainer
+    do -- setup the Footers "Announcement" box for sending messages to a channel
+        local ChannelSelectDropdown = FooterContainer.AnnounceChannelSelect
+        local AnnounceButton = FooterContainer.AnnounceButton
+        local AnnounceInput = FooterContainer.AnnounceInput
+        --- Announcement Target Channel Selection Dropdown
+        ChannelSelectDropdown:SetNormalFontObject(GBB.DB.FontSize)
+        ChannelSelectDropdown:SetSelectionTranslator(function(selection) return selection.data end)
+        local defaultChannel = GBB.L["lfg_channel"] ~= "" and GBB.L["lfg_channel"] or select(2, GetChannelList())
+        local channelSelectSetting = OptionsUtil.GetSavedVarHandle(GBB.DB, "AnnounceChannel", defaultChannel);
+        ChannelSelectDropdown:SetupMenu(function(frame, rootDescription)
+            ---@cast rootDescription RootMenuDescriptionProxy
+            local channelInfo = GBB.PhraseChannelList(GetChannelList())
+            local isSelected = function(channel) return channel == channelSelectSetting:GetValue() end
+            local setSelected = function(channel) channelSelectSetting:SetValue(channel) end
+            for i, channel in pairs(channelInfo) do
+                local button = rootDescription:CreateRadio(i..". "..channel.name, isSelected, setSelected, channel.name)
+                button:SetEnabled(not channel.hidden)
+            end
+        end)
+        ChannelSelectDropdown:HookScript("OnShow", function(self)
+            -- hack: early in addon loading process `GetChannelList` can return nil; so re-generate the menu in these cases.
+            if not self:GetText() then self:GenerateMenu() end
+        end)
+        --- Announce Message Input Box
+        AnnounceInput:SetTextColor(0.6, 0.6, 0.6)
+        AnnounceInput:SetText(GBB.L["msgRequestHere"])
+        AnnounceInput:HighlightText(0, 0)
+        AnnounceInput:SetCursorPosition(0)
+        AnnounceInput:SetScript("OnEditFocusGained", function()
+            local text = AnnounceInput:GetText()
+            if text == GBB.L["msgRequestHere"] then -- clear default text if set
+                AnnounceInput:SetTextColor(1, 1, 1)
+                AnnounceInput:SetText("")
+            end
+        end)
+        AnnounceInput:SetScript("OnTextChanged", function()
+            local text = AnnounceInput:GetText()
+            AnnounceButton:SetEnabled(text and text ~= "" and text ~= GBB.L["msgRequestHere"])
+        end)
+        --- Announcement Send Message Button
+        AnnounceButton:SetNormalFontObject(GBB.DB.FontSize)
+        AnnounceButton:SetText(GBB.L["BtnPostMsg"])
+        AnnounceButton:Disable()
+        AnnounceButton:SetScript("OnClick", function()
+            local message = AnnounceInput:GetText()
+            if message ~= nil and message ~= "" and message ~= GBB.L["msgRequestHere"] then
+                GBB.SendMessage(GBB.DB.AnnounceChannel, message)
+                AnnounceInput:ClearFocus()
+            end
+        end)
+
+        -- Hide the announcement barUI if the option is disabled
+        local displaySetting = OptionsUtil.GetSavedVarHandle(GBB.DB, "DisplayLFG")
+        local updateVisibility = function(isVisible)
+            AnnounceButton:SetShown(isVisible)
+            AnnounceInput:SetShown(isVisible)
+            ChannelSelectDropdown:SetShown(isVisible)
+            FooterContainer:SetHeight(isVisible and 44 or 30)
+        end
+        displaySetting:AddUpdateHook(updateVisibility)
+        updateVisibility(displaySetting:GetValue()) -- initial update
+    end
 	local x, y, w, h = GBB.DB.X, GBB.DB.Y, GBB.DB.Width, GBB.DB.Height
 	if not x or not y or not w or not h then
 		GBB.SaveAnchors()
@@ -761,29 +827,6 @@ function GBB.Init()
 		end,
 		GBB.Title
 	)
-	GroupBulletinBoardFrameTitle:SetFontObject(GBB.DB.FontSize)
-
-	if GBB.DB.AnnounceChannel == nil then
-		if GBB.L["lfg_channel"] ~= "" then GBB.DB.AnnounceChannel = GBB.L["lfg_channel"];
-		else GBB.DB.AnnounceChannel = select(2, GetChannelList()) end;
-	end
-	DropdownSelectionTextMixin.OnLoad(GroupBulletinBoardFrameSelectChannel)
-	GroupBulletinBoardFrameSelectChannel:SetSelectionTranslator(function(selection) return selection.data end)
-	GroupBulletinBoardFrameSelectChannel:SetupMenu(function(frame, rootDescription)
-		---@cast rootDescription RootMenuDescriptionProxy
-		local channelInfo = GBB.PhraseChannelList(GetChannelList())
-		local setting = OptionsUtil.GetSavedVarHandle(GBB.DB, "AnnounceChannel");
-		local isSelected = function(channel) return channel == setting:GetValue() end
-		local setSelected = function(channel) setting:SetValue(channel) end
-		for i, channel in pairs(channelInfo) do
-			local button = rootDescription:CreateRadio(i..". "..channel.name, isSelected, setSelected, channel.name)
-			button:SetEnabled(not channel.hidden)
-		end
-	end)
-	--hack: early in addon loading process `GetChannelList` can return nil; re-generate the menu in these cases.
-	GroupBulletinBoardFrameSelectChannel:HookScript("OnShow", function(self)
-		if not self:GetText() then self:GenerateMenu() end;
-	end)
 
 	---@type EditBox # making this local isnt required, just here for the luals linter
 	local GroupBulletinBoardFrameResultsFilter = _G["GroupBulletinBoardFrameResultsFilter"];
@@ -808,7 +851,6 @@ function GBB.Init()
 	function GroupBulletinBoardFrameResultsFilter:GetFilters() 
 		return self.filterPatterns
 	end
-	GroupBulletinBoardFrameSettingsButton:SetScript("OnMouseDown", SettingsButton_OnMouseDown)
 	GBB.ResizeFrameList()
 	
 	if GBB.DB.EscapeQuit then 
@@ -827,14 +869,10 @@ function GBB.Init()
 	GBB.PatternWho1=GBB.Tool.CreatePattern(WHO_LIST_FORMAT )
 	GBB.PatternWho2=GBB.Tool.CreatePattern(WHO_LIST_GUILD_FORMAT )
 	GBB.PatternOnline=GBB.Tool.CreatePattern(ERR_FRIEND_ONLINE_SS)
-
-	GroupBulletinBoardFrameTitle:SetText(string.format(GBB.TxtEscapePicture,GBB.MiniIcon).." ".. GBB.Title)
 	
 	GBB.Initalized=true
 	
 	GBB.PopupDynamic=GBB.Tool.CreatePopup(GBB.OptionsUpdate)
-	-- hack: hide settings button popup whenever the board frame is hidden
-	GroupBulletinBoardFrameSettingsButton:HookScript("OnHide", function() GBB.PopupDynamic:Wipe("SettingsButtonMenu") end)
 	GBB.InitGroupList()
 
 	local TabEnum; ---@type {ChatRequests: number?, RecentPlayers: number?, LFGTool: number?}

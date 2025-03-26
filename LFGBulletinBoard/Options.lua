@@ -27,9 +27,9 @@ local filtersByExpansionID = {}
 -- Locals/helpers
 --------------------------------------------------------------------------------
 
----@type fun(Var: string, Init: boolean): CheckButton|RegisteredFrameMixin # Create account-wide Settings checkbox
-local function CheckBox (Var,Init)
-	return GBB.OptionsBuilder.AddCheckBoxToCurrentPanel(GBB.DB,Var,Init,GBB.L["Cbox"..Var])
+---@type fun(Var: string, Init: boolean, displayText: string?): CheckButton|RegisteredFrameMixin # Create account-wide Settings checkbox
+local function CheckBox (Var,Init, displayText)
+	return GBB.OptionsBuilder.AddCheckBoxToCurrentPanel(GBB.DB,Var,Init,(displayText or GBB.L["Cbox"..Var]))
 end
 ---@type fun(Var: string, Init: boolean): CheckButton|RegisteredFrameMixin # Create character-specific Settings checkbox
 local function CheckBoxChar (Var,Init)
@@ -383,7 +383,7 @@ function GBB.OptionsInit ()
 	CheckBox("ColorOnLevel",true)
 	CheckBox("UseAllInLFG",true)
 	CheckBox("EscapeQuit",true)
-	CheckBox("DisplayLFG",false)
+	CheckBox("DisplayLFG",false, GBB.L.DISPLAY_LFG_ANNOUNCEMENT_BAR)
 	GBB.OptionsBuilder.AddSpacerToPanel()
 	do -- Bulletin board request entry display settings
 		GBB.OptionsBuilder.InLine()
