@@ -395,6 +395,17 @@ local getSettingsButtonMenuDescription do
     local setBoardFrameNonInteractive = function()
         windowSettings.isInteractive:SetValue(not windowSettings.isInteractive:GetValue())
     end
+    local setBoardFrameOpacity = function(opacity)
+		windowSettings.opacity:SetValue(opacity)
+    end
+    local opacityRadioButtonArgs = function(opacity)
+        local isSelected = function()
+            return floor(GroupBulletinBoardFrame:GetAlpha()*10)/10 == opacity
+        end
+        local onSelected = setBoardFrameOpacity
+        local displayText = ("%d%%"):format(opacity * 100)
+        return displayText, isSelected, onSelected, opacity
+    end
 	getSettingsButtonMenuDescription = function(clickType)
 		local description = MenuUtil.CreateRootMenuDescription(MenuStyle2Mixin)
 		---@cast description RootMenuDescriptionProxy
@@ -413,6 +424,11 @@ local getSettingsButtonMenuDescription do
             description:CreateTitle(GBB.L.WINDOW_SETTINGS)
             description:CreateCheckbox(LOCK_WINDOW, isBoardFrameLocked, toggleBoardFrameLock)
             description:CreateCheckbox(MAKE_UNINTERACTABLE, isBoardFrameNonInteractive, setBoardFrameNonInteractive)
+            local opacityOptions = description:CreateButton(OPACITY)
+            -- todo: add a slider
+            for _, opacity in ipairs({1, .8, .6, .5, .4, .2, .1}) do
+                opacityOptions:CreateRadio(opacityRadioButtonArgs(opacity)):SetResponse(MenuResponse.Refresh)
+            end
             description:CreateDivider()
         end
 		description:CreateButton(ALL_SETTINGS, function() OptionsUtil.OpenCategoryPanel(1) end)
@@ -923,6 +939,8 @@ function GBB.Init()
             isMovable = OptionsUtil.GetSavedVarHandle(GBB.DB.WindowSettings, "isMovable", true),
             --- `false` if the board is **not** interactive (aka click-through); default=`true`
             isInteractive = OptionsUtil.GetSavedVarHandle(GBB.DB.WindowSettings, "isInteractive", true),
+			--- `1` if the board is fully opaque; `0` if the board is fully transparent; default=`1`
+			opacity = OptionsUtil.GetSavedVarHandle(GBB.DB.WindowSettings, "opacity", 1),
         }
         windowSettings.isMovable:AddUpdateHook(setBulletinBoardMovableState)
         setBulletinBoardMovableState(windowSettings.isMovable:GetValue())
@@ -933,6 +951,11 @@ function GBB.Init()
         end
         windowSettings.isInteractive:AddUpdateHook(setBulletinBoardInteractiveState)
         setBulletinBoardInteractiveState(windowSettings.isInteractive:GetValue())
+		local setBulletinBoardOpacity = function(opacity)
+			GroupBulletinBoardFrame:SetAlpha(opacity)
+		end
+		windowSettings.opacity:AddUpdateHook(setBulletinBoardOpacity)
+		setBulletinBoardOpacity(windowSettings.opacity:GetValue())
     end
 
 	GBB.PatternWho1=GBB.Tool.CreatePattern(WHO_LIST_FORMAT )

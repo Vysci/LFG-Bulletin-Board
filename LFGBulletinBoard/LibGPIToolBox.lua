@@ -734,7 +734,8 @@ function Tool.AddTab(frame,name,tabFrame,combatlockdown)
 	frame.Tabs[frame.numTabs]=CreateFrame("Button",frameName.."Tab"..frame.numTabs, frame, "CharacterFrameTabButtonTemplate")
 	frame.Tabs[frame.numTabs]:SetID(frame.numTabs)
 	frame.Tabs[frame.numTabs]:SetText(name)
-	frame.Tabs[frame.numTabs]:SetScript("OnClick",SelectTab)	
+	frame.Tabs[frame.numTabs]:SetScript("OnClick",SelectTab)
+	frame.Tabs[frame.numTabs]:SetIgnoreParentAlpha(true)
 	frame.Tabs[frame.numTabs]._gpi_combatlock=combatlockdown
 	frame.Tabs[frame.numTabs].content=tabFrame
 	tabFrame:Hide()

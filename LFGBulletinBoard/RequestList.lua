@@ -123,9 +123,6 @@ local function CreateHeader(scrollPos, dungeon)
 		header:SetPoint("RIGHT", GroupBulletinBoardFrame_ScrollChildFrame, "RIGHT")
 		header:SetScript("OnMouseDown", GBB.ClickDungeon)
 		header:SetHeight(20)
-		local isWindowInteractive = GBB.DB.WindowSettings.isInteractive
-		header:EnableMouse(isWindowInteractive)
-		header.Name:EnableMouse(not isWindowInteractive)
 		header.Name = _G[ItemFrameName.."_name"] ---@type FontString
 		header.Name:SetPoint("TOPLEFT", header, "TOPLEFT", 0, 0)
 		header.Name:SetPoint("BOTTOMLEFT", header, "BOTTOMLEFT", 0, 0)
@@ -212,18 +209,6 @@ local function CreateItem(scrollPos,i,scale,req,forceHeight)
 		
 		GBB.Tool.EnableHyperlink(entry)
 		GBB.FramesEntries[i]=entry
-		local isWindowInteractive = GBB.DB.WindowSettings.isInteractive
-		entry:EnableMouse(isWindowInteractive)
-		entry.Name:EnableMouse(not isWindowInteractive)
-		if not isWindowInteractive then
-			entry.Name:SetScript("OnMouseDown", function(self, button) GBB.ClickRequest(entry, button) end)
-			entry.Name:SetScript("OnEnter", function(self) GBB.RequestShowTooltip(entry) end)
-			entry.Name:SetScript("OnLeave", function(self) GBB.RequestHideTooltip(entry) end)
-		else
-			entry:SetScript("OnMouseDown", GBB.ClickRequest)
-			entry:SetScript("OnEnter", GBB.RequestShowTooltip)
-			entry:SetScript("OnLeave", GBB.RequestHideTooltip)
-		end
 	end
 
 	-- Init entry children frames for request info
