@@ -996,7 +996,7 @@ function GBB.Init()
 	if TabEnum.LFGTool then
 		GBB.Tool.TabOnSelect(GroupBulletinBoardFrame, TabEnum.LFGTool, function()
 			GBB.LfgTool.RefreshButton:GetScript("OnClick")() -- refresh search results
-		end)
+		end, true)
 		-- only enable the tool tab whenever the player gains access to blizz LFGTool
 		local isTabEnabledYet = false
 		local trySetEnabled = function()
@@ -1026,6 +1026,58 @@ function GBB.Init()
 		manageTabVisibility(setting:GetValue()) -- run once to match the setting state.
 	else GroupBulletinBoardFrame_GroupFrame:Hide() end;
 
+    -- Modifications to the tab buttons
+	-- 1. Allow the tabs to be able to reposition the bulletin board
+	-- 2. Add a context menu to tabs that with option to:
+	--   - lock/unlock the bulletin board
+	--   - move tabs to top or bottom of the owner frame
+	do
+		local windowMovable = OptionsUtil.GetSavedVarHandle(GBB.DB.WindowSettings, "isMovable")
+		local tabPosition = OptionsUtil.GetSavedVarHandle(GBB.DB.WindowSettings, "tabPosition", "bottom")
+		for _, tabId in pairs(TabEnum) do
+			local tab = GroupBulletinBoardFrame.Tabs[tabId]
+			tab:HookScript("OnClick", function(self, clickType)
+				if clickType == "RightButton" then
+					MenuUtil.CreateContextMenu(tab, function(_, rootDesc)
+						-- Lock/Unlock the bulletin board
+						rootDesc:CreateButton(
+							windowMovable:GetValue() and LOCK_WINDOW or UNLOCK_WINDOW,
+							function() windowMovable:SetValue(not windowMovable:GetValue()) end -- onSelected
+						):AddInitializer(function(frame)
+							frame.fontString:SetFontObject("GameFontHighlightSmall")
+						end)
+						-- Move tabs to top or bottom of the owner frame
+						local buttonText = GBB.L.MOVE_TABS_TO_TOP
+						if tabPosition:GetValue() == "top" then
+							buttonText = GBB.L.MOVE_TABS_TO_BOTTOM
+						end
+						rootDesc:CreateButton(buttonText, function()
+							local newPosition = (tab.position == "top") and "bottom" or "top"
+							tabPosition:SetValue(newPosition)
+						end):AddInitializer(function(frame)
+							frame.fontString:SetFontObject("GameFontHighlightSmall")
+						end)
+					end)
+				end
+			end)
+			tab:RegisterForClicks("LeftButtonUp", "RightButtonUp")
+			tab:HookScript("OnDragStart", function() GroupBulletinBoardFrame:StartMoving() end)
+			tab:HookScript("OnDragStop", function() GroupBulletinBoardFrame:StopMovingAndSaveAnchors() end)
+		end
+		local onWindowMovableUpdate = function(isMovable)
+			local tabs = GroupBulletinBoardFrame.Tabs
+			for _, tab in pairs(tabs) do
+				if isMovable then tab:RegisterForDrag("LeftButton")
+				else tab:RegisterForDrag() end
+			end
+		end
+		windowMovable:AddUpdateHook(onWindowMovableUpdate)
+		onWindowMovableUpdate(windowMovable:GetValue())
+		tabPosition:AddUpdateHook(function(newPosition)
+			GBB.Tool.ChangeTabPositions(GroupBulletinBoardFrame, newPosition)
+		end)
+		GBB.Tool.ChangeTabPositions(GroupBulletinBoardFrame, tabPosition:GetValue())
+	end
 	---@class AddonEnum
 	local Enum = GBB.Enum; Enum.Tabs = TabEnum
 
