@@ -653,21 +653,188 @@ Tool.RegisterEvent("GLOBAL_MOUSE_DOWN",function(event, buttonName)
 end)
 --------------------------------------------------------------------------------
 -- TAB
+--------------------------------------------------------------------------------
 
-local function SelectTab(self)
-	if not self._gpi_combatlock or not InCombatLockdown() then 
-		local parent=self:GetParent()
-		PanelTemplates_SetTab(parent,self:GetID())
-		for i=1, parent.numTabs do
-			parent.Tabs[i].content:Hide()
+---@class TabButtonMixin: SelectableButtonMixin, Button
+---@field selected boolean # whether the tab is selected
+---@field position "top" | "bottom" # position of the tab on the owner, defaults to "bottom"
+---@field fitToText boolean # whether the tab should fit to the text
+---@field textPadding number # padding between the text and the tab
+---@field Contents Frame? # contents of the tab
+local TabButtonMixin = {
+	selected = false,
+	position = "bottom",
+	fitToText = true,
+	textPadding = 15,
+};
+function TabButtonMixin:OnLoad()
+	Mixin(self, SelectableButtonMixin) -- adds toggle like support for a `Button`
+	for _, texture in ipairs({"LeftDisabled", "RightDisabled", "MiddleDisabled"}) do
+		_G[self:GetName()..texture]:Hide() -- not using the DisabledTextures
+	end
+	_G[self:GetName().."Text"]:Hide() -- we dont wanna use ButtonText, so hide and create our own
+	self.Text = self:CreateFontString(nil, "ARTWORK", "GameFontHighlightSmall")
+	self.Highlight =  _G[self:GetName().."HighlightTexture"] ---@type Texture
+	self.Left = _G[self:GetName().."Left"] ---@type Texture
+	self.Right = _G[self:GetName().."Right"] ---@type Texture
+	self.Middle = _G[self:GetName().."Middle"] ---@type Texture
+
+	self:SetScript("OnEnable", TabButtonMixin.UpdateButtonState)
+	self:SetScript("OnDisable", TabButtonMixin.UpdateButtonState)
+	self:SetScript("OnEnter", TabButtonMixin.OnEnter)
+	self:SetScript("OnLeave", TabButtonMixin.OnLeave)
+
+	self:UpdateOrientation() -- set initial texture orientations
+end
+function TabButtonMixin:OnSelected(isSelected)
+	self:UpdateButtonState()
+end
+function TabButtonMixin:UpdateButtonState()
+	local isEnabled = self:IsEnabled()
+	self.Highlight:SetShown((not self.selected and isEnabled))
+	if self:IsEnabled() and self.selected then
+		-- shift text slightly when tab selected. shift (downward when tab is on bottom)
+		self.Text:AdjustPointsOffset(0, 1.5 * (self.position == "bottom" and 1 or -1))
+	end
+	self.Text:SetFontObject(isEnabled
+		and (self.selected and "GameFontHighlightSmall" or "GameFontNormalSmall")
+		or "GameFontDisableSmall"
+	)
+end
+function TabButtonMixin:SetText(text)
+	self.Text:SetText(text)
+	if self.fitToText then
+		local newWidth = self.Text:GetStringWidth() + self.textPadding
+		self:SetWidth(newWidth)
+	end
+end
+function TabButtonMixin:OnEnter()
+	if not self:IsEnabled() or self.selected then return end
+	self.Text:SetFontObject("GameFontHighlightSmall")
+end
+function TabButtonMixin:OnLeave()
+	if not self:IsEnabled() or self.selected then return end
+	self.Text:SetFontObject("GameFontNormalSmall")
+end
+function TabButtonMixin:UpdateOrientation()
+	for _, texture in ipairs({self.Highlight, self.Left, self.Right, self.Middle}) do
+		local left, top, _, bottom, right = texture:GetTexCoord()
+		if self.position == "bottom" and bottom > top then
+			texture:SetTexCoord(left, right, top, bottom)
+		else
+			texture:SetTexCoord(left, right, bottom, top)
 		end
-		self.content:Show()	
-	
-		if parent.Tabs[self:GetID()].OnSelect then
-			parent.Tabs[self:GetID()].OnSelect(self)
+	end
+	local highlightAnchorPoints = {
+		bottom = {
+			{"TOPLEFT", self, "TOPLEFT", 3, 5},
+			{"BOTTOMRIGHT", self, "BOTTOMRIGHT", -3, 0},
+		},
+		top = {
+			{"BOTTOMLEFT", self, "BOTTOMLEFT", 3, -5},
+			{"TOPRIGHT", self, "TOPRIGHT", -3, 0},
+		},
+	}
+	self.Highlight:ClearAllPoints()
+	for _, point in ipairs(highlightAnchorPoints[self.position]) do
+		self.Highlight:SetPoint(unpack(point))
+	end
+	self.Text:SetPoint("CENTER", 0, 2 * (self.position == "bottom" and 1 or -1))
+	self:UpdateButtonState()
+end
+
+local TabManager = {
+	FrameTabs = {}, ---@type {[Frame]: ManagedTab[]} # maps owner to its tabs
+}
+---@param owner Frame # owner region of the tab
+function TabManager:NewManagedTab(owner, name)
+	if not TabManager.FrameTabs[owner] then TabManager.FrameTabs[owner] = {} end
+	local tabId = #TabManager.FrameTabs[owner] + 1
+	if not name then
+		-- note: because im using the `CharacterFrameTabButtonTemplate` template, a name is required-
+		-- since the template expects a named parent.
+		local ownerName = owner:GetName(); assert(ownerName, "TabManager.Create: `owner` must have a name")
+		name = ownerName.."Tab"..tabId
+	end
+	---@class ManagedTab: TabButtonMixin
+	---@field Contents Frame? # contents of the tab
+	---@field onTabSelected function? # optional hook, executed when tab is selected
+	---@field onTabSelectedRequiresClick boolean? # if `true` OnTabSelected will only be called for click events
+	local newTab = CreateFrame("Button", name, owner or UIParent, "CharacterFrameTabButtonTemplate")
+	Mixin(newTab, TabButtonMixin); TabButtonMixin.OnLoad(newTab)
+
+	function newTab:OnClick(clickType)
+		if clickType ~= "LeftButton" then return end;
+		-- Make the tab group buttons act like a radio instead of a toggle.
+		-- ie a tab button can only be selected if not already selected.
+		local canSelect = self:CanChangeSelection(true)
+		if canSelect then
+			if self.onTabSelected and self.onTabSelectedRequiresClick then
+				self.onTabSelected(clickType)
+			end
+			self:SetSelected(true)
+			PlaySound(SOUNDKIT.U_CHAT_SCROLL_BUTTON);
+		end
+	end
+	newTab:SetScript("OnClick", newTab.OnClick)
+	newTab:RegisterForClicks("LeftButtonUp", "RightButtonUp")
+
+	-- Override the OnSelected method to include a callback to the tab manager to handle tab selection
+	-- as well as any defined OnSelect hooks, and show/hide the contents of the tab
+	function newTab:OnSelected(isSelected)
+		TabButtonMixin.OnSelected(self, isSelected)
+		if self.Contents then self.Contents:SetShown(isSelected) end
+		if isSelected and self.onTabSelected and not self.onTabSelectedRequiresClick then
+			self.onTabSelected()
+		end
+		if isSelected then
+			TabManager:OnSelectedTabChanged(owner, self:GetID())
+		end
+	end
+	newTab:SetID(tabId)
+	newTab:SetSelected(tabId == 1)
+	TabManager.FrameTabs[owner][tabId] = newTab
+	return newTab
+end
+
+--- Manage the state of other tabs when a new tab is selected
+function TabManager:OnSelectedTabChanged(owner, selectedTabID)
+	for _, tab in ipairs(TabManager.FrameTabs[owner]) do
+		if tab:GetID() ~= selectedTabID then
+			tab:SetSelected(false)
 		end
 	end
 end
+
+---@param owner Frame # owner region of the tab
+---@param position "top" | "bottom" # position of the tabs on the owner
+function TabManager:ChangeTabPositions(owner, position)
+	for _, tab in ipairs(TabManager.FrameTabs[owner]) do
+		tab.position = position
+		tab:UpdateOrientation()
+	end
+	TabManager:LayoutTabs(owner, position)
+end
+
+function TabManager:LayoutTabs(owner, position, padding, inset)
+	position = position or "bottom"
+	padding = padding or -12
+	inset = inset or 20
+	for id, tab in ipairs(TabManager.FrameTabs[owner]) do
+		tab:ClearAllPoints()
+		if id == 1 then
+			if position == "top" then
+				tab:SetPoint("BOTTOMLEFT", owner, "TOPLEFT", inset or 20, -2.5)
+			else
+				tab:SetPoint("TOPLEFT", owner, "BOTTOMLEFT", inset or 20, 2.5)
+			end
+		else
+			tab:SetPoint("TOPLEFT", TabManager.FrameTabs[owner][id - 1], "TOPRIGHT", padding, 0)
+		end
+	end
+end
+
+function Tool.ChangeTabPositions(frame, position) TabManager:ChangeTabPositions(frame, position) end
 
 function Tool.TabHide(frame,id)
 	if id and frame.Tabs and frame.Tabs[id] then
@@ -691,66 +858,48 @@ end
 
 function Tool.SelectTab(frame,id)
 	if id and frame.Tabs and frame.Tabs[id] then
-		SelectTab(frame.Tabs[id])
+		frame.Tabs[id]:SetSelected(true)
 	end
-end	
-
-function Tool.TabOnSelect(frame,id,func)
+end
+---@param frame Frame # owner region of the tab
+---@param id number # id of the tab
+---@param func function # hook executed when tab is selected
+---@param requiresClickEvent boolean? # if `true` hook will only be called when backed by a click event
+function Tool.TabOnSelect(frame, id, func, requiresClickEvent)
 	if id and frame.Tabs and frame.Tabs[id] then
-		frame.Tabs[id].OnSelect=func
+		frame.Tabs[id].onTabSelected = func
+		frame.Tabs[id].onTabSelectedRequiresClick = requiresClickEvent
 	end
-end	
-	
+end
+
 function Tool.GetSelectedTab(frame)
-	if frame.Tabs then 
-		for i=1, frame.numTabs do
-			if frame.Tabs[i].content:IsShown() then
-				return i
-			end					
+	if type(frame.Tabs) ~= "table" then return end;
+	for _, tab in ipairs(frame.Tabs) do
+		if tab.Contents and tab.Contents.IsShown and tab.Contents:IsShown() then
+			return tab:GetID()
 		end
 	end
 	return 0
 end
+
 function Tool.SetTabEnabled(frame, id, shouldEnable)
 	if not (id and frame.Tabs and frame.Tabs[id]) then return end;
-	PanelTemplates_SetTabEnabled(frame, id, shouldEnable)
-end
-function Tool.AddTab(frame,name,tabFrame,combatlockdown)
-	local frameName
-	
-	if type(frame)=="string" then
-		frameName=frame
-		frame=_G[frameName]
-	else
-		frameName=frame:GetName()
-	end
-	if type(tabFrame)=="string" then
-		tabFrame=_G[tabFrame]
-	end
-	
-	frame.numTabs=frame.numTabs and frame.numTabs+1 or 1
-	if frame.Tabs==nil then frame.Tabs={} end
-	
-	frame.Tabs[frame.numTabs]=CreateFrame("Button",frameName.."Tab"..frame.numTabs, frame, "CharacterFrameTabButtonTemplate")
-	frame.Tabs[frame.numTabs]:SetID(frame.numTabs)
-	frame.Tabs[frame.numTabs]:SetText(name)
-	frame.Tabs[frame.numTabs]:SetScript("OnClick",SelectTab)
-	frame.Tabs[frame.numTabs]:SetIgnoreParentAlpha(true)
-	frame.Tabs[frame.numTabs]._gpi_combatlock=combatlockdown
-	frame.Tabs[frame.numTabs].content=tabFrame
-	tabFrame:Hide()
-	
-	if frame.numTabs==1 then
-		frame.Tabs[frame.numTabs]:SetPoint("TOPLEFT",frame,"BOTTOMLEFT",5,4)
-	else
-		frame.Tabs[frame.numTabs]:SetPoint("TOPLEFT",frame.Tabs[frame.numTabs-1],"TOPRIGHT",-14,0)
-	end
-	
-	SelectTab(frame.Tabs[frame.numTabs])
-	SelectTab(frame.Tabs[1])
-	return frame.numTabs
+	frame.Tabs[id]:SetEnabled(shouldEnable)
 end
 
+function Tool.AddTab(frame, displayText, tabFrame)
+	assert(frame and frame.GetFrameLevel, "Invalid `frame` argument. Expected a frame, got %s", type(frame))
+	assert(tabFrame and tabFrame.GetFrameLevel, "Invalid `tabFrame` argument. Expected a frame, got %s", type(tabFrame))
+	assert(type(displayText) == "string", "Invalid `displayText` argument. Expected a string, got %s", type(displayText))
+	local tab = TabManager:NewManagedTab(frame)
+	tab:Show()
+	tab:SetText(displayText)
+	tab.Contents = tabFrame
+	tabFrame:Hide()
+	TabManager:LayoutTabs(frame, "bottom")
+	frame.Tabs = TabManager.FrameTabs[frame]
+	return tab:GetID()
+end
 
 -- DataBrocker
 local DataBrocker=false
