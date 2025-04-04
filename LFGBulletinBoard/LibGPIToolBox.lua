@@ -792,7 +792,6 @@ function TabManager:NewManagedTab(owner, name)
 		end
 	end
 	newTab:SetID(tabId)
-	newTab:SetSelected(tabId == 1)
 	TabManager.FrameTabs[owner][tabId] = newTab
 	return newTab
 end
@@ -892,13 +891,15 @@ function Tool.AddTab(frame, displayText, tabFrame)
 	assert(tabFrame and tabFrame.GetFrameLevel, "Invalid `tabFrame` argument. Expected a frame, got %s", type(tabFrame))
 	assert(type(displayText) == "string", "Invalid `displayText` argument. Expected a string, got %s", type(displayText))
 	local tab = TabManager:NewManagedTab(frame)
+	local tabID = tab:GetID()
 	tab:Show()
 	tab:SetText(displayText)
 	tab.Contents = tabFrame
-	tabFrame:Hide()
+	tab.Contents:Hide()
+	tab:SetSelected(tabID == 1)
 	TabManager:LayoutTabs(frame, "bottom")
 	frame.Tabs = TabManager.FrameTabs[frame]
-	return tab:GetID()
+	return tabID
 end
 
 -- DataBrocker
