@@ -101,7 +101,7 @@ local LFGActivityIDs = {
     ["CRY"] = isSoD and 1611 or nil, -- Crystal Vale (Thunderaan)
     ["NMG"] = isSoD and 1610 or nil, -- Nightmare Grove (Emerald Dragons)
     ["KARA"] = isSoD and 1693 or nil, -- Karazhan Crypts
-    ["ENCLAVE"] = 7777 or nil -- Scarlet Enclave (spoofed until real ActivityID known)
+    ["ENCLAVE"] = isSoD and 7777 or nil -- Scarlet Enclave (spoofed until real ActivityID known)
 }
 --see https://wago.tools/db2/GroupFinderCategory?build=1.15.2.54332
 local activityCategoryTypeID  = {
