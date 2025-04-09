@@ -692,9 +692,9 @@ end
 function TabButtonMixin:UpdateButtonState()
 	local isEnabled = self:IsEnabled()
 	self.Highlight:SetShown((not self.selected and isEnabled))
-	if self:IsEnabled() and self.selected then
+	if self:IsEnabled() then
 		-- shift text slightly when tab selected. shift (downward when tab is on bottom)
-		self.Text:AdjustPointsOffset(0, 1.5 * (self.position == "bottom" and 1 or -1))
+		self.Text:SetPoint("CENTER", 0 , (2 + (self.selected and  1.5 or 0)) * (self.position == "bottom" and 1 or -1))
 	end
 	self.Text:SetFontObject(isEnabled
 		and (self.selected and "GameFontHighlightSmall" or "GameFontNormalSmall")
@@ -739,7 +739,6 @@ function TabButtonMixin:UpdateOrientation()
 	for _, point in ipairs(highlightAnchorPoints[self.position]) do
 		self.Highlight:SetPoint(unpack(point))
 	end
-	self.Text:SetPoint("CENTER", 0, 2 * (self.position == "bottom" and 1 or -1))
 	self:UpdateButtonState()
 end
 
