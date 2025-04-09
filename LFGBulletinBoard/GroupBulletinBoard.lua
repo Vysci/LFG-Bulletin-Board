@@ -475,7 +475,9 @@ local function SettingsButton_OnMouseDown(self, clickType)
 	-- Close menu curently open click menu if it exists
 	if currentOpenMenu and incomingDescription == settingsButtonMenuContext.lastDescription then
 		settingsButtonMenuContext:CloseMenu(currentOpenMenu)
+		PlaySound(SOUNDKIT.IG_MAINMENU_OPTION_CHECKBOX_OFF)
     else  -- open menu when: No menu is currently open, or switching click menus
+		PlaySound(SOUNDKIT.IG_MAINMENU_OPTION_CHECKBOX_ON)
         settingsButtonMenuContext:OpenMenu(self, incomingDescription)
     end
 end
