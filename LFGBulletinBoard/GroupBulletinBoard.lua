@@ -489,10 +489,17 @@ local shouldUpdateTagKey = function(pattern, current, incoming)
 	assert(incoming, "shouldUpdateTagKey: incoming key is nil", pattern, current, incoming)
 	if current == incoming then return false end
 	if not current then return true end
-	incoming = GBB.GetDungeonInfo(incoming)
-	current = GBB.GetDungeonInfo(current); 
-	current = current and current.expansionID or -1
-	incoming = incoming and incoming.expansionID or -1
+	local incInfo = GBB.GetDungeonInfo(incoming) or {};
+	local curInfo = GBB.GetDungeonInfo(current) or {};
+	if incInfo.expansionID ~= curInfo.expansionID then
+		return (incInfo.expansionID or -1) >= (curInfo.expansionID or -1)
+	end
+	if incInfo.typeID ~= curInfo.typeID then
+		return (incInfo.typeID or -1) >= (curInfo.typeID or -1)
+	end
+	if incInfo.maxLevel ~= curInfo.maxLevel then
+		return (incInfo.maxLevel or -1) >= (curInfo.maxLevel or -1)
+	end
 	return incoming >= current
 end
 ---Sets the `GBB.tagList` table with the tags specified by the given locale.
