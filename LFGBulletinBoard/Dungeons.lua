@@ -33,6 +33,12 @@ function GBB.GetDungeonNames()
 	for _, key in ipairs(dungeonKeys) do
 		defaultLocalizations[key] = GBB.GetDungeonInfo(key).name
 	end
+	-- note: `GetSortedDungeonKeys` does not include the `SM2` and `DM2` dungeons keys by design.
+	-- (because they are not actually dungeons, but rather a combination of dungeons)
+	-- so we need to add them manually
+	defaultLocalizations["SM2"] = GBB.GetDungeonInfo("SM2").name
+	defaultLocalizations["DM2"] = GBB.GetDungeonInfo("DM2").name
+
 	for key, translations in pairs(miscCategoryLocalizations) do
 		defaultLocalizations[key] = translations[clientLocale] or translations.enUS
 	end
