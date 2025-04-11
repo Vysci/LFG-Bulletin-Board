@@ -77,6 +77,16 @@ local preLocalizedFallbacks = {
 
 -- localized strings keyed by string identifier key
 local localizedAddonDisplayStrings = {
+	DISMISS_REQUEST = {
+		enUS = "Dismiss Request",
+		deDE = "Anfrage löschen",
+		esMX = "Retira solicitud",
+		frFR = "Supprimer la demande",
+		ptBR = "Descarte solicitação",
+		ruRU = "Удалить запрос",
+		zhCN = "删除请求",
+		zhTW = "刪除要求",
+	},
 	JOIN_REQUEST_HEADER = {
         enUS = "Alt+Click to Request to Join Group",
         deDE = "Alt+Klick, um Beitritt zur Gruppe anzufragen",
