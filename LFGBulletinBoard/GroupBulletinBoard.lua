@@ -370,117 +370,148 @@ end
 -- Bulletin Board Settings Button Setup
 --------------------------------------------------------------------------------
 
-local getSettingsButtonMenuDescription do
-	local isSavedVarSelected = function(table, var)
-		return function() return table[var] end;
+---@class BulletinBoardSettingsButton: Button
+local SettingsButtonMixin = {}
+function SettingsButtonMixin:OnLoad()
+	local getSettingsVarHandleTable = function(settingsTable)
+		return setmetatable({}, { ---@type table<string, SavedVarHandle>
+			__index = function(t, k)
+				-- note: make sure the saved vars defaults has been setup before access within this menu
+				local value = OptionsUtil.GetSavedVarHandle(settingsTable, k)
+				rawset(t, k, value); return value;
+			end
+		})
 	end
-	local toggleSavedVar = function(table, var)
-		return function() table[var] = (not table[var]) end;
+	local getSettingValue = function(setting) return setting:GetValue() end
+	local getInverseSettingValue = function(setting) return not getSettingValue(setting) end
+	local toggleSettingValue = function(setting) setting:SetValue(not getSettingValue(setting)) end
+	local accountSettings = getSettingsVarHandleTable(GBB.DB)
+
+	---Helper for older saved variables that use the `Cbox` prefix convention for their associated labels.
+	---@param variableName string `GBB.DB[variableName]`
+	---@param label string? display text. falls back to `GBB.L["Cbox"..variableName]`
+	local getAccountVarCheckBoxArgs = function(variableName, label)
+		local setting = accountSettings[variableName]
+		return (label or GBB.L["Cbox"..variableName]), getSettingValue, toggleSettingValue, setting
 	end
-	local getSavedVarCheckBoxArgs = function(table, var)
-		return GBB.L["Cbox"..var], isSavedVarSelected(table, var), toggleSavedVar(table, var)
+
+	---@param subDesc RootMenuDescriptionProxy|ElementMenuDescriptionProxy
+	local makeSubElementsSmall = function(subDesc)
+		for _, desc in subDesc:EnumerateElementDescriptions() do
+			desc:AddInitializer(function(frame)
+				if frame.fontString then frame.fontString:SetFontObject("GameFontNormalSmall") end
+			end)
+		end
 	end
-    local windowSettings = setmetatable({}, { ---@type table<string, SavedVarHandle>
-        __index = function(t, k)
-            local value = OptionsUtil.GetSavedVarHandle(GBB.DB.WindowSettings, k)
-            assert(value, "windowSettings: handle is nil. Don't index table until after ADDON_LOADED", k)
-            rawset(t, k, value); return value;
-        end
-    })
-    local isBoardFrameLocked = function() return not windowSettings.isMovable:GetValue() end
-    local toggleBoardFrameLock = function()
-        windowSettings.isMovable:SetValue(not windowSettings.isMovable:GetValue())
-    end
-    local isBoardFrameNonInteractive = function() return not windowSettings.isInteractive:GetValue() end
-    local setBoardFrameNonInteractive = function()
-        windowSettings.isInteractive:SetValue(not windowSettings.isInteractive:GetValue())
-    end
-    local setBoardFrameOpacity = function(opacity)
-		windowSettings.opacity:SetValue(opacity)
-    end
-    local opacityRadioButtonArgs = function(opacity)
-        local isSelected = function()
-            return floor(GroupBulletinBoardFrame:GetAlpha()*10)/10 == opacity
-        end
-        local onSelected = setBoardFrameOpacity
-        local displayText = ("%d%%"):format(opacity * 100)
-        return displayText, isSelected, onSelected, opacity
-    end
-	getSettingsButtonMenuDescription = function(clickType)
+
+	---@param clickType "LeftButton"|"RightButton"
+	local buildDescriptionForClickType = function(clickType)
 		local description = MenuUtil.CreateRootMenuDescription(MenuStyle2Mixin)
-		---@cast description RootMenuDescriptionProxy
 		description:CreateButton(FILTERS, function() OptionsUtil.OpenCategoryPanel(2) end)
 		if clickType == "RightButton" then
 			do -- Notification Settings
-				local submenu = description:CreateButton(COMMUNITIES_NOTIFICATION_SETTINGS)
-				-- sound
-				submenu:CreateCheckbox(getSavedVarCheckBoxArgs(GBB.DB, "NotifySound"))
-				-- chat
-				submenu:CreateCheckbox(getSavedVarCheckBoxArgs(GBB.DB, "NotifyChat"))
+				local subDesc = description:CreateButton(COMMUNITIES_NOTIFICATION_SETTINGS, nop)
+				subDesc:CreateCheckbox(getAccountVarCheckBoxArgs("NotifySound")) -- sound
+				subDesc:CreateCheckbox(getAccountVarCheckBoxArgs("NotifyChat")) -- chat
+				makeSubElementsSmall(subDesc)
+			end
+			do -- Request Entry Settings
+				local subDesc = description:CreateButton(GBB.L.REQUESTS_SETTINGS, nop)
+				subDesc:CreateCheckbox(getAccountVarCheckBoxArgs("ShowTotalTime")) -- total time vs last updated
+				subDesc:CreateCheckbox(getAccountVarCheckBoxArgs("OrderNewTop")) -- sort by most recent vs oldest
+				subDesc:CreateCheckbox(getAccountVarCheckBoxArgs("EnableShowOnly")) -- limit requests per category
+				subDesc:CreateCheckbox(getAccountVarCheckBoxArgs("RemoveRealm")) -- remove realm from player names
+				subDesc:CreateCheckbox(getAccountVarCheckBoxArgs("DontTrunicate")) -- don't truncate requests
+				subDesc:CreateCheckbox(GBB.L["CboxFilterTravel"], -- filter travel requests (character specific setting)
+					getSettingValue, toggleSettingValue, OptionsUtil.GetSavedVarHandle(GBB.DBChar, "FilterDungeonTRAVEL")
+				)
+				subDesc:CreateDivider():SetFinalInitializer(function(frame) frame:SetHeight(5) end)
+				subDesc:CreateTitle(GBB.L.LAYOUT_OPTIONS)
+				-- "Chat Style" & "Compact Style" layout, respectively.
+				subDesc:CreateCheckbox(getAccountVarCheckBoxArgs("ChatStyle"))
+				subDesc:CreateCheckbox(getAccountVarCheckBoxArgs("CompactStyle"))
+				makeSubElementsSmall(subDesc)
 			end
 		end
-        do -- Board window/frame settings
-            description:CreateDivider()
-            description:CreateTitle(GBB.L.WINDOW_SETTINGS)
-            description:CreateCheckbox(LOCK_WINDOW, isBoardFrameLocked, toggleBoardFrameLock)
-            description:CreateCheckbox(MAKE_UNINTERACTABLE, isBoardFrameNonInteractive, setBoardFrameNonInteractive)
-            local opacityOptions = description:CreateButton(OPACITY)
-            -- todo: add a slider
-            for _, opacity in ipairs({1, .8, .6, .5, .4, .2, .1}) do
-                opacityOptions:CreateRadio(opacityRadioButtonArgs(opacity)):SetResponse(MenuResponse.Refresh)
-            end
-            description:CreateDivider()
-        end
+		do -- Board window/frame settings
+			local windowSettings = getSettingsVarHandleTable(GBB.DB.WindowSettings)
+			description:CreateDivider()
+			description:CreateTitle(GBB.L.WINDOW_SETTINGS)
+			description:CreateCheckbox(LOCK_WINDOW, -- Lock window
+				getInverseSettingValue, toggleSettingValue, windowSettings.isMovable
+			)
+			description:CreateCheckbox(MAKE_UNINTERACTABLE, -- Make non-interactive (click-through)
+				getInverseSettingValue, toggleSettingValue, windowSettings.isInteractive
+			)
+			local opacityOptions = description:CreateButton(OPACITY) -- Opacity
+			-- todo: add a slider
+			local setBoardFrameOpacity = function(opacity)
+				windowSettings.opacity:SetValue(opacity)
+			end
+			local opacityRadioButtonArgs = function(opacity)
+				local isSelected = function()
+					return floor(GroupBulletinBoardFrame:GetAlpha()*10)/10 == opacity
+				end
+				local displayText = ("%d%%"):format(opacity * 100)
+				return displayText, isSelected, setBoardFrameOpacity, opacity
+			end
+			for _, opacity in ipairs({1, .8, .6, .5, .4, .2, .1}) do
+				opacityOptions:CreateRadio(opacityRadioButtonArgs(opacity)):SetResponse(MenuResponse.Refresh)
+			end
+			description:CreateDivider()
+		end
 		description:CreateButton(ALL_SETTINGS, function() OptionsUtil.OpenCategoryPanel(1) end)
-        description:CreateButton(GBB.L.BtnCancel, nop):SetResponse(MenuResponse.CloseMenu)
-        return description
+		description:CreateButton(GBB.L.BtnCancel, nop):SetResponse(MenuResponse.CloseMenu)
+		return description
 	end
+	self.descriptions = {
+		LeftButton = buildDescriptionForClickType("LeftButton"),
+		RightButton = buildDescriptionForClickType("RightButton"),
+	}
+	self.owner = self -- using the button itself for now, but can be moved to any other region if needed.
+	self.menuAnchor = AnchorUtil.CreateAnchor("TOPRIGHT", self.owner, "BOTTOMRIGHT")
+	self.HandlesGlobalMouseEvent = function() return true end -- prevents clicks on button from closing the menus
+	self:SetScript("OnMouseDown", self.OnMouseDown)
+	self:SetScript("OnEnter", self.OnEnter)
+	self:SetScript("OnLeave", self.OnLeave)
 end
--- note: mostly lazily loaded until after first click because button doesnt exist until after ADDON_LOADED
--- todo: move load order in .toc
-local settingsButtonMenuContext = {
-	menuAnchor = nil, ---@type AnchorMixin?
-	lastDescription = nil, ---@type RootMenuDescriptionProxy?
-	clickDescriptions = {
-		LeftButton = nil, ---@type RootMenuDescriptionProxy?
-		RightButton = nil, ---@type RootMenuDescriptionProxy?
-	},
-	OpenMenu = function(self, owner, menuDescription)
-		local menu = Menu.GetManager():OpenMenu(owner, menuDescription, self.menuAnchor)
-		owner.HandlesGlobalMouseEvent = function() return true end
-		menu:SetClosedCallback(function() self.lastDescription = nil end)
-		self.lastDescription = menuDescription
-		return menu
-	end,
-    Initialize = function(self, owner)
-        self.clickDescriptions.RightButton = getSettingsButtonMenuDescription("RightButton")
-        self.clickDescriptions.LeftButton = getSettingsButtonMenuDescription("LeftButton")
-        self.menuAnchor = AnchorUtil.CreateAnchor("TOPRIGHT", owner, "BOTTOMRIGHT")
-    end,
-    CloseMenu = function(self, menu)
-        assert(menu, "CloseMenu: menu is nil")
-        Menu.GetManager():CloseMenu(menu)
-    end
-}
-
--- Toggles a quick settings dropdown menu depending on the click type.
-local function SettingsButton_OnMouseDown(self, clickType)
-	if not settingsButtonMenuContext.menuAnchor then -- first click
-		settingsButtonMenuContext:Initialize(self)
-	end
+function SettingsButtonMixin:OpenMenu(menuDescription)
+	local menu = Menu.GetManager():OpenMenu(self.owner, menuDescription, self.menuAnchor)
+	menu:SetClosedCallback(function() self.lastDescription = nil end)
+	self.lastDescription = menuDescription
+	return menu
+end
+function SettingsButtonMixin:CloseMenu(menu)
+	assert(menu, "CloseMenu: menu is nil")
+	Menu.GetManager():CloseMenu(menu)
+end
+function SettingsButtonMixin:OnMouseDown(clickType)
 	local currentOpenMenu = Menu.GetManager():GetOpenMenu()
-    local incomingDescription = settingsButtonMenuContext.clickDescriptions[clickType]
-                                or settingsButtonMenuContext.clickDescriptions.LeftButton -- default to left click
-    -- Simmulate a toggle button:
-	-- Close menu curently open click menu if it exists
-	if currentOpenMenu and incomingDescription == settingsButtonMenuContext.lastDescription then
-		settingsButtonMenuContext:CloseMenu(currentOpenMenu)
+	-- default to left click description
+	local incomingDescription = self.descriptions[clickType] or self.descriptions.LeftButton
+	-- Simulate a toggle button: Close menu currently open click menu if it exists
+	if currentOpenMenu and incomingDescription == self.lastDescription then
+		self:CloseMenu(currentOpenMenu)
+		self:OnLeave() -- clear tooltip
 		PlaySound(SOUNDKIT.IG_MAINMENU_OPTION_CHECKBOX_OFF)
-    else  -- open menu when: No menu is currently open, or switching click menus
+	else  -- open menu when: No menu is currently open, or switching click menus
 		PlaySound(SOUNDKIT.IG_MAINMENU_OPTION_CHECKBOX_ON)
-        settingsButtonMenuContext:OpenMenu(self, incomingDescription)
-    end
+		self:OpenMenu(incomingDescription)
+		self:OnEnter() -- update tooltip
+	end
 end
+function SettingsButtonMixin:OnEnter()
+	-- show tooltip after left-clicked, __only__
+	if self.lastDescription == self.descriptions.LeftButton then
+		GameTooltip:SetOwner(self, "ANCHOR_RIGHT");
+		GameTooltip:AddLine(SETTINGS, 1, 1, 1)
+		GameTooltip:AddLine(GBB.L.RIGHT_CLICK_FOR_MORE_OPTIONS,
+			GREEN_FONT_COLOR.r, GREEN_FONT_COLOR.g, GREEN_FONT_COLOR.b, true
+		)
+		GameTooltip:Show()
+	else GameTooltip:Hide() end
+end
+function SettingsButtonMixin:OnLeave() GameTooltip:Hide() end
 --------------------------------------------------------------------------------
 -- Tag Lists
 --------------------------------------------------------------------------------
@@ -758,9 +789,8 @@ function GBB.Init()
     do -- setup the header "Title"/"Close"/ "Settings" buttons
         HeaderContainer.Title:SetText(string.format(GBB.TxtEscapePicture,GBB.MiniIcon).." ".. GBB.Title)
         HeaderContainer.CloseButton:SetScript("OnClick", GBB.HideWindow)
-        HeaderContainer.SettingsButton:SetScript("OnMouseDown", SettingsButton_OnMouseDown)
-        -- hack: hide settings button popup whenever the board frame is hidden
-        HeaderContainer.SettingsButton:HookScript("OnHide", function() GBB.PopupDynamic:Wipe("SettingsButtonMenu") end)
+		Mixin(HeaderContainer.SettingsButton, SettingsButtonMixin)
+		SettingsButtonMixin.OnLoad(HeaderContainer.SettingsButton)
         -- HeaderContainerRefreshButton setup in LFGToolList.lua (only because its loaded after xml)
     end
 
