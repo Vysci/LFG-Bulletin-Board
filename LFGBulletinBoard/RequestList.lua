@@ -1,5 +1,5 @@
 local TOCNAME,
-	---@class Addon_RequestList : Addon_Tags
+	---@class Addon_RequestList : Addon_Tags, Addon_Tool
 	---@field FramesEntries (RequestHeader|RequestEntry)[]
 	GBB = ...;
 
@@ -975,46 +975,56 @@ function GBB.FoldAllDungeon()
 	GBB.UpdateList()
 end
 
-local function createMenu(DungeonID,req)
-	if not GBB.PopupDynamic:Wipe("request"..(DungeonID or "nil")..(req and "request" or "nil")) then
-		return
-	end
-	if req then
-		GBB.PopupDynamic:AddItem(string.format(GBB.L["BtnWho"],req.name),false,WhoRequest,req.name,nil,true)
-		GBB.PopupDynamic:AddItem(string.format(GBB.L["BtnWhisper"],req.name),false,WhisperRequest,req.name,nil,true)
-		GBB.PopupDynamic:AddItem(string.format(GBB.L["BtnInvite"],req.name),false,InviteRequest,req.name,nil,true)
-		GBB.PopupDynamic:AddItem(string.format(GBB.L["BtnIgnore"],req.name),false,IgnoreRequest,req.name,nil,true)
-		GBB.PopupDynamic:AddItem("",true)
-	end
-	if DungeonID then
-		GBB.PopupDynamic:AddItem(GBB.L["BtnFold"], false,GBB.FoldedDungeons,DungeonID, nil, true)
-		GBB.PopupDynamic:AddItem(GBB.L["BtnFoldAll"], false,GBB.FoldAllDungeon, nil, true)
-		GBB.PopupDynamic:AddItem(GBB.L["BtnUnFoldAll"], false,GBB.UnfoldAllDungeon, nil, true)
-		GBB.PopupDynamic:AddItem("",true)
-	end
-	GBB.PopupDynamic:AddItem(GBB.L["CboxShowTotalTime"],false,GBB.DB,"ShowTotalTime")
-	GBB.PopupDynamic:AddItem(GBB.L["CboxOrderNewTop"],false,GBB.DB,"OrderNewTop")
-	GBB.PopupDynamic:AddItem(GBB.L["CboxEnableShowOnly"],false,GBB.DB,"EnableShowOnly")
-	GBB.PopupDynamic:AddItem(GBB.L["CboxChatStyle"],false,GBB.DB,"ChatStyle")
-	GBB.PopupDynamic:AddItem(GBB.L["CboxCompactStyle"],false,GBB.DB,"CompactStyle")
-	GBB.PopupDynamic:AddItem(GBB.L["CboxDontTrunicate"],false,GBB.DB,"DontTrunicate")
-	GBB.PopupDynamic:AddItem("",true)
-	GBB.PopupDynamic:AddItem(GBB.L["CboxNotifySound"],false,GBB.DB,"NotifySound")
-	GBB.PopupDynamic:AddItem(GBB.L["CboxRemoveRealm"],false,GBB.DB,"RemoveRealm")
-	GBB.PopupDynamic:AddItem(GBB.L["CboxNotifyChat"],false,GBB.DB,"NotifyChat")
-	GBB.PopupDynamic:AddItem("",true)
-	GBB.PopupDynamic:AddItem(SETTINGS, false, GBB.OptionsBuilder.OpenCategoryPanel, 1)
-	-- todo: Open to filter settings to expac related to DungeonID
-	GBB.PopupDynamic:AddItem(FILTERS, false, GBB.OptionsBuilder.OpenCategoryPanel, 2)
-	GBB.PopupDynamic:AddItem(GBB.L["BtnCancel"], false, nil, nil, nil, true)
-	GBB.PopupDynamic:Show()
-end
+---@class SharedBoardContextMenuApiOverrides
+local apiOverridesEmpty = { -- table mostly here to give type hints,
+	fold = {}, ---@type { isSelected: (fun(key: string): boolean), setSelected: fun(key: string) }?
+	foldAll = {}, ---@type { onSelect: fun(key: string) }?
+	unfoldAll = {}, ---@type { onSelect: fun(key: string) }?
+}
 
-function GBB.ClickFrame(self,button)
-	if button=="LeftButton" then
-	else
-		createMenu()
+---Generates a context menu for a request entry or dungeon header. (see `data` arg)
+---@param parent table|Region? owner frame
+---@param data string|{name: string, class: string}? either dungeonKey or request entry info table (name, class)
+---@param apiOverrides? SharedBoardContextMenuApiOverrides # used to pass functions from LFGToolList.lua
+function GBB.CreateSharedBoardContextMenu(parent, data, apiOverrides)
+	if not apiOverrides then apiOverrides = apiOverridesEmpty;
+	else for k,v in pairs(apiOverridesEmpty) do apiOverrides[k] = apiOverrides[k] or v end end
+
+	local createThinDivider = function(rootDesc)
+		return rootDesc:CreateDivider():SetFinalInitializer(function(frame) frame:SetHeight(3) end)
 	end
+	---@param rootDesc RootMenuDescriptionProxy
+	local menuGenerator = function(_, rootDesc)
+		if type(data) == "table" then -- request entry options
+			rootDesc:CreateTitle(data.name, GBB.Tool.ClassColor[data.class])
+			createThinDivider(rootDesc)
+			rootDesc:CreateTitle(UNIT_FRAME_DROPDOWN_SUBSECTION_TITLE_INTERACT)
+			rootDesc:CreateButton(WHO, function() WhoRequest(data.name) end):SetResponse(MenuResponse.Refresh)
+			rootDesc:CreateButton(WHISPER, function() WhisperRequest(data.name) end)
+			rootDesc:CreateButton(INVITE, function() InviteRequest(data.name) end)
+			createThinDivider(rootDesc)
+			rootDesc:CreateTitle(UNIT_FRAME_DROPDOWN_SUBSECTION_TITLE_OTHER)
+			rootDesc:CreateButton(IGNORE, function() IgnoreRequest(data.name) end)
+		elseif type(data) == "string" then -- dungeon/category header options
+			rootDesc:CreateTitle(GBB.dungeonNames[data] or "Header Options")
+			local foldApi = {
+				isSelected = apiOverrides.fold.isSelected
+					or function() return GBB.FoldedDungeons[data] end,
+				setSelected = apiOverrides.fold.setSelected
+					or function() GBB.FoldedDungeons[data] = (not GBB.FoldedDungeons[data]) end,
+				foldAll = apiOverrides.foldAll.onSelect or GBB.FoldAllDungeon,
+				unfoldAll = apiOverrides.unfoldAll.onSelect or GBB.UnfoldAllDungeon,
+			}
+			rootDesc:CreateCheckbox(GBB.L["BtnFold"], foldApi.isSelected, foldApi.setSelected, data)
+			createThinDivider(rootDesc)
+			rootDesc:CreateButton(GBB.L["BtnFoldAll"], foldApi.foldAll)
+			rootDesc:CreateButton(GBB.L["BtnUnFoldAll"], foldApi.unfoldAll)
+		else return end
+		createThinDivider(rootDesc)
+		-- shared options
+		rootDesc:CreateButton(CANCEL, nop)
+	end
+	MenuUtil.CreateContextMenu(parent, menuGenerator)
 end
 
 function GBB.ClickDungeon(self,button)
@@ -1038,7 +1048,7 @@ function GBB.ClickDungeon(self,button)
 		GBB.UpdateList()
 	-- Any other mouse click
 	else
-		createMenu(id)
+		GBB.CreateSharedBoardContextMenu(self, id)
 	end
 
 end
@@ -1060,7 +1070,7 @@ function GBB.ClickRequest(entry, button)
 			WhisperRequest(req.name)
 		end
 	else
-		createMenu(nil,req)
+		GBB.CreateSharedBoardContextMenu(entry, req)
 	end
 
 end
