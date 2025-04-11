@@ -356,60 +356,11 @@ local DataProviderConsts = {
 	SkipSort = true,
 	DoSort = false,
 }
-local setAllHeadersCollapsed ---@type function
-local toggleHeaderCollapseByKey ---@type function
-local function createMenu(DungeonID,req) -- shared right-click menu for headers and requests
-	if not GBB.PopupDynamic:Wipe("request"..(DungeonID or "nil")..(req and "request" or "nil")) then
-		return
-	end
-	if req then
-		GBB.PopupDynamic:AddItem(string.format(GBB.L["BtnWho"],req.name),false,WhoRequest,req.name,nil,true)
-		GBB.PopupDynamic:AddItem(string.format(GBB.L["BtnWhisper"],req.name),false,WhisperRequest,req.name,nil,true)
-		GBB.PopupDynamic:AddItem(string.format(GBB.L["BtnInvite"],req.name),false,InviteRequest,req.name,nil,true)
-		GBB.PopupDynamic:AddItem(string.format(GBB.L["BtnIgnore"],req.name),false,IgnoreRequest,req.name,nil,true)
-		GBB.PopupDynamic:AddItem("",true)
-	end
-	if DungeonID then
-		GBB.PopupDynamic:AddItem(GBB.L["BtnFold"], false, toggleHeaderCollapseByKey, DungeonID, nil, true)
-		GBB.PopupDynamic:AddItem(GBB.L["BtnFoldAll"], false, setAllHeadersCollapsed, true, nil, true)
-		GBB.PopupDynamic:AddItem(GBB.L["BtnUnFoldAll"], false, setAllHeadersCollapsed, false, nil, true)
-		GBB.PopupDynamic:AddItem("",true)
-	end
-	GBB.PopupDynamic:AddItem(GBB.L["CboxShowTotalTime"],false,GBB.DB,"ShowTotalTime")
-	GBB.PopupDynamic:AddItem(GBB.L["CboxOrderNewTop"],false,GBB.DB,"OrderNewTop")
-	GBB.PopupDynamic:AddItem(GBB.L["CboxEnableShowOnly"],false,GBB.DB,"EnableShowOnly")
-	GBB.PopupDynamic:AddItem(GBB.L["CboxChatStyle"],false,GBB.DB,"ChatStyle")
-	GBB.PopupDynamic:AddItem(GBB.L["CboxCompactStyle"],false,GBB.DB,"CompactStyle")
-	GBB.PopupDynamic:AddItem(GBB.L["CboxDontTrunicate"],false,GBB.DB,"DontTrunicate")
-	GBB.PopupDynamic:AddItem("",true)
-	GBB.PopupDynamic:AddItem(GBB.L["CboxNotifySound"],false,GBB.DB,"NotifySound")
-	GBB.PopupDynamic:AddItem(GBB.L["CboxNotifyChat"],false,GBB.DB,"NotifyChat")
-	GBB.PopupDynamic:AddItem(GBB.L["CboxRemoveRealm"],false,GBB.DB,"RemoveRealm")
-	GBB.PopupDynamic:AddItem("",true)
-	GBB.PopupDynamic:AddItem(SETTINGS, false, GBB.OptionsBuilder.OpenCategoryPanel, 1)
-	GBB.PopupDynamic:AddItem(GBB.L["BtnCancel"], false, nil, nil, nil, true)
-	GBB.PopupDynamic:Show()
-end
 --------------------------------------------------------------------------------
 -- Dungeon/Category Header frame setup
 --------------------------------------------------------------------------------
 
----@param self Button|TreeDataProviderNodeMixin
----@param clickType mouseButton
----@param isMouseDown boolean
-local dungeonHeaderClickHandler = function(self, clickType, isMouseDown)
-	if clickType == "LeftButton" then
-		if IsShiftKeyDown() then
-			local shouldCollapse = not self:IsCollapsed()
-			setAllHeadersCollapsed(shouldCollapse)
-		else
-			self:ToggleCollapsed(DataProviderConsts.ExcludeChildren, DataProviderConsts.DoInvalidation)
-		end
-	elseif clickType == "RightButton" then
-		createMenu(self:GetData().dungeon)
-	end
-end
-setAllHeadersCollapsed = function(shouldCollapse)
+local setAllHeadersCollapsed = function(shouldCollapse)
 	local scrollView = LFGTool.ScrollContainer.scrollView
 	scrollView.dataProvider.node:SetChildrenCollapsed(shouldCollapse,
 		DataProviderConsts.ExcludeChildren, DataProviderConsts.SkipInvalidation
@@ -423,13 +374,38 @@ setAllHeadersCollapsed = function(shouldCollapse)
 	for key, _ in pairs(GBB.FoldedDungeons) do GBB.FoldedDungeons[key] = shouldCollapse end
 	scrollView.dataProvider:Invalidate()
 end
-toggleHeaderCollapseByKey = function(key)
+local toggleHeaderCollapseByKey = function(key)
 	LFGTool.ScrollContainer.scrollView:ForEachFrame(function(frame, node)
 		if node.data.isHeader and node.data.dungeon == key then
 			frame:ToggleCollapsed(DataProviderConsts.ExcludeChildren, DataProviderConsts.DoInvalidation);
 		end
 	end)
 end
+local sharedMenuHeaderAPI = {
+	fold = {
+		isSelected = function(dungeonKey) return GBB.FoldedDungeons[dungeonKey] end,
+		setSelected = function(dungeonKey) toggleHeaderCollapseByKey(dungeonKey) end,
+	},
+	foldAll = { onSelect = function() setAllHeadersCollapsed(true) end },
+	unfoldAll = { onSelect = function() setAllHeadersCollapsed(false) end },
+}
+---@param self Button|TreeDataProviderNodeMixin
+---@param clickType mouseButton
+---@param isMouseDown boolean
+local dungeonHeaderClickHandler = function(self, clickType, isMouseDown)
+	if clickType == "LeftButton" then
+		if IsShiftKeyDown() then
+			local shouldCollapse = not self:IsCollapsed()
+			setAllHeadersCollapsed(shouldCollapse)
+		else
+			self:ToggleCollapsed(DataProviderConsts.ExcludeChildren, DataProviderConsts.DoInvalidation)
+		end
+	elseif clickType == "RightButton" then
+		local dungeonKey = self:GetData().dungeon
+		GBB.CreateSharedBoardContextMenu(self, dungeonKey, sharedMenuHeaderAPI)
+	end
+end
+
 local elementExtentByData = {}
 local function InitializeHeader(header, node)
 	---@class HeaderButton: Button, ScrollElementAccessorsMixin
@@ -616,7 +592,7 @@ local requestEntryClickHandler = function(self, clickType)
 			end
 		end
 	else -- on right click
-		createMenu(nil, req)
+		GBB.CreateSharedBoardContextMenu(self, req)
 	end
 end
 ---@param entry RequestEntryFrame|ScrollElementAccessorsMixin
