@@ -255,10 +255,6 @@
 			<OnEvent>
 				GroupBulletinBoard_Addon.OnEvent(event, ...);
 			</OnEvent>
-			
-			<OnMouseDown>
-				GroupBulletinBoard_Addon.ClickFrame(self,button)
-			</OnMouseDown>
 		</Scripts>
 	</Frame>
 	
