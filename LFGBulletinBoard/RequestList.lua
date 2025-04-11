@@ -377,19 +377,44 @@ local function CreateItem(scrollPos,i,scale,req,forceHeight)
 	return entry:GetHeight() -- final height
 end
 
-local function WhoRequest(name)
-	--DEFAULT_CHAT_FRAME:AddMessage(GBB.MSGPREFIX .. string.format(GBB.L["msgStartWho"],name))
-	--DEFAULT_CHAT_FRAME.editBox:SetText("/who " .. name)
-	--ChatEdit_SendText(DEFAULT_CHAT_FRAME.editBox)
-	GBB.Tool.RunSlashCmd("/who " .. name)
+---@param playerName string
+local function sendWhoRequest(playerName)
+	GBB.Tool.RunSlashCmd("/who " .. playerName)
 end
 
-local function WhisperRequest(name)
-	ChatFrame_OpenChat("/w " .. name .." ")
+---@param playerName string
+local function startWhisperChat(playerName)
+	ChatFrame_OpenChat("/w " .. playerName .." ")
 end
 
-local function InviteRequest(name)
-	GBB.Tool.RunSlashCmd("/invite " .. name)
+---@param playerName string
+local function sendInvite(playerName)
+	GBB.Tool.RunSlashCmd("/invite " .. playerName)
+end
+
+---@param playerName string
+local function ignorePlayer(playerName)
+	for ir,req in pairs(GBB.RequestList) do
+		if type(req) == "table" and req.name == playerName then
+			req.last=0
+		end
+	end
+	GBB.ClearNeeded=true
+	C_FriendList.AddIgnore(playerName)
+end
+
+---@param request table request data object
+local function dismissRequest(request)
+	for requestIdx, req in pairs(GBB.RequestList) do
+		local match = true
+		for _, criteria in ipairs({"name", "dungeon", "startTime"}) do
+			if request[criteria] ~= req[criteria] then
+				match = false; break;
+			end
+		end
+		if match then tremove(GBB.RequestList, requestIdx); break; end
+	end
+	GBB.UpdateList()
 end
 
 ---@param leaderName string
@@ -413,15 +438,6 @@ function GBB.SendJoinRequestMessage(leaderName, dungeonKey, isHeroic)
 	SendChatMessage(msg, "WHISPER", nil, leaderName)
 end
 
-local function IgnoreRequest(name)
-	for ir,req in pairs(GBB.RequestList) do
-		if type(req) == "table" and req.name == name then
-			req.last=0
-		end
-	end
-	GBB.ClearNeeded=true
-	C_FriendList.AddIgnore(name)
-end
 
 local function showNoFiltersMessage()
 	local idx = 1
@@ -980,6 +996,7 @@ local apiOverridesEmpty = { -- table mostly here to give type hints,
 	fold = {}, ---@type { isSelected: (fun(key: string): boolean), setSelected: fun(key: string) }?
 	foldAll = {}, ---@type { onSelect: fun(key: string) }?
 	unfoldAll = {}, ---@type { onSelect: fun(key: string) }?
+	dismissRequest = {}, ---@type { onSelect: fun(req: LFGToolRequestData) }?
 }
 
 ---Generates a context menu for a request entry or dungeon header. (see `data` arg)
@@ -999,12 +1016,17 @@ function GBB.CreateSharedBoardContextMenu(parent, data, apiOverrides)
 			rootDesc:CreateTitle(data.name, GBB.Tool.ClassColor[data.class])
 			createThinDivider(rootDesc)
 			rootDesc:CreateTitle(UNIT_FRAME_DROPDOWN_SUBSECTION_TITLE_INTERACT)
-			rootDesc:CreateButton(WHO, function() WhoRequest(data.name) end):SetResponse(MenuResponse.Refresh)
-			rootDesc:CreateButton(WHISPER, function() WhisperRequest(data.name) end)
-			rootDesc:CreateButton(INVITE, function() InviteRequest(data.name) end)
+			rootDesc:CreateButton(WHO, function() sendWhoRequest(data.name) end):SetResponse(MenuResponse.Refresh)
+			rootDesc:CreateButton(WHISPER, function() startWhisperChat(data.name) end)
+			rootDesc:CreateButton(INVITE, function() sendInvite(data.name) end)
 			createThinDivider(rootDesc)
 			rootDesc:CreateTitle(UNIT_FRAME_DROPDOWN_SUBSECTION_TITLE_OTHER)
-			rootDesc:CreateButton(IGNORE, function() IgnoreRequest(data.name) end)
+			local dismissRequest = apiOverrides.dismissRequest.onSelect or dismissRequest
+			rootDesc:CreateButton(IGNORE, function()
+				ignorePlayer(data.name)
+				dismissRequest(data)
+			end)
+			rootDesc:CreateButton(GBB.L.DISMISS_REQUEST, dismissRequest, data)
 		elseif type(data) == "string" then -- dungeon/category header options
 			rootDesc:CreateTitle(GBB.dungeonNames[data] or "Header Options")
 			local foldApi = {
@@ -1060,14 +1082,13 @@ function GBB.ClickRequest(entry, button)
 	if not req then return end
 	if button=="LeftButton" then
 		if IsShiftKeyDown() then
-			WhoRequest(req.name)
-			--SendWho( req.name )
+			sendWhoRequest(req.name)
 		elseif IsAltKeyDown() then
 			GBB.SendJoinRequestMessage(req.name, req.dungeon, req.IsHeroic)
 		elseif IsControlKeyDown() then
-			InviteRequest(req.name)
+			sendInvite(req.name)
 		else
-			WhisperRequest(req.name)
+			startWhisperChat(req.name)
 		end
 	else
 		GBB.CreateSharedBoardContextMenu(entry, req)

@@ -322,27 +322,18 @@ local getDebounceHandle = function(func, delay)
 	end
 end
 
-local function WhoRequest(name)
-	GBB.Tool.RunSlashCmd("/who " .. name)
-end
-
-local function WhisperRequest(name)
-	ChatFrame_OpenChat("/w " .. name .." ")
-end
-
-local function InviteRequest(name)
-	GBB.Tool.RunSlashCmd("/invite " .. name)
-end
-
-local function IgnoreRequest(name)
-	for ir,req in pairs(GBB.RequestList) do
-		if type(req) == "table" and req.name == name then
-			req.last=0
+local function autoNestingTable(keyDepth, defaultValue)
+	return setmetatable({}, {
+		__index = function(table, key)
+			local v = keyDepth > 1 and autoNestingTable(keyDepth - 1, defaultValue) or defaultValue
+			rawset(table, key, v);
+			return v
 		end
-	end
-	GBB.ClearNeeded=true
-	C_FriendList.AddIgnore(name)
+	})
 end
+
+-- {[author][listingTimestamp][activityID] = boolean}
+local requestsBlacklist = autoNestingTable(3, false)
 
 -- argument constants used by various methods in the TreeDataProviderNodeMixin
 -- here to make the source more readable.
@@ -565,13 +556,33 @@ do
 		gridContainer:Hide()
 	end
 end
+
+local sharedMenuRequestAPI = {
+	dismissRequest = {
+		---@param req LFGToolRequestData
+		onSelect = function(req)
+			---@type TreeDataProviderMixin
+			local dataProvider = LFGTool.ScrollContainer.scrollBox:GetDataProvider()
+			for _, node in dataProvider:Enumerate(nil, nil, DataProviderConsts.IncludeCollapsed) do
+				if node.data.req
+					and node.data.req.name == req.name
+					and node.data.req.activityID == req.activityID
+				then
+					requestsBlacklist[req.name][req.listingTimestamp][req.activityID] = true
+					dataProvider:Remove(node, DataProviderConsts.DoInvalidation)
+					return;
+				end
+			end
+		end
+	}
+}
 ---@param self Frame|TreeDataProviderNodeMixin
 ---@param clickType mouseButton
 local requestEntryClickHandler = function(self, clickType)
 	local req = self:GetData().req ---@type LFGToolRequestData
 	if clickType == "LeftButton" then
 		if IsShiftKeyDown() then
-			WhoRequest(req.name)
+			GBB.Tool.RunSlashCmd("/who " .. req.name)
 		elseif IsAltKeyDown() then
 			GBB.SendJoinRequestMessage(req.name, req.dungeon, req.isHeroic)
 		elseif IsControlKeyDown() then
@@ -592,7 +603,7 @@ local requestEntryClickHandler = function(self, clickType)
 			end
 		end
 	else -- on right click
-		GBB.CreateSharedBoardContextMenu(self, req)
+		GBB.CreateSharedBoardContextMenu(self, req, sharedMenuRequestAPI)
 	end
 end
 ---@param entry RequestEntryFrame|ScrollElementAccessorsMixin
@@ -1097,7 +1108,8 @@ function LFGTool:UpdateRequestList()
                 message = (message ~= "" and strjoin(" ", message, searchResultData.comment)) or searchResultData.comment
             end
 			GBB.RealLevel[leaderInfo.name] = leaderInfo.level
-			for _, activityID in pairs(searchResultData.activityIDs) do
+			local activityBlacklist = requestsBlacklist[leaderInfo.name][listingTimestamp]
+			for _, activityID in pairs(searchResultData.activityIDs) do if not activityBlacklist[activityID] then
 				local activityInfo = C_LFGList.GetActivityInfoTable(activityID)
 				-- DevTool:AddData(activityInfo, resultID)
 				local dungeonKey = getActivityDungeonKey(activityInfo.fullName, activityID)
@@ -1137,7 +1149,7 @@ function LFGTool:UpdateRequestList()
 					memberRoleCounts = C_LFGList.GetSearchResultMemberCounts(resultID),
 				}
 				table.insert(self.requestList, entry)
-			end
+			end end
 		end
     end
 	return self.requestList
