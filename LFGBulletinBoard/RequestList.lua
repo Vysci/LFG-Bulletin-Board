@@ -1031,16 +1031,20 @@ function GBB.CreateSharedBoardContextMenu(parent, data, apiOverrides)
 			rootDesc:CreateTitle(GBB.dungeonNames[data] or "Header Options")
 			local foldApi = {
 				isSelected = apiOverrides.fold.isSelected
-					or function() return GBB.FoldedDungeons[data] end,
+				or function() return GBB.FoldedDungeons[data] end,
 				setSelected = apiOverrides.fold.setSelected
-					or function() GBB.FoldedDungeons[data] = (not GBB.FoldedDungeons[data]) end,
+				or function() GBB.FoldedDungeons[data] = (not GBB.FoldedDungeons[data]) end,
 				foldAll = apiOverrides.foldAll.onSelect or GBB.FoldAllDungeon,
 				unfoldAll = apiOverrides.unfoldAll.onSelect or GBB.UnfoldAllDungeon,
 			}
 			rootDesc:CreateCheckbox(GBB.L["BtnFold"], foldApi.isSelected, foldApi.setSelected, data)
+			local filterSetting = GBB.OptionsBuilder.GetSavedVarHandle(GBB.DBChar, "FilterDungeon"..data)
 			createThinDivider(rootDesc)
 			rootDesc:CreateButton(GBB.L["BtnFoldAll"], foldApi.foldAll)
 			rootDesc:CreateButton(GBB.L["BtnUnFoldAll"], foldApi.unfoldAll)
+			createThinDivider(rootDesc)
+			rootDesc:CreateTitle(GBB.L.FILTER_OPTIONS)
+			rootDesc:CreateButton(DISABLE, function() filterSetting:SetValue(false) end)
 		else return end
 		createThinDivider(rootDesc)
 		-- shared options

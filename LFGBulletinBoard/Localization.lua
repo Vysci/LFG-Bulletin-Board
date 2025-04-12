@@ -77,6 +77,16 @@ local preLocalizedFallbacks = {
 
 -- localized strings keyed by string identifier key
 local localizedAddonDisplayStrings = {
+	FILTER_OPTIONS = {
+		enUS = "Filter Options",
+		deDE = "Filter Optionen",
+		esMX = "Opciones de filtro",
+		frFR = "Options de filtre",
+		ptBR = "Opções de filtro",
+		ruRU = "Опции фильтра",
+		zhCN = "过滤器选项",
+		zhTW = "過濾器選項",
+	},
 	DISMISS_REQUEST = {
 		enUS = "Dismiss Request",
 		deDE = "Anfrage löschen",
