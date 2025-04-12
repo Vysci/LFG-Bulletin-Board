@@ -625,10 +625,72 @@ function GBB.CreateTagList ()
 		print("Messages with these keywords may not be categorized as expected. Priority given to the last in list.")
 	end
 end
+--------------------------------------------------------------------------------
+-- Minimap button context Menu setup
+--------------------------------------------------------------------------------
 
-
---Initalize / Event
--------------------------------------------------------------------------------------
+local minimapMenuGeneratorCache = {}
+local function getMinimapMenuDescriptionGenerator(showMinimapOptions)
+	local settings = {
+		notifySound = OptionsUtil.GetSavedVarHandle(GBB.DB, "NotifySound"),
+		notifyChat = OptionsUtil.GetSavedVarHandle(GBB.DB, "NotifyChat"),
+		minimapLock = OptionsUtil.GetSavedVarHandle(GBB.DB.MinimapButton, "lock"),
+		minimapLockDistance = OptionsUtil.GetSavedVarHandle(GBB.DB.MinimapButton, "lockDistance"),
+	}
+	local GetSettingValue = function(setting) return setting:GetValue() end
+	local ToggleSettingValue = function(setting) setting:SetValue(not GetSettingValue(setting)) end
+	local getSettingsCheckboxArgs = function(label, setting)
+		return label, GetSettingValue, ToggleSettingValue, setting
+	end
+	local function makeElementsSmall(subDesc)
+		if not subDesc:HasElements() then return end
+		for _, desc in subDesc:EnumerateElementDescriptions() do
+			desc:AddInitializer(function(frame)
+				if frame.fontString then frame.fontString:SetFontObject("GameFontNormalSmall") end
+			end)
+			makeElementsSmall(desc)
+		end
+	end
+	local createThinDivider = function(rootDesc)
+		rootDesc:CreateDivider():SetFinalInitializer(function(frame) frame:SetHeight(4) end)
+	end
+	return function(_, rootDesc) ---@param rootDesc RootMenuDescriptionProxy
+		rootDesc:CreateTitle(GBB.Title)
+		rootDesc:CreateButton(SETTINGS, OptionsUtil.OpenCategoryPanel, 1) -- open main settings
+		do -- Notification Settings
+			local subDesc = rootDesc:CreateButton(COMMUNITIES_NOTIFICATION_SETTINGS, nop)
+			subDesc:CreateCheckbox(getSettingsCheckboxArgs(GBB.L["CboxNotifySound"], settings.notifySound))
+			subDesc:CreateCheckbox(getSettingsCheckboxArgs(GBB.L["CboxNotifyChat"], settings.notifyChat))
+		end
+		createThinDivider(rootDesc)
+		if showMinimapOptions ~= false then -- Minimap Button Settings
+			rootDesc:CreateCheckbox(getSettingsCheckboxArgs(GBB.L["CboxLockMinimapButton"], settings.minimapLock))
+			if GBB.MinimapButton.isLibDBIconAvailable and GBB.DB.MinimapButton.UseLibDBIcon then
+				-- disable distance lock toggle whenever the minimap is using LibDBIcon
+				rootDesc:CreateCheckbox(GBB.L["CboxLockMinimapButtonDistance"], function() return true end, nop)
+					:SetEnabled(false)
+			else
+				rootDesc:CreateCheckbox(
+					getSettingsCheckboxArgs(GBB.L["CboxLockMinimapButtonDistance"], settings.minimapLockDistance)
+				)
+			end
+			createThinDivider(rootDesc)
+		end
+		rootDesc:CreateButton(CANCEL, nop):SetResponse(MenuResponse.CloseMenu)
+		makeElementsSmall(rootDesc)
+	end
+end
+function GBB.CreateMinimapContextMenu(frame, showMinimapOptions)
+	local menuDescription = minimapMenuGeneratorCache[showMinimapOptions]
+	if not menuDescription then
+		menuDescription = getMinimapMenuDescriptionGenerator(showMinimapOptions)
+		minimapMenuGeneratorCache[showMinimapOptions] = menuDescription
+	end
+	MenuUtil.CreateContextMenu(frame, menuDescription)
+end
+--------------------------------------------------------------------------------
+-- Initialize / Event
+--------------------------------------------------------------------------------
 
 local function hooked_createTooltip(self)
 	local name, unit = self:GetUnit()
@@ -664,38 +726,6 @@ local function hooked_createTooltip(self)
 			end
 		end
 	end
-end
-
-function GBB.Popup_Minimap(frame,showMinimapOptions)
-	local txt="nil"
-	if type(frame)=="table" then txt=frame:GetName() or "nil" end
-	if not GBB.PopupDynamic:Wipe(txt..(showMinimapOptions and "notminimap" or "minimap")) then
-		return
-	end
-
-	GBB.PopupDynamic:AddItem(GBB.L["HeaderSettings"],false, OptionsUtil.OpenCategoryPanel, 1)
-	
-	GBB.PopupDynamic:AddItem("",true)
-	GBB.PopupDynamic:AddItem(GBB.L["CboxFilterTravel"],false,GBB.DBChar,"FilterDungeonTRAVEL")
-	
-	GBB.PopupDynamic:AddItem("",true)
-	GBB.PopupDynamic:AddItem(GBB.L["CboxNotifyChat"],false,GBB.DB,"NotifyChat")
-	GBB.PopupDynamic:AddItem(GBB.L["CboxNotifySound"],false,GBB.DB,"NotifySound")
-	
-	if showMinimapOptions ~= false then
-		GBB.PopupDynamic:AddItem("",true)
-		GBB.PopupDynamic:AddItem(GBB.L["CboxLockMinimapButton"],false,GBB.DB.MinimapButton,"lock")
-		-- disable whenever the minimap is in LibDBIcon mode
-		if GBB.MinimapButton.isLibDBIconAvailable and GBB.DB.MinimapButton.UseLibDBIcon then
-			GBB.PopupDynamic:AddItem(GBB.L['CboxLockMinimapButtonDistance'], true, {true}, 1);
-		else
-			GBB.PopupDynamic:AddItem(GBB.L['CboxLockMinimapButtonDistance'], false, GBB.DB.MinimapButton, 'lockDistance')
-		end
-	end
-	GBB.PopupDynamic:AddItem("",true)
-	GBB.PopupDynamic:AddItem(GBB.L["BtnCancel"], false, nil, nil, nil, true)
-		
-	GBB.PopupDynamic:Show(frame,0,0)
 end
 
 function GBB.Init()
@@ -923,8 +953,7 @@ function GBB.Init()
 			if button=="LeftButton" then 
 				GBB.ToggleWindow()
 			else
-				GBB.Popup_Minimap(self.button,true)
-				--GBB.Options.Open(2)
+				GBB.CreateMinimapContextMenu(self.button, true)
 			end
 		end,
 		GBB.Title
@@ -1235,8 +1264,7 @@ local function Event_ADDON_LOADED(arg1)
 			if button=="LeftButton" then 
 				GBB.ToggleWindow()
 			else
-				GBB.Popup_Minimap(clickedframe,false)
-				--GBB.Options.Open(2)
+				GBB.CreateMinimapContextMenu(clickedframe, false)
 			end
 		end
 	)
