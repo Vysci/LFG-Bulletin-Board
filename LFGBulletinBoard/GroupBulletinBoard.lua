@@ -1032,7 +1032,6 @@ function GBB.Init()
 	
 	GBB.Initalized=true
 	
-	GBB.PopupDynamic=GBB.Tool.CreatePopup(GBB.OptionsUpdate)
 	GBB.InitGroupList()
 
 	local TabEnum; ---@type {ChatRequests: number?, RecentPlayers: number?, LFGTool: number?}
