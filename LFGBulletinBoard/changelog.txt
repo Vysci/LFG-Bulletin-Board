@@ -1,5 +1,16 @@
 Group Bulletin Board
 
+3.45:
+  - Added preliminary support for Mists of Pandaria classic
+  - Locking the bulleting board window now prevents resizing.
+  - Added "Disable" filter option to dungeon header right-click menus
+  - Added "Dismiss Request" button to request entry right-click menus
+  - Moved additional options to the right-click version of the bulletin board's settings button's menu.
+    - now includes tooltip indicating the extra right-click menu's existence.
+  - Added more custom filter settings (under "Additional Filters" panel).
+    - Filters now include option to allow words inside of [item links] to be used for filtering.
+      - accessed via a gear icon next to the custom filter's name.
+
 3.44
   - General:
     - Added settings for Locking, Changing Opacity, and Disabling Interactivity of the Bulletin Board window
