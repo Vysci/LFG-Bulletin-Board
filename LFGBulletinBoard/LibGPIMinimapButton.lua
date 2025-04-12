@@ -101,7 +101,7 @@ function MinimapButton.Init(DB,Texture,DoOnClick,Tooltip)
 			end or nil,
 		}, DB)
 		-- sync to our dropdown settings for the minimap button to libDBIcon functions
-		-- see `GBB.Popup_Minimap`
+		-- see `GBB.CreateMinimapContextMenu`
 		SavedVarHandle(DB, 'lock'):AddUpdateHook(function(isLocked)
 			LibDBIcon[isLocked and 'Lock' or 'Unlock'](LibDBIcon, TOCNAME);
 		end);
