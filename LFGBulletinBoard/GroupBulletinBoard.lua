@@ -733,7 +733,8 @@ function GBB.Init()
     local GroupBulletinBoardFrame = GroupBulletinBoardFrame
 	GroupBulletinBoardFrame:SetResizeBounds(400,170)
 	GroupBulletinBoardFrame:SetClampedToScreen(true)
-	GBB.UserLevel=UnitLevel("player")
+	GBB.UserLevel = UnitLevel("player")
+	GBB.Tool.RegisterEvent("PLAYER_LEVEL_UP", function() GBB.UserLevel = UnitLevel("player") end)
 	GBB.UserName=(UnitFullName("player"))
 	GBB.ServerName=GetRealmName()
 	GBB.RealLevel = {} -- recently seen player levels

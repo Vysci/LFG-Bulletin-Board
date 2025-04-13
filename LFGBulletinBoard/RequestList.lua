@@ -1,6 +1,6 @@
 local TOCNAME,
 	---@class Addon_RequestList : Addon_Tags, Addon_Tool
-	---@field FramesEntries (RequestHeader|RequestEntry)[]
+	---@field FramesEntries RequestHeader[]
 	GBB = ...;
 
 --ScrollList / Request
@@ -75,6 +75,45 @@ local subDungeonParentLookup = (function()
 	})
 	return lookup
 end)()
+
+---@param playerName string
+local function sendWhoRequest(playerName)
+	GBB.Tool.RunSlashCmd("/who " .. playerName)
+end
+
+---@param playerName string
+local function startWhisperChat(playerName)
+	ChatFrame_OpenChat("/w " .. playerName .." ")
+end
+
+---@param playerName string
+local function sendInvite(playerName)
+	GBB.Tool.RunSlashCmd("/invite " .. playerName)
+end
+
+---@param playerName string
+local function ignorePlayer(playerName)
+	for ir,req in pairs(GBB.RequestList) do
+		if type(req) == "table" and req.name == playerName then
+			req.last=0
+		end
+	end
+	GBB.ClearNeeded=true
+	C_FriendList.AddIgnore(playerName)
+end
+---@param request table request data object
+local function dismissRequest(request)
+	for requestIdx, req in pairs(GBB.RequestList) do
+		local match = true
+		for _, criteria in ipairs({"name", "dungeon", "startTime"}) do
+			if request[criteria] ~= req[criteria] then
+				match = false; break;
+			end
+		end
+		if match then tremove(GBB.RequestList, requestIdx); break; end
+	end
+	GBB.UpdateList()
+end
 
 -- track categories/dungeon keys that have had a header created
 -- this table is wiped on every `GBB.UpdateList` when the board is re-drawn
@@ -161,261 +200,317 @@ local function CreateHeader(scrollPos, dungeon)
 	existingHeaders[dungeon] = true
 	return scrollPos + bottomMargin
 end
+--------------------------------------------------------------------------------
+-- Request Entry Frame
+--------------------------------------------------------------------------------
 
----@param scrollPos number current scroll position
----@param i integer request index
----@param scale number scale factor for the entry item
----@param req table? request info table
----@param forceHeight number? force the height of the entry item
----@return number height The height of the entry item
-local function CreateItem(scrollPos,i,scale,req,forceHeight)
-	local AnchorTop="GroupBulletinBoardFrame_ScrollChildFrame"
-	local ItemFrameName="GBB.Item_"..i
-	local entry = GBB.FramesEntries[i]
-	-- space between inner-bottom of entry and outer-bottom of message
-	local bottomPadding = 4; 
-	
-	if GBB.FramesEntries[i]==nil then
-		---@class RequestEntry : Frame
-		entry = CreateFrame("Frame", ItemFrameName,
-			GroupBulletinBoardFrame_ScrollChildFrame, "GroupBulletinBoard_TmpRequest"
-		);
-		entry:SetPoint("RIGHT", GroupBulletinBoardFrame_ScrollChildFrame, "RIGHT", 0, 0)
-		entry.Name = _G[ItemFrameName.."_name"] ---@type FontString
-		entry.Message = _G[ItemFrameName.."_message"] ---@type FontString
-		entry.Time = _G[ItemFrameName.."_time"] ---@type FontString
-		
-		entry.Name:SetPoint("TOPLEFT", 0,-1.5)
-		entry.Name:SetFontObject(GBB.DB.FontSize)
-		entry.Time:SetPoint("TOP", entry.Name, "TOP", 0, 0)
-		entry.Time:SetFontObject(GBB.DB.FontSize)
-		entry.Message:SetNonSpaceWrap(false)
-		entry.Message:SetFontObject(GBB.DB.FontSize)
-		
-		if GBB.DontTrunicate then
-			GBB.ClearNeeded=true
-		end
-		-- add a light hightlight on mouseover, requires we add a texture child		
-		-- Draw on "HIGHTLIGHT" layer to use base xml highlighting script
-		local hoverTex = entry:CreateTexture(nil, "HIGHLIGHT")
-		-- padding used compensate text clipping out of its containing frame
-		local pad = 2 
-		hoverTex:SetPoint("TOPLEFT", -pad, pad)
-		hoverTex:SetPoint("BOTTOMRIGHT", pad, -pad)
-		hoverTex:SetAtlas("search-highlight")
-		hoverTex:SetDesaturated(true) -- its comes blue by default
-		hoverTex:SetVertexColor(0.7, 0.7, 0.7, 0.4)
-		hoverTex:SetBlendMode("ADD")
-		
-		GBB.Tool.EnableHyperlink(entry)
-		GBB.FramesEntries[i]=entry
-	end
+---@class RequestListEntryFrame: Frame
+---@field requestData table? GBB.RequestList data object, expected for `UpdateTextLayout`
+local EntryFrameMixin = {}
+function EntryFrameMixin:OnLoad()
+	self.Name = self:CreateFontString(nil, "ARTWORK", "GameFontNormalLeft")
+	self.Message = self:CreateFontString(nil, "ARTWORK", "GameFontNormalLeft")
+	self.Time = self:CreateFontString(nil, "ARTWORK", "GameFontNormalRight")
+	self.Highlight = self:CreateTexture(nil, "HIGHLIGHT")
 
-	-- Init entry children frames for request info
-	-- request author/sender
-	entry.Name:SetFontObject(GBB.DB.FontSize)
-	entry.Name:SetPoint("TOPLEFT", 0,-1.5)
-	entry.Name:Show() -- incase hidden from being in chat style
+	-- points not expected to change, see `layoutEntryChildRegions` func for rest.
+	self.Name:SetPoint("TOPLEFT")
+	self.Time:SetPoint("TOPRIGHT")
 
-	-- time since request was made
-	entry.Time:SetFontObject(GBB.DB.FontSize)
-	entry.Time:Show()
-	
-	-- request message
-	entry.Message:SetFontObject(GBB.DB.FontSize)
-	entry.Message:SetMaxLines(GBB.DB.DontTrunicate and 99 or 1)
-	entry.Message:SetJustifyV("MIDDLE")
-	entry.Message:ClearAllPoints() -- incase swapped to 2-line mode
-	entry.Message:SetText(" ") 
-	local lineHeight = entry.Message:GetStringHeight() + 1 -- ui nit +1 offset
-	
-	if GBB.DontTrunicate then
-		-- make sure the initial size of the FontString object is big enough
-		-- to allow for all possible text when not truncating
-		entry.Message:SetHeight(999)
-	end
-	
-	--- Fill out the entry frames children with the request data
-	if req then
-		local formattedName = req.name
-		if GBB.RealLevel[req.name] then
-			formattedName = formattedName.." ("..GBB.RealLevel[req.name]..")"
-		end
-		if GBB.DB.ColorByClass and req.class and GBB.Tool.ClassColor[req.class].colorStr then
-			formattedName = WrapTextInColorCode(formattedName, GBB.Tool.ClassColor[req.class].colorStr)
-		end
+	local offset = 2 -- offset padding used compensate text clipping out of its containing frame
+	self.Highlight:SetPoint("TOPLEFT", -offset, offset)
+	self.Highlight:SetPoint("BOTTOMRIGHT", offset, -offset)
+	self.Highlight:SetAtlas("search-highlight")
+	self.Highlight:SetDesaturated(true) -- its comes blue by default
+	self.Highlight:SetVertexColor(0.7, 0.7, 0.7, 0.4)
+	self.Highlight:SetBlendMode("ADD")
+	self:SetScript("OnMouseDown", self.OnMouseDown)
+	self:SetScript("OnEnter", self.OnEnter)
+	self:SetScript("OnLeave", self.OnLeave)
+	GBB.Tool.EnableHyperlink(self)
+end
 
-		local ClassIcon=""
-		if GBB.DB.ShowClassIcon and req.class then
-			ClassIcon = GBB.Tool.GetClassIcon(req.class, GBB.DB.ChatStyle and 12 or 18) or ""
-		end
+---@param entry RequestListEntryFrame
+local fillEntryChildRegions = function(entry, request)
+	local formattedName = request.name
+	local playerLevel = GBB.RealLevel[request.name]
+	if playerLevel then formattedName = string.format("%s (%s)", formattedName, playerLevel) end
+	local classColor = GBB.DB.ColorByClass and request.class and GBB.Tool.ClassColor[request.class].colorStr
+	if classColor then formattedName = WrapTextInColorCode(formattedName, classColor) end
 
-		local FriendIcon = (
-			(req.IsFriend 
-			and string.format(GBB.TxtEscapePicture,GBB.FriendIcon) 
-			or "") 
-			..(req.IsGuildMember 
-			and string.format(GBB.TxtEscapePicture,GBB.GuildIcon) 
-			or "") 
-			..(req.IsPastPlayer 
-			and string.format(GBB.TxtEscapePicture,GBB.PastPlayerIcon) 
+	-- Note: in the future there should be dedicated texture frames for all the following icons
+	-- that way we dont have to deal with all the annoying parsing of strings to display them in the rendered text.
+	local classIcon = (GBB.DB.ShowClassIcon and request.class)
+		and GBB.Tool.GetClassIcon(request.class, GBB.DB.CompactStyle and 12 or 18)
+		or ""
+
+	local playerRelationIcon = (
+		(request.IsFriend
+			and string.format(GBB.TxtEscapePicture, GBB.FriendIcon)
 			or "")
-		);
+		..(request.IsGuildMember
+			and string.format(GBB.TxtEscapePicture, GBB.GuildIcon)
+			or "")
+		..(request.IsPastPlayer
+			and string.format(GBB.TxtEscapePicture, GBB.PastPlayerIcon)
+			or "")
+	);
 
-		local now = time()
-		local fmtTime
-		if GBB.DB.ShowTotalTime then
-			if (now - req.start < 0) then -- Quick fix for negative timers that happen as a result of new time calculation.
-				fmtTime=GBB.formatTime(0) 
-			else
-				fmtTime=GBB.formatTime(now-req.start)
-			end
+	local now = time()
+	local fmtTime
+	if GBB.DB.ShowTotalTime then
+		if (now - request.start < 0) then -- Quick fix for negative timers that happen as a result of new time calculation.
+			fmtTime=GBB.formatTime(0)
 		else
-			if (now - req.last < 0) then
-				fmtTime=GBB.formatTime(0)
-			else
-				fmtTime=GBB.formatTime(now-req.last)
-			end
+			fmtTime=GBB.formatTime(now-request.start)
 		end
-
-		local typePrefix = ""
-		if not isClassicEra then -- "heroic" is not a concept in classic era/sod
-			if req.IsHeroic == true then
-				local colorHex = GBB.Tool.RGBPercToHex(GBB.DB.HeroicDungeonColor.r,GBB.DB.HeroicDungeonColor.g,GBB.DB.HeroicDungeonColor.b)
-				-- note colorHex here has no alpha channels
-				typePrefix = WrapTextInColorCode(
-					("[" .. GBB.L["heroicAbr"] .. "]    "), 'FF'..colorHex
-				);
-			elseif req.IsRaid == true then
-				typePrefix = WrapTextInColorCode(
-					("[" .. GBB.L["raidAbr"] .. "]    "), "FF00FF00"
-				);
-			else
-				local colorHex = GBB.Tool.RGBPercToHex(GBB.DB.NormalDungeonColor.r,GBB.DB.NormalDungeonColor.g,GBB.DB.NormalDungeonColor.b)
-				typePrefix = WrapTextInColorCode(
-					("[" .. GBB.L["normalAbr"] .. "]    "), 'FF'..colorHex
-				)
-			end
-		end
-		if GBB.DB.ChatStyle then
-			entry.Name:SetText("")
-			entry.Message:SetFormattedText("%s\91%s\93%s: %s",
-				ClassIcon, formattedName, FriendIcon, req.message
-			);
-			entry.Message:SetIndentedWordWrap(true)
-		else
-			entry.Name:SetFormattedText("%s%s%s", ClassIcon, formattedName, FriendIcon)
-			entry.Message:SetFormattedText("%s %s", typePrefix, req.message)
-			entry.Time:SetText(fmtTime)
-			entry.Message:SetIndentedWordWrap(false)
-		end
-
-		entry.Message:SetTextColor(GBB.DB.EntryColor.r,GBB.DB.EntryColor.g,GBB.DB.EntryColor.b,GBB.DB.EntryColor.a)
-		entry.Time:SetTextColor(GBB.DB.TimeColor.r,GBB.DB.TimeColor.g,GBB.DB.TimeColor.b,GBB.DB.TimeColor.a)
 	else
-		entry.Name:SetText("Aag ")
-		entry.Message:SetText("Aag ")   
-		entry.Time:SetText("Aag ")
+		if (now - request.last < 0) then
+			fmtTime=GBB.formatTime(0)
+		else
+			fmtTime=GBB.formatTime(now-request.last)
+		end
 	end
-	entry.requestInfo = req
-	
-	--- Adjust child frames based on chosen layout
-	-- check for compact or Normal styling 	
+
+	local typePrefix = ""
+	if not isClassicEra then -- "heroic" is not a concept in classic era/sod
+		if request.IsHeroic == true then
+			local colorHex = GBB.Tool.RGBPercToHex(GBB.DB.HeroicDungeonColor.r,GBB.DB.HeroicDungeonColor.g,GBB.DB.HeroicDungeonColor.b)
+			-- note colorHex here has no alpha channels
+			typePrefix = WrapTextInColorCode(
+				("[" .. GBB.L["heroicAbr"] .. "]    "), 'FF'..colorHex
+			);
+		elseif request.IsRaid == true then
+			typePrefix = WrapTextInColorCode(
+				("[" .. GBB.L["raidAbr"] .. "]    "), "FF00FF00"
+			);
+		else
+			local colorHex = GBB.Tool.RGBPercToHex(GBB.DB.NormalDungeonColor.r,GBB.DB.NormalDungeonColor.g,GBB.DB.NormalDungeonColor.b)
+			typePrefix = WrapTextInColorCode(
+				("[" .. GBB.L["normalAbr"] .. "]    "), 'FF'..colorHex
+			)
+		end
+	end
+	if GBB.DB.ChatStyle then
+		entry.Name:SetText("")
+		entry.Message:SetFormattedText("%s\91%s\93%s: %s",
+			classIcon, formattedName, playerRelationIcon, request.message
+		);
+		entry.Message:SetIndentedWordWrap(true)
+	else
+		entry.Name:SetFormattedText("%s%s%s", classIcon, formattedName, playerRelationIcon)
+		entry.Message:SetFormattedText("%s %s", typePrefix, request.message)
+		entry.Time:SetText(fmtTime)
+		entry.Message:SetIndentedWordWrap(false)
+	end
+
+	entry.Message:SetTextColor(GBB.DB.EntryColor.r,GBB.DB.EntryColor.g,GBB.DB.EntryColor.b,GBB.DB.EntryColor.a)
+	entry.Time:SetTextColor(GBB.DB.TimeColor.r,GBB.DB.TimeColor.g,GBB.DB.TimeColor.b,GBB.DB.TimeColor.a)
+end
+
+---@param entry RequestListEntryFrame
+---@param layout "normal" | "two-line" | "chat"
+local layoutEntryChildRegions = function(entry, layout)
+	local scale = layout == "two-line" and 0.85 or 1
 	entry.Name:SetScale(scale)
 	entry.Time:SetScale(scale)
-	if scale < 1 then -- aka GBB.DB.CompactStyle
-		entry.Message:SetPoint("TOPLEFT",entry.Name, "BOTTOMLEFT", 0, -2)
-		entry.Message:SetPoint("RIGHT",entry.Time, "RIGHT", 0,0)
-		entry.Message:SetJustifyV("TOP")
-	else
-		entry.Message:SetPoint("TOPLEFT",entry.Name, "TOPRIGHT", 10)
-		entry.Message:SetPoint("RIGHT",entry.Time, "LEFT", -10,0) 
-	end
-	if GBB.DB.ChatStyle then
-		entry.Time:Hide()
+	entry.Name:SetFontObject(GBB.DB.FontSize)
+	entry.Time:SetFontObject(GBB.DB.FontSize)
+	entry.Message:SetFontObject(GBB.DB.FontSize)
+	if layout == "normal" then
+		entry.Name:Show()
+		entry.Time:Show()
+		entry.Message:SetPoint("TOPLEFT", entry.Name, "TOPRIGHT", 6, 0)
+		entry.Message:SetPoint("TOPRIGHT", entry.Time, "TOPLEFT", -6, 0)
+	elseif layout == "two-line" then
+		entry.Name:Show()
+		entry.Time:Show()
+		entry.Message:SetPoint("TOPLEFT", entry.Name, "BOTTOMLEFT", 0, -1)
+		entry.Message:SetPoint("TOPRIGHT", entry.Time, "BOTTOMRIGHT", 0, -1)
+	elseif layout == "chat" then
 		entry.Name:Hide()
-		entry.Name:SetWidth(1)
-		entry.Time:ClearAllPoints() -- remove time in chat style
-		entry.Message:SetPoint("RIGHT", entry, "RIGHT", -4)
-	else -- Compact/Normal style
-		-- set width & time to this sessions widest seen frames
+		entry.Time:Hide()
+		entry.Message:SetPoint("TOPLEFT")
+		entry.Message:SetPoint("TOPRIGHT")
+	end
+	entry.Message:Show()
+	-- set name & time widths
+	if layout == "normal" or layout == "two-line" then
+		-- set name & time to this sessions widest seen frames
 		local padX = 10
-		local w = entry.Name:GetStringWidth() + padX
-		GBB.DB.widthNames = math.max(GBB.DB.widthNames, w)
+		-- name
+		local stringWidth = entry.Name:GetStringWidth() + padX
+		GBB.DB.widthNames = math.max(GBB.DB.widthNames, stringWidth)
 		entry.Name:SetWidth(GBB.DB.widthNames)
-
-		local w = entry.Time:GetStringWidth() + padX
-		GBB.DB.widthTimes = math.max(GBB.DB.widthTimes, w)
+		-- time
+		stringWidth = entry.Time:GetStringWidth() + padX
+		GBB.DB.widthTimes = math.max(GBB.DB.widthTimes, stringWidth)
 		entry.Time:SetWidth(GBB.DB.widthTimes)
 		entry.Time:SetPoint("TOPRIGHT", entry, "TOPRIGHT")
+	elseif layout == "chat" then
+		-- name and time are hidden
 	end
 
-	-- determine the height of the name/message fields
-	local projectedHeight
-	if GBB.DB.ChatStyle then
-		projectedHeight=entry.Message:GetStringHeight()
+	-- hack: make sure the initial size of the FontString object is big enough
+	-- to allow for all possible text when not truncating for `GetStringHeight`
+	if GBB.DB.DontTrunicate then entry.Message:SetHeight(999) end
+
+	-- set sub element heights
+	local textPadding = 3 -- px
+	local messageHeight = GBB.DB.DontTrunicate and entry.Message:GetStringHeight() or entry.Message:GetLineHeight()
+	entry.Message:SetHeight(messageHeight + textPadding)
+	entry.Name:SetHeight(entry.Name:GetLineHeight() + textPadding)
+	entry.Time:SetHeight(entry.Time:GetLineHeight() + textPadding)
+
+	-- finally set the frame height
+	if layout == "normal" or layout == "chat" then
+		entry:SetHeight(entry.Message:GetHeight())
+	elseif layout == "two-line" then
+		entry:SetHeight(entry.Name:GetHeight() + entry.Message:GetHeight())
+	end
+end
+
+function EntryFrameMixin:UpdateTextLayout()
+	local request = self.requestData
+	assert(request, "No request data found for entry ", self)
+
+	--- Fill out the entry frames children with the request data
+	--- note: ran before `layoutEntryChildRegions` to get accurate returns from `GetStringHeight` of fontStrings
+	fillEntryChildRegions(self, request)
+
+	--- Adjust frame sizes and positions based on chosen layout
+	local layout = (GBB.DB.CompactStyle and "two-line") or (GBB.DB.ChatStyle and "chat") or "normal"
+	layoutEntryChildRegions(self, layout)
+end
+function EntryFrameMixin:UpdateInteractiveState()
+	-- When NOT isInteractive, only the Name should handle mouse events
+	local isInteractive = GBB.DB.WindowSettings.isInteractive
+	self:EnableMouse(isInteractive)
+	self.Name:EnableMouse(not isInteractive)
+	if not isInteractive then
+		self.Name:SetScript("OnMouseDown", function(_, button) self:OnMouseDown(button) end)
+		self.Name:SetScript("OnEnter", function() self:OnEnter() end)
+		self.Name:SetScript("OnLeave", function() self:OnLeave() end)
+		self:SetScript("OnMouseDown", nil)
+		self:SetScript("OnEnter", nil)
+		self:SetScript("OnLeave", nil)
 	else
-		if scale < 1 then
-			projectedHeight = entry.Name:GetStringHeight() + entry.Message:GetStringHeight()
-		else
-			projectedHeight = GBB.DB.DontTrunicate 
-				and entry.Message:GetStringHeight()
-				or lineHeight;
-		end
+		self:SetScript("OnMouseDown", self.OnMouseDown)
+		self:SetScript("OnEnter", self.OnEnter)
+		self:SetScript("OnLeave", self.OnLeave)
+		self.Name:SetScript("OnMouseDown", nil)
+		self.Name:SetScript("OnEnter", nil)
+		self.Name:SetScript("OnLeave", nil)
 	end
-	if not GBB.DB.DontTrunicate and forceHeight then
-		projectedHeight=forceHeight
-	end
-	
-	-- finally set element heights and return container height
-	entry.Message:SetHeight(projectedHeight)
-	entry.Name:SetHeight(entry.Name:GetStringHeight())
-	entry:SetPoint("TOPLEFT",_G[AnchorTop], "TOPLEFT", 10,-scrollPos)
-	entry:SetHeight(projectedHeight + bottomPadding)
-	entry:SetShown(req ~= nil)
+end
+function EntryFrameMixin:OnEnter()
+	local request = self.requestData
+	if not request then return end
 
+	GameTooltip_SetDefaultAnchor(GameTooltip,UIParent)
+	if not GBB.DB.EnableGroup then GameTooltip:SetOwner(GroupBulletinBoardFrame, "ANCHOR_BOTTOM", 0,0	)
+	else GameTooltip:SetOwner(GroupBulletinBoardFrame, "ANCHOR_BOTTOM", 0,-25) end
+
+	GameTooltip:ClearLines()
+
+	-- add message
+	GameTooltip:AddLine(request.message,0.9,0.9,0.9,1)
+
+	-- add time
+	if GBB.DB.ChatStyle then
+		GameTooltip:AddLine(string.format(GBB.L["msgLastTime"],GBB.formatTime(time()-request.last)).."|n"..string.format(GBB.L["msgTotalTime"],GBB.formatTime(time()-request.start)))
+	elseif GBB.DB.ShowTotalTime then
+		GameTooltip:AddLine(string.format(GBB.L["msgLastTime"],GBB.formatTime(time()-request.last)))
+	else
+		GameTooltip:AddLine(string.format(GBB.L["msgTotalTime"],GBB.formatTime(time()-request.start)))
+	end
+
+	-- add class icon and historical group info if previously grouped with this player
+	if GBB.DB.EnableGroup and GBB.GroupTrans and GBB.GroupTrans[request.name] then
+		local playerHistory=GBB.GroupTrans[request.name]
+
+		GameTooltip:AddLine(
+			(GBB.Tool.GetClassIcon(playerHistory.class) or "")
+			..("|c"..GBB.Tool.ClassColor[playerHistory.class].colorStr)
+			..playerHistory.name
+		)
+		if playerHistory.dungeon then GameTooltip:AddLine(playerHistory.dungeon) end
+		if playerHistory.Note then GameTooltip:AddLine(playerHistory.Note) end
+		GameTooltip:AddLine(SecondsToTime(GetServerTime()-playerHistory.lastSeen))
+	end
+
+	GameTooltip:Show()
+end
+function EntryFrameMixin:OnLeave() GameTooltip:Hide() end
+function EntryFrameMixin:OnMouseDown(button, down)
+	local req = self.requestData
+	if not req then return end
+	if button=="LeftButton" then
+		if IsShiftKeyDown() then
+			sendWhoRequest(req.name)
+		elseif IsAltKeyDown() then
+			GBB.SendJoinRequestMessage(req.name, req.dungeon, req.IsHeroic)
+		elseif IsControlKeyDown() then
+			sendInvite(req.name)
+		else
+			startWhisperChat(req.name)
+		end
+	else
+		GBB.CreateSharedBoardContextMenu(self, req)
+	end
+end
+
+local requestEntryFramePool = CreateObjectPool(function(pool)
+	local entry = CreateFrame("Frame", nil, GroupBulletinBoardFrame_ScrollChildFrame);
+	Mixin(entry, EntryFrameMixin)
+	EntryFrameMixin.OnLoad(entry)
+	GBB.Tool.EnableHyperlink(entry)
+	return entry
+end, Pool_HideAndClearAnchors)
+
+---@param scrollPos number current scroll position
+---@param req table request info table
+---@param forceHeight number? force the height of the entry item
+---@return number height The height of the entry item
+local function CreateItem(scrollPos, req, forceHeight)
+	local entry = requestEntryFramePool:Acquire() ---@type RequestListEntryFrame
+	entry.requestData = req
+	entry:UpdateTextLayout()
+	entry:UpdateInteractiveState()
+	entry:Show()
+
+	-- finally set element heights and return container height
+	entry:SetPoint("RIGHT", GroupBulletinBoardFrame_ScrollChildFrame, "RIGHT", 0, 0)
+	entry:SetPoint("TOPLEFT", GroupBulletinBoardFrame_ScrollChildFrame, "TOPLEFT", 10, -scrollPos)
+	if not GBB.DB.DontTrunicate and forceHeight then entry:SetHeight(forceHeight) end
 	return entry:GetHeight() -- final height
 end
 
----@param playerName string
-local function sendWhoRequest(playerName)
-	GBB.Tool.RunSlashCmd("/who " .. playerName)
-end
+local function CreateNoFiltersMessage()
+	local entry = requestEntryFramePool:Acquire()
+	entry.Name:SetWidth(0)
+	entry.Name:SetText("")
+	entry.Time:SetWidth(0)
+	entry.Time:SetText("")
+	entry.Message:SetText(GBB.L.NO_FILTERS_SELECTED)
+	entry.Message:SetFontObject("GameFontNormalLarge")
+	entry.Message:SetJustifyH("CENTER")
+	entry.Message:SetMaxLines(2)
+	entry.Message:SetTextColor(0.6, 0.6, 0.6, 0.6)
+	entry.Message:SetHeight(entry.Message:GetStringHeight())
+	entry:SetHeight(entry.Message:GetHeight())
+	entry:SetPoint("RIGHT", GroupBulletinBoardFrame_ScrollChildFrame, "RIGHT", 0, 0)
+	entry:SetPoint("TOPLEFT", GroupBulletinBoardFrame_ScrollChildFrame, "TOPLEFT", 10, 0)
+	entry:SetHeight(entry.Message:GetHeight())
 
----@param playerName string
-local function startWhisperChat(playerName)
-	ChatFrame_OpenChat("/w " .. playerName .." ")
-end
-
----@param playerName string
-local function sendInvite(playerName)
-	GBB.Tool.RunSlashCmd("/invite " .. playerName)
-end
-
----@param playerName string
-local function ignorePlayer(playerName)
-	for ir,req in pairs(GBB.RequestList) do
-		if type(req) == "table" and req.name == playerName then
-			req.last=0
-		end
+	-- override mouse down to open to the latest xpac filter settings
+	function entry:OnMouseDown()
+		GBB.OptionsBuilder.OpenCategoryPanel(2)
+		entry.OnMouseDown = EntryFrameMixin.OnMouseDown -- restore script
 	end
-	GBB.ClearNeeded=true
-	C_FriendList.AddIgnore(playerName)
+	entry:Show()
 end
-
----@param request table request data object
-local function dismissRequest(request)
-	for requestIdx, req in pairs(GBB.RequestList) do
-		local match = true
-		for _, criteria in ipairs({"name", "dungeon", "startTime"}) do
-			if request[criteria] ~= req[criteria] then
-				match = false; break;
-			end
-		end
-		if match then tremove(GBB.RequestList, requestIdx); break; end
-	end
-	GBB.UpdateList()
-end
+--------------------------------------------------------------------------------
 
 ---@param leaderName string
 ---@param dungeonKey string
@@ -438,27 +533,6 @@ function GBB.SendJoinRequestMessage(leaderName, dungeonKey, isHeroic)
 	SendChatMessage(msg, "WHISPER", nil, leaderName)
 end
 
-
-local function showNoFiltersMessage()
-	local idx = 1
-	CreateItem(0, idx, 1.25, nil, 30)
-	local entry = GBB.FramesEntries[idx]
-	entry.Name:SetWidth(0)
-	entry.Name:SetText("")
-	entry.Time:SetWidth(0)
-	entry.Time:SetText("")
-	entry.Message:SetText(GBB.L.NO_FILTERS_SELECTED)
-	entry.Message:SetFontObject("GameFontNormalLarge")
-	entry.Message:SetJustifyH("CENTER")
-	entry.Message:SetMaxLines(2)
-	entry.Message:SetTextColor(0.6, 0.6, 0.6, 0.6)
-	-- hack: used as an override to open the filter settings, called from `ClickRequest`
-	function entry.__custom_on_click()
-		GBB.OptionsBuilder.OpenCategoryPanel(2) -- opens to the latest xpac filters.
-		entry.__custom_on_click = nil;
-	end
-	entry:Show()
-end
 
 function GBB.Clear()
 	if GBB.ClearNeeded or GBB.ClearTimer<time() then
@@ -501,17 +575,10 @@ local function doesRequestMatchResultsFilter(message)
 	return true
 end
 
-local ownRequestDungeons={}
---- generates 100 elements(items) for display in the scroll list. These are stored in `GBB.FramesEntries` and are shown/hidden as needed depending on the data in `GBB.RequestList`.
+--- generates items for display in the scroll list. headers are stored in `GBB.FramesEntries` and are shown/hidden as needed depending on the data in `GBB.RequestList`.
 function GBB.UpdateList()
-
 	GBB.Clear()
-
-	if not GroupBulletinBoardFrame:IsVisible()  then
-		return
-	end
-
-	GBB.UserLevel=UnitLevel("player")
+	if not GroupBulletinBoardFrame:IsVisible() then return end
 
 	if GBB.DB.OrderNewTop then
 		if GBB.DB.ShowTotalTime then
@@ -527,31 +594,13 @@ function GBB.UpdateList()
 		end
 	end
 
-	-- Hide all exisiting scroll frame elements
-	for _, f in pairs(GBB.FramesEntries) do
-		f:Hide()
-	end
-
-	local AnchorTop="GroupBulletinBoardFrame_ScrollChildFrame"
-	local AnchorRight="GroupBulletinBoardFrame_ScrollChildFrame"
     local scrollHeight = 0
 	local count = 0
-	local itemScale = 1
 	local itemsInCategory = 0
-	local MAX_NUM_ITEMS = 100
-	local allItemsInitialized = not (#GBB.FramesEntries < MAX_NUM_ITEMS)
-	lastHeaderCategory= "" -- still used for managing padding between folded categorties in `CreateHeader`
-	local lastCategory
-
-	local itemWidth = GroupBulletinBoardFrame:GetWidth() -20-10-10
-	if GBB.DB.CompactStyle and not GBB.DB.ChatStyle then
-		itemScale=0.85
-	end
-
-	lastIsFolded=false
-	wipe(ownRequestDungeons)
+	local ownRequestDungeons = {}
+	local itemSpacing = 6
 	-- reset the list of existing headers to draw new ones
-	existingHeaders = {} 
+	existingHeaders = {}
 
 	if GBB.DBChar.DontFilterOwn then
 		for i,req in pairs(GBB.RequestList) do
@@ -561,18 +610,17 @@ function GBB.UpdateList()
 		end
 	end
 
-	local baseItemHeight = CreateItem(scrollHeight, 0, itemScale, nil)
-	
-	-- set scroll height slightly bigger than 1 element to account for category headers being taller
-	GroupBulletinBoardFrame_ScrollFrame.ScrollBar.scrollStep = baseItemHeight * 1.25 
+	local baseItemHeight = 25
 
-	if not allItemsInitialized then
-		for i = 1, MAX_NUM_ITEMS do
-			CreateItem(scrollHeight,i,itemScale,nil)
-		end
-	end
+	-- Hide all exisiting scroll frame elements
+	for _, f in pairs(GBB.FramesEntries) do f:Hide() end
+	requestEntryFramePool:ReleaseAll()
+
+	-- set scroll height slightly bigger than 1 element to account for category headers being taller
+	GroupBulletinBoardFrame_ScrollFrame.ScrollBar.scrollStep = baseItemHeight * 1.25
+
 	-- iterate request and generate headers and items for display
-	for requestIdx, req in pairs(GBB.RequestList) do
+	for _, req in pairs(GBB.RequestList) do
 		if type(req) == "table" then
 
 			if (req.last + GBB.DB.TimeOut > time()) -- not timed out
@@ -591,13 +639,13 @@ function GBB.UpdateList()
 					scrollHeight = CreateHeader(scrollHeight, requestDungeon)
 					itemsInCategory = 0; -- reset count on new category
 				end
-				
+
 				-- add entry
 				if GBB.FoldedDungeons[requestDungeon] ~= true -- not folded
 					and (not GBB.DB.EnableShowOnly -- no limit
 						or itemsInCategory < GBB.DB.ShowOnlyNb) -- or limit not reached
 				then
-					scrollHeight= scrollHeight + CreateItem(scrollHeight,requestIdx,itemScale,req) + 3 -- why add 3? 
+					scrollHeight = scrollHeight + CreateItem(scrollHeight, req) + itemSpacing
 					itemsInCategory = itemsInCategory + 1
 				end
 			end
@@ -605,9 +653,9 @@ function GBB.UpdateList()
 	end
 
 	-- Show a help message when users have less than `n` filters selected and 0 requests are shown
-	if GBB.GetNumActiveFilters() < 5 and count == 0 then showNoFiltersMessage() end
+	if GBB.GetNumActiveFilters() < 5 and count == 0 then CreateNoFiltersMessage() end
 
-	-- adds a window's woth of padding to the bottom of the scroll frame
+	-- adds a window's worth of padding to the bottom of the scroll frame
 	scrollHeight=scrollHeight+GroupBulletinBoardFrame_ScrollFrame:GetHeight()-20
 
 	GroupBulletinBoardFrame_ScrollChildFrame:SetHeight(scrollHeight)
@@ -1079,82 +1127,6 @@ function GBB.ClickDungeon(self,button)
 
 end
 
----@param entry RequestEntry
-function GBB.ClickRequest(entry, button)
-	local req = entry.requestInfo
-	if entry.__custom_on_click then entry.__custom_on_click(); return end
-	if not req then return end
-	if button=="LeftButton" then
-		if IsShiftKeyDown() then
-			sendWhoRequest(req.name)
-		elseif IsAltKeyDown() then
-			GBB.SendJoinRequestMessage(req.name, req.dungeon, req.IsHeroic)
-		elseif IsControlKeyDown() then
-			sendInvite(req.name)
-		else
-			startWhisperChat(req.name)
-		end
-	else
-		GBB.CreateSharedBoardContextMenu(entry, req)
-	end
-
-end
-
-
-function GBB.RequestShowTooltip(self)
-	for id in string.gmatch(self:GetName(), "GBB.Item_(.+)") do
-		local n=_G[self:GetName().."_message"]
-		local req=GBB.RequestList[tonumber(id)]
-		if not req then
-			return
-		end
-		GameTooltip_SetDefaultAnchor(GameTooltip,UIParent)
-		if not GBB.DB.EnableGroup then
-			GameTooltip:SetOwner(GroupBulletinBoardFrame, "ANCHOR_BOTTOM", 0,0	)
-		else
-			GameTooltip:SetOwner(GroupBulletinBoardFrame, "ANCHOR_BOTTOM", 0,-25)
-		end
-		GameTooltip:ClearLines()
-		local tip=""
-		if n:IsTruncated() then
-			GameTooltip:AddLine(req.message,0.9,0.9,0.9,1)
-		end
-
-		if GBB.DB.ChatStyle then
-			GameTooltip:AddLine(string.format(GBB.L["msgLastTime"],GBB.formatTime(time()-req.last)).."|n"..string.format(GBB.L["msgTotalTime"],GBB.formatTime(time()-req.start)))
-		elseif GBB.DB.ShowTotalTime then
-			GameTooltip:AddLine(string.format(GBB.L["msgLastTime"],GBB.formatTime(time()-req.last)))
-		else
-			GameTooltip:AddLine(string.format(GBB.L["msgTotalTime"],GBB.formatTime(time()-req.start)))
-		end
-
-		if GBB.DB.EnableGroup and GBB.GroupTrans and GBB.GroupTrans[req.name] then
-			local entry=GBB.GroupTrans[req.name]
-
-			GameTooltip:AddLine((GBB.Tool.GetClassIcon(entry.class) or "")..
-				"|c"..GBB.Tool.ClassColor[entry.class].colorStr ..
-				entry.name)
-			if entry.dungeon then
-				GameTooltip:AddLine(entry.dungeon)
-			end
-			if entry.Note then
-				GameTooltip:AddLine(entry.Note)
-			end
-			GameTooltip:AddLine(SecondsToTime(GetServerTime()-entry.lastSeen))
-		end
-
-    -- Integration with LogTracker addon (if addon is present and loaded)
-    if LogTracker then
-      LogTracker:AddPlayerInfoToTooltip(req.name);
-    end
-
-		GameTooltip:Show()
-	end
-end
-
-function GBB.RequestHideTooltip(self)
-	GameTooltip:Hide()
-end
 
 -- Function to update interactive state of all clickable elements
 function GBB.UpdateRequestListInteractiveState()
@@ -1187,26 +1159,7 @@ function GBB.UpdateRequestListInteractiveState()
 			header.Name:SetScript("OnLeave", not isInteractive and GenerateClosure(onHeaderMouseLeave, header) or nil)
         end
     end
-    -- When NOT isInteractive, only the Name should handle mouse events
-    for _, entry in pairs(GBB.FramesEntries) do
-        if entry:GetName() and entry:GetName():match("^GBB%.Item_") then
-            entry:EnableMouse(isInteractive)
-            entry.Name:EnableMouse(not isInteractive)
-            if not isInteractive then
-                entry.Name:SetScript("OnMouseDown", function(self, button) GBB.ClickRequest(entry, button) end)
-                entry.Name:SetScript("OnEnter", function(self) GBB.RequestShowTooltip(entry) end)
-                entry.Name:SetScript("OnLeave", function(self) GBB.RequestHideTooltip(entry) end)
-				entry:SetScript("OnMouseDown", nil)
-				entry:SetScript("OnEnter", nil)
-				entry:SetScript("OnLeave", nil)
-            else
-				entry.Name:SetScript("OnMouseDown", nil)
-				entry.Name:SetScript("OnEnter", nil)
-				entry.Name:SetScript("OnLeave", nil)
-				entry:SetScript("OnMouseDown", GBB.ClickRequest)
-				entry:SetScript("OnEnter", GBB.RequestShowTooltip)
-				entry:SetScript("OnLeave", GBB.RequestHideTooltip)
-            end
-        end
-    end
+    for entry in requestEntryFramePool:EnumerateActive() do
+		entry:UpdateInteractiveState()
+	end
 end
