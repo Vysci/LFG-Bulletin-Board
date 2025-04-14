@@ -218,7 +218,7 @@ local dungeonTags = {
 		zhCN = "厄运西",
 	},
 	DMN = { -- Dire Maul - Gordok Commons (DMN pre-cata)
-		enGB = "dmn dmnorth north tribute",
+		enGB = "dmn dmnorth north tribute dmt",
 		deDE = "tribut dbn nord dbnord",
 		ruRU = "дмн дмсевер север трибут трибьют",
 		frFR = "tribut nord",
