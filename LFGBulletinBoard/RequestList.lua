@@ -1,12 +1,9 @@
 local TOCNAME,
 	---@class Addon_RequestList : Addon_Tags, Addon_Tool
-	---@field FramesEntries RequestHeader[]
 	GBB = ...;
 
 --ScrollList / Request
 ------------------------------------------------------------------------------------- 
-local lastHeaderCategory = "" -- last category/dungeon header seen when building the scroll list
-local lastIsFolded
 local requestNil={dungeon="NIL",start=0,last=0,name=""}
 local isClassicEra = WOW_PROJECT_ID == WOW_PROJECT_CLASSIC
 
@@ -114,90 +111,130 @@ local function dismissRequest(request)
 	end
 	GBB.UpdateList()
 end
+--------------------------------------------------------------------------------
+-- Header Frame
+--------------------------------------------------------------------------------
 
--- track categories/dungeon keys that have had a header created
--- this table is wiped on every `GBB.UpdateList` when the board is re-drawn
-local existingHeaders= {}
+---@class RequestListHeaderFrame : Frame
+---@field categoryKey string Aka `dungeonKey`, identifies the dungeon/raid/category this header represents
+local HeaderFrameMixin = {}
+function HeaderFrameMixin:OnLoad()
+	self:SetPoint("RIGHT", GroupBulletinBoardFrame_ScrollChildFrame, "RIGHT")
+	self:SetHeight(20)
+	self.Name = self:CreateFontString(nil, "ARTWORK", "GameFontNormalLeft")
+	self.Name:SetAllPoints()
+	self.Name:SetJustifyV("MIDDLE")
 
--- add fontstring highlight on header hover
-local highlightForFontSize = {
-	GameFontNormal = "GameFontHighlight",
-	GameFontNormalSmall = "GameFontHighlightSmall",
-	GameFontNormalLarge = "GameFontHighlightLarge",
-}
----@param header RequestHeader
-local onHeaderMouseEnter = function(header)
-	if GBB.DB.ColorOnLevel then
-		-- save color escaped text
-		header.Name.savedText = header.Name:GetText()
-		local name, levels = header.Name.savedText:match("|c%x%x%x%x%x%x%x%x(.+)|r(.+)");
-		if name then
-			header.Name:SetText(name..(levels or ""))
+	self:SetScript("OnMouseDown", self.OnMouseDown)
+	self:SetScript("OnEnter", self.OnEnter)
+	self:SetScript("OnLeave", self.OnLeave)
+end
+
+---@param header RequestListHeaderFrame
+local updateHeaderTextColor = function(header)
+	local categoryKey = header.categoryKey
+	assert(categoryKey, "No category/dungeon key found for header", header)
+	local textColor = NORMAL_FONT_COLOR
+	if header:IsMouseOver() then textColor = HIGHLIGHT_FONT_COLOR
+	elseif GBB.DB.ColorOnLevel
+		and GBB.dungeonLevel[categoryKey][1] and GBB.dungeonLevel[categoryKey][1] > 0
+	then textColor = GBB.Tool.GetDungeonDifficultyColor(categoryKey) end
+	header.Name:SetTextColor(textColor:GetRGBA())
+end
+function HeaderFrameMixin:UpdateTextLayout()
+	local dungeon = self.categoryKey
+	local categoryName = GBB.dungeonNames[dungeon]
+	if GBB.FoldedDungeons[dungeon] then categoryName = "[+] "..categoryName end
+	local levelRange = GRAY_FONT_COLOR:WrapTextInColorCode(GBB.LevelRange(dungeon))
+
+	updateHeaderTextColor(self)
+
+	self.Name:SetText(("%s %s"):format(categoryName, levelRange))
+	self.Name:SetFontObject(GBB.DB.FontSize)
+	local lineHeight = self.Name:GetLineHeight()
+	local textPadding = 4 -- px, vspace around text
+	self.Name:SetHeight(lineHeight)
+	self:SetHeight(lineHeight + textPadding)
+end
+
+function HeaderFrameMixin:UpdateInteractiveState()
+	-- When NOT isInteractive, only the Name should handle mouse events
+	local isInteractive = GBB.DB.WindowSettings.isInteractive
+	self:EnableMouse(isInteractive)
+	self.Name:EnableMouse(not isInteractive)
+	self.Name:ClearAllPoints()
+	if not isInteractive then
+		self:SetScript("OnMouseDown", nil)
+		self:SetScript("OnEnter", nil)
+		self:SetScript("OnLeave", nil)
+		self.Name:SetScript("OnMouseDown", function(_, button) self:OnMouseDown(button) end)
+		self.Name:SetScript("OnEnter", function() self:OnEnter() end)
+		self.Name:SetScript("OnLeave", function() self:OnLeave() end)
+		self.Name:SetPoint("TOPLEFT")
+	else
+		self:SetScript("OnMouseDown", self.OnMouseDown)
+		self:SetScript("OnEnter", self.OnEnter)
+		self:SetScript("OnLeave", self.OnLeave)
+		self.Name:SetScript("OnMouseDown", nil)
+		self.Name:SetScript("OnEnter", nil)
+		self.Name:SetScript("OnLeave", nil)
+		self.Name:SetAllPoints()
+	end
+end
+function HeaderFrameMixin:OnEnter() updateHeaderTextColor(self) end
+function HeaderFrameMixin:OnLeave() updateHeaderTextColor(self) end
+
+local unfoldAllHeaders = function()
+	for k, v in pairs(GBB.FoldedDungeons) do
+		GBB.FoldedDungeons[k] = false
+	end
+	GBB.UpdateList()
+end
+local foldAllHeaders = function()
+	for k, v in pairs(GBB.FoldedDungeons) do
+		GBB.FoldedDungeons[k] = true
+	end
+	GBB.UpdateList()
+end
+function HeaderFrameMixin:OnMouseDown(button)
+	if not self.categoryKey then return end
+	-- Shift + Left-Click
+	if button=="LeftButton" and IsShiftKeyDown() then
+		if GBB.FoldedDungeons[self.categoryKey] then
+			unfoldAllHeaders()
+		else
+			foldAllHeaders()
 		end
-		header.Name:SetFontObject(highlightForFontSize[GBB.DB.FontSize or "GameFontNormal"])
+	-- Left-Click
+	elseif button=="LeftButton" then
+		GBB.FoldedDungeons[self.categoryKey] = not GBB.FoldedDungeons[self.categoryKey]
+		GBB.UpdateList()
+	-- Any other mouse click
+	else
+		GBB.CreateSharedBoardContextMenu(self, self.categoryKey)
 	end
 end
-local onHeaderMouseLeave = function(header)
-	if GBB.DB.ColorOnLevel then
-		-- restore color escaped text
-		header.Name:SetText(header.Name.savedText)
-	end
-	header.Name:SetFontObject(GBB.DB.FontSize or "GameFontNormal")
-end
+
+local headerFramePool = CreateObjectPool(function(pool)
+	local header = CreateFrame("Frame", nil, GroupBulletinBoardFrame_ScrollChildFrame)
+	Mixin(header, HeaderFrameMixin)
+	HeaderFrameMixin.OnLoad(header)
+	return header
+end, Pool_HideAndClearAnchors)
+
 ---@param scrollPos integer The current bottom pos from the top of the scroll frame
 ---@param dungeon string The dungeons "key" ie DM|MC|BWL|etc
 ---@return integer newScrollPos The updated bottom pos of the scroll frame after adding the header
 local function CreateHeader(scrollPos, dungeon)
-	local AnchorTop="GroupBulletinBoardFrame_ScrollChildFrame"
-	local ItemFrameName="GBB.Dungeon_"..dungeon
-	local header = GBB.FramesEntries[dungeon]
-	local padY = 4 -- px, vspace around text
+	local header = headerFramePool:Acquire() ---@type RequestListHeaderFrame
 	local bottomMargin = 3 -- px, vspace beneath the header
-	if not header then
-		---@class RequestHeader : Frame
-		header = CreateFrame(
-			"Frame", ItemFrameName,
-			GroupBulletinBoardFrame_ScrollChildFrame, "GroupBulletinBoard_TmpHeader"
-		);
-		header:SetPoint("RIGHT", GroupBulletinBoardFrame_ScrollChildFrame, "RIGHT")
-		header:SetScript("OnMouseDown", GBB.ClickDungeon)
-		header:SetHeight(20)
-		header.Name = _G[ItemFrameName.."_name"] ---@type FontString
-		header.Name:SetPoint("TOPLEFT", header, "TOPLEFT", 0, 0)
-		header.Name:SetPoint("BOTTOMLEFT", header, "BOTTOMLEFT", 0, 0)
-		header.Name:SetFontObject(GBB.DB.FontSize)
-		header.Name:SetJustifyH("LEFT")
-		header.Name:SetJustifyV("MIDDLE")
-
-		header:SetScript("OnEnter", onHeaderMouseEnter)
-		header:SetScript("OnLeave", onHeaderMouseLeave)
-
-		GBB.FramesEntries[dungeon] = header
-	end
-	
-	local categoryName = GBB.dungeonNames[dungeon]
-	local levelRange = WrapTextInColorCode(GBB.LevelRange(dungeon), "FFAAAAAA")
-	
-	if GBB.FoldedDungeons[dungeon] then
-		categoryName = "[+] "..categoryName
-	end
-	
-	if GBB.DB.ColorOnLevel and GBB.dungeonLevel[dungeon][1]
-	and GBB.dungeonLevel[dungeon][1] > 0
-	then
-		categoryName = GBB.Tool.GetDungeonDifficultyColor(dungeon):WrapTextInColorCode(categoryName)
-	end
-
-	header.Name:SetText(("%s %s"):format(categoryName, levelRange))
-	header.Name:SetFontObject(GBB.DB.FontSize)
-	local _, fontHeight = header.Name:GetFontObject():GetFont()
-	header:SetHeight(fontHeight + padY)
+	header.categoryKey = dungeon
+	header:UpdateTextLayout()
+	header:UpdateInteractiveState()
 	header:Show()
-	
+	header:SetPoint("RIGHT", GroupBulletinBoardFrame_ScrollChildFrame, "RIGHT")
 	header:SetPoint("TOPLEFT", GroupBulletinBoardFrame_ScrollChildFrame, "TOPLEFT", 0, -scrollPos)
 	scrollPos = scrollPos + header:GetHeight()
-	lastHeaderCategory = dungeon
-	existingHeaders[dungeon] = true
 	return scrollPos + bottomMargin
 end
 --------------------------------------------------------------------------------
@@ -575,7 +612,7 @@ local function doesRequestMatchResultsFilter(message)
 	return true
 end
 
---- generates items for display in the scroll list. headers are stored in `GBB.FramesEntries` and are shown/hidden as needed depending on the data in `GBB.RequestList`.
+--- generates items for display in the scroll list.
 function GBB.UpdateList()
 	GBB.Clear()
 	if not GroupBulletinBoardFrame:IsVisible() then return end
@@ -599,8 +636,7 @@ function GBB.UpdateList()
 	local itemsInCategory = 0
 	local ownRequestDungeons = {}
 	local itemSpacing = 6
-	-- reset the list of existing headers to draw new ones
-	existingHeaders = {}
+	local existingHeaders = {}
 
 	if GBB.DBChar.DontFilterOwn then
 		for i,req in pairs(GBB.RequestList) do
@@ -613,7 +649,7 @@ function GBB.UpdateList()
 	local baseItemHeight = 25
 
 	-- Hide all exisiting scroll frame elements
-	for _, f in pairs(GBB.FramesEntries) do f:Hide() end
+	headerFramePool:ReleaseAll()
 	requestEntryFramePool:ReleaseAll()
 
 	-- set scroll height slightly bigger than 1 element to account for category headers being taller
@@ -637,6 +673,7 @@ function GBB.UpdateList()
 				-- create header (if needed)
 				if not existingHeaders[requestDungeon] then
 					scrollHeight = CreateHeader(scrollHeight, requestDungeon)
+					existingHeaders[requestDungeon] = true
 					itemsInCategory = 0; -- reset count on new category
 				end
 
@@ -660,7 +697,6 @@ function GBB.UpdateList()
 
 	GroupBulletinBoardFrame_ScrollChildFrame:SetHeight(scrollHeight)
 	GroupBulletinBoardFrameFooterContainer.StatusText:SetText(string.format(GBB.L["msgNbRequest"], count))
-	GBB.UpdateRequestListInteractiveState()
 end
 
 function GBB.GetDungeons(msg,name)
@@ -1101,33 +1137,6 @@ function GBB.CreateSharedBoardContextMenu(parent, data, apiOverrides)
 	MenuUtil.CreateContextMenu(parent, menuGenerator)
 end
 
-function GBB.ClickDungeon(self,button)
-	local id=string.match(self:GetName(), "GBB.Dungeon_(.+)")
-	if id==nil or id==0 then return end
-
-	-- Shift + Left-Click
-	if button=="LeftButton" and IsShiftKeyDown() then
-		if GBB.FoldedDungeons[id] then
-			GBB.UnfoldAllDungeon()
-		else
-			GBB.FoldAllDungeon()
-		end
-	-- Left-Click
-	elseif button=="LeftButton" then
-		if GBB.FoldedDungeons[id] then
-			GBB.FoldedDungeons[id]=false
-		else
-			GBB.FoldedDungeons[id]=true
-		end
-		GBB.UpdateList()
-	-- Any other mouse click
-	else
-		GBB.CreateSharedBoardContextMenu(self, id)
-	end
-
-end
-
-
 -- Function to update interactive state of all clickable elements
 function GBB.UpdateRequestListInteractiveState()
     local isInteractive = GBB.DB.WindowSettings.isInteractive
@@ -1144,20 +1153,8 @@ function GBB.UpdateRequestListInteractiveState()
 		GroupBulletinBoardFrame_ScrollFrame:SetScript("OnDragStart", nil)
 		GroupBulletinBoardFrame_ScrollFrame:SetScript("OnDragStop", nil)
 	end
-    -- When NOT isInteractive, only the Name should handle mouse events
-    for _, header in pairs(GBB.FramesEntries) do
-        if header:GetName() and header:GetName():match("^GBB%.Dungeon_") then
-            header:EnableMouse(isInteractive)
-			header:SetScript("OnMouseDown", isInteractive and GBB.ClickDungeon or nil)
-			header:SetScript("OnEnter", isInteractive and onHeaderMouseEnter or nil)
-			header:SetScript("OnLeave", isInteractive and onHeaderMouseLeave or nil)
-			header.Name:EnableMouse(not isInteractive)
-			header.Name:SetScript("OnMouseDown", not isInteractive and function(_, button)
-				GBB.ClickDungeon(header, button)
-			end or nil)
-			header.Name:SetScript("OnEnter", not isInteractive and GenerateClosure(onHeaderMouseEnter, header) or nil)
-			header.Name:SetScript("OnLeave", not isInteractive and GenerateClosure(onHeaderMouseLeave, header) or nil)
-        end
+    for header in headerFramePool:EnumerateActive() do
+		header:UpdateInteractiveState()
     end
     for entry in requestEntryFramePool:EnumerateActive() do
 		entry:UpdateInteractiveState()

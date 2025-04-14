@@ -257,20 +257,7 @@
 			</OnEvent>
 		</Scripts>
 	</Frame>
-	
-	<Frame hidden="false" name="GroupBulletinBoard_TmpHeader" virtual="true">
-		<Layers>
-			<Layer level="ARTWORK">
-				<FontString name="$parent_name" text="samplename" inherits="GameFontNormal" maxLines="1" justifyH="LEFT" justifyV="TOP"/>					
-			</Layer>
-		</Layers>
-		<Scripts>
-			<OnMouseDown>
-				GroupBulletinBoard_Addon.ClickDungeon(self,button)
-			</OnMouseDown>
-		</Scripts>
-	</Frame>
-		<Frame hidden="false" name="GroupBulletinBoard_LfgTmpHeader" virtual="true">
+	<Frame hidden="false" name="GroupBulletinBoard_LfgTmpHeader" virtual="true">
 		<Layers>
 			<Layer level="ARTWORK">
 				<FontString name="$parent_name" text="samplename" inherits="GameFontNormal" maxLines="1" justifyH="LEFT" justifyV="TOP"/>					
