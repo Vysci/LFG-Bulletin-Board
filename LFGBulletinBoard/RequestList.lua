@@ -733,7 +733,7 @@ function GBB.GetDungeons(msg,name)
 	if dungeons["DEADMINES"] 
 		and not dungeons["DMW"] 
 		and not dungeons["DME"] 
-		and not dungeons["DME"] 
+		and not dungeons["DMN"]
 		and name ~= nil 
 	then
 		if nameLevel>0 and nameLevel<40 then
