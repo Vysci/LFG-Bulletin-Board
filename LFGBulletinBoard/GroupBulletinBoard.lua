@@ -805,7 +805,6 @@ function GBB.Init()
 
 	-- Reset Request-List
 	GBB.RequestList={}
-	GBB.FramesEntries={}
 
 	-- Timer-Stuff
 	GBB.MAXTIME=time() +60*60*24*365 --add a year!
