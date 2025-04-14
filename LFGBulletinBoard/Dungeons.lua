@@ -201,11 +201,12 @@ function GBB.GetDungeonSort(additonalCategories)
 	dungeonSort[dungeonSort["SM2"]] = "SM2"
 	dungeonSort[dungeonSort["DM2"]] = "DM2"
 
-	-- This is set to a high index with no reverse link because-
-	-- we dont ever want to show this in the list during `UpdateList()` (might not be relevant anymore)
-	-- Ideally the "DEADMINES" key should never make it to the `req.dungeon` field as it should be converted to either "DM" or "DM2"/"DMW"/"DME"/"DMN" in GBB.GetDungeon() 
+	-- This is set to a high index with no reverse link because we dont ever want to show this in `ChatRequests.UpdateRequestList()` (might not be relevant anymore)
+	-- Ideally the "DEADMINES" key should never make it to the `req.dungeon` field as it should be converted to either-
+	-- "DM" or "DM2"/"DMW"/"DME"/"DMN" in `getRequestMessageCategories()`
+	-- keeping this shim here until i fully understand what it even doing, though i suspect it's a relic of old code.
 	dungeonSort["DEADMINES"] = GBB.ENDINGDUNGEONEND + 20
-	
+
 	return dungeonSort
 end
 

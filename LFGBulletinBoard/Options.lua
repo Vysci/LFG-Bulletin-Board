@@ -277,7 +277,7 @@ function GBB.OptionsUpdate()
 	fixSecondaryTagFilters()
 	GBB.CreateTagList()
 	GBB.MinimapButton.UpdatePosition()
-	GBB.ClearNeeded = true
+	GBB.ChatRequests.UpdateRequestList(true)
 end
 
 --- Setup the options panels, creating and initializing settings widgets and their saved variables.

@@ -2,12 +2,16 @@ local TOCNAME,
 	---@class Addon_RequestList : Addon_Tags, Addon_Tool
 	GBB = ...;
 
---ScrollList / Request
-------------------------------------------------------------------------------------- 
 local requestNil={dungeon="NIL",start=0,last=0,name=""}
 local isClassicEra = WOW_PROJECT_ID == WOW_PROJECT_CLASSIC
 
-local function requestSort_TOP_TOTAL (a,b)
+-- Chat based request list module
+local ChatRequests = { }
+--------------------------------------------------------------------------------
+-- local function/helpers
+--------------------------------------------------------------------------------
+
+local function SortRequests_NewestByTotalTime (a,b)
 	if GBB.dungeonSort[a.dungeon] < GBB.dungeonSort[b.dungeon] then
 		return true
 	elseif GBB.dungeonSort[a.dungeon] == GBB.dungeonSort[b.dungeon]then
@@ -19,7 +23,7 @@ local function requestSort_TOP_TOTAL (a,b)
 	end
 	return false
 end
-local function requestSort_TOP_nTOTAL (a,b)
+local function SortRequests_NewestByLastUpdate (a,b)
 	if GBB.dungeonSort[a.dungeon] < GBB.dungeonSort[b.dungeon] then
 		return true
 	elseif GBB.dungeonSort[a.dungeon] == GBB.dungeonSort[b.dungeon] then
@@ -31,7 +35,7 @@ local function requestSort_TOP_nTOTAL (a,b)
 	end
 	return false
 end
-local function requestSort_nTOP_TOTAL (a,b)
+local function SortRequests_OldestByTotalTime (a,b)
 	if GBB.dungeonSort[a.dungeon] < GBB.dungeonSort[b.dungeon] then
 		return true
 	elseif GBB.dungeonSort[a.dungeon] == GBB.dungeonSort[b.dungeon] then
@@ -43,7 +47,7 @@ local function requestSort_nTOP_TOTAL (a,b)
 	end
 	return false
 end
-local function requestSort_nTOP_nTOTAL (a,b)	
+local function SortRequests_OldestByLastUpdate (a,b)
 	if GBB.dungeonSort[a.dungeon] < GBB.dungeonSort[b.dungeon] then
 		return true
 	elseif GBB.dungeonSort[a.dungeon] == GBB.dungeonSort[b.dungeon] then
@@ -55,23 +59,6 @@ local function requestSort_nTOP_nTOTAL (a,b)
 	end
 	return false
 end
-local subDungeonParentLookup = (function() 
-	local lookup = {}
-	for parentDungeon, secondaryKeys in pairs(GBB.dungeonSecondTags) do
-		for _, secondaryKey in ipairs(secondaryKeys) do
-			lookup[secondaryKey] = parentDungeon
-		end
-	end
-	-- set any unseen keys to false to reduce cache misses on repeated lookups
-	-- (table will repeatedly be accessed by the *same* set of keys so may as well)
-	setmetatable(lookup, {
-		__index = function(_, dungeonKey)
-			rawset(lookup, dungeonKey, false)
-			return false
-		end
-	})
-	return lookup
-end)()
 
 ---@param playerName string
 local function sendWhoRequest(playerName)
@@ -95,10 +82,10 @@ local function ignorePlayer(playerName)
 			req.last=0
 		end
 	end
-	GBB.ClearNeeded=true
+	ChatRequests.clearOnNextUpdate = true
 	C_FriendList.AddIgnore(playerName)
 end
----@param request table request data object
+---@param request ChatRequestData request data object
 local function dismissRequest(request)
 	for requestIdx, req in pairs(GBB.RequestList) do
 		local match = true
@@ -109,7 +96,405 @@ local function dismissRequest(request)
 		end
 		if match then tremove(GBB.RequestList, requestIdx); break; end
 	end
-	GBB.UpdateList()
+	ChatRequests.UpdateRequestList()
+end
+
+--- Used alongside the `GroupBulletinBoardFrameResultsFilter` editbox to filter requests by their message content.
+--- An empty editbox assumes no filter is set and all requests should be shown.
+---@param message string
+---@return boolean
+local function doesRequestMatchResultsFilter(message)
+	assert(
+		GroupBulletinBoardFrameResultsFilter and GroupBulletinBoardFrameResultsFilter.GetFilters,
+		"`GroupBulletinBoardFrameResultsFilter:GetFilters` not found. Forgot to call `GBB.Init`?"
+	)
+
+	local filters = GroupBulletinBoardFrameResultsFilter:GetFilters()
+	for _, filter in ipairs(filters) do
+		if not string.find(message:lower(), filter:lower(), nil, true) then
+			return false
+		end
+	end
+	return true
+end
+
+-- eg: {["DMN" | "DMW" | "DME"] => "DM2"}
+---@type { [string]: string|false }
+local subDungeonParentLookup do
+	local lookup = {}
+	-- setup known key mappings
+	for parentKey, secondaryKeys in pairs(GBB.dungeonSecondTags) do
+		if parentKey ~= "DEADMINES" then -- ignore DEADMINES it doesn't actually have sub dungeons
+			for _, secondaryKey in ipairs(secondaryKeys) do
+				lookup[secondaryKey] = parentKey
+			end
+		end
+	end
+	subDungeonParentLookup = setmetatable(lookup, {
+		-- set any unknown keys to false to reduce cache misses on repeated lookups
+		__index = function(self, key) rawset(self, key, false); return false end
+	})
+end
+
+--- Get the best dungeon/raid categories associated with a request message and player.
+---@param msg string? The message to parse
+---@param name string? Message author/sender name
+---@return {[string]: boolean?} dungeons Categories associated with the message
+---@return boolean? hasSearchTag Whether the message contains a TAGSEARCH or TRADE tag keyword
+---@return boolean? hasBlacklistTag Whether the message contains a blacklisted aka TAGBAD keyword
+---@return boolean? hasHeroicTag Whether the message contains keywords for the Heroic tag
+---@return integer? wordCount The number of words in the message
+local function getRequestMessageCategories(msg, name)
+	if msg==nil then return {} end
+	---Maps a [tagKey] => boolean. `true` if the dungeon/category is associated with message
+	local dungeons = {} ---@type table<string, boolean?>
+	local hasBlacklistTag = false
+	local hasHeroicTag = false
+	local hasRunTag = false
+	local hasSearchTag = false
+	local wordCount = 0
+	local runDungeonKey = nil
+
+	if GBB.DB.TagsZhcn then
+		for key, v in pairs(GBB.tagList) do
+			if strfind(msg:lower(), key) then
+				if v==GBB.TAGSEARCH then
+					hasSearchTag=true
+				elseif v==GBB.TAGBAD then
+					break
+				elseif v~=nil then
+					dungeons[v]=true
+				end
+			end
+		end
+		for key, v in pairs(GBB.HeroicKeywords) do
+			if strfind(msg:lower(), key) then
+				hasHeroicTag = true
+			end
+		end
+		wordCount = string.len(msg)
+	elseif GBB.DB.TagsZhtw then
+		for key, v in pairs(GBB.tagList) do
+			if strfind(msg:lower(), key) then
+				if v==GBB.TAGSEARCH then
+					hasSearchTag=true
+				elseif v==GBB.TAGBAD then
+					break
+				elseif v~=nil then
+					dungeons[v]=true
+				end
+			end
+		end
+		for key, v in pairs(GBB.HeroicKeywords) do
+			if strfind(msg:lower(), key) then
+				hasHeroicTag = true
+			end
+		end
+		wordCount = string.len(msg)
+	else
+		local parts = GBB.GetMessageWordList(msg)
+		for _, word in pairs(parts) do
+			if word == "run" or word == "runs" then hasRunTag = true end
+
+			local categoryTagKey = GBB.tagList[word]
+
+			if GBB.HeroicKeywords[word] ~= nil then hasHeroicTag = true end
+
+			if categoryTagKey == nil then
+				if GBB.tagList[word.."run"] ~= nil then
+					runDungeonKey = GBB.tagList[word.."run"]
+				end
+			elseif categoryTagKey == GBB.TAGBAD then
+				hasBlacklistTag = true
+				break;
+			elseif categoryTagKey == GBB.TAGSEARCH then
+				hasSearchTag = true
+			else
+				local skip = false
+				if dungeons.TRADE and categoryTagKey ~= "TRADE" then
+					-- if a trade keyword and dungeon keyword are both present, disambiguate between items and dungeons.
+					-- useful for dungeons with more general search patterns like "Throne of Four Winds"
+					local itemPattern =  "|hitem.*|h%[.*"..word..".*%]"
+					if msg:lower():find(itemPattern) then skip = true end
+				end
+				dungeons[categoryTagKey] = not skip
+			end
+		end
+		wordCount = #(parts)
+	end
+
+	if hasRunTag and runDungeonKey and hasBlacklistTag == false then
+		dungeons[runDungeonKey] = true
+	end
+
+	local authorPlayerLevel = 0
+	if name ~= nil then
+		if GBB.RealLevel[name] then
+			authorPlayerLevel = GBB.RealLevel[name]
+		else
+			for categoryKey, _ in pairs(dungeons) do
+				if GBB.dungeonLevel[categoryKey][1] > 0 and authorPlayerLevel < GBB.dungeonLevel[categoryKey][1] then
+					authorPlayerLevel = GBB.dungeonLevel[categoryKey][1]
+				end
+			end
+		end
+	end
+
+	-- disambiguate between "Deadmines" and "Diremaul" based on authors level
+	if dungeons["DEADMINES"]
+	and not dungeons["DMW"]
+	and not dungeons["DME"]
+	and not dungeons["DMN"]
+	and authorPlayerLevel > 0
+	then
+		if (authorPlayerLevel > 0) and (authorPlayerLevel < 40) then
+			dungeons["DM"]=true
+			dungeons["DM2"]=false
+		else
+			dungeons["DM"]=false
+			dungeons["DM2"]=true
+		end
+	end
+
+	-- fix dungeons for messages with categories that have secondary keys
+	if not hasBlacklistTag and hasSearchTag then
+		for parentKey, secondaryKeys in pairs(GBB.dungeonSecondTags) do
+			local messageHasSecondaryTags = false
+			if dungeons[parentKey] == true then
+				-- check if any secondary categories are present in the message
+				for _, secondKey in ipairs(secondaryKeys) do
+					-- check if secondary key is negative & get base key from it
+					-- eg ["DEADMINES"] = { "DM", "-DMW", "-DME", "-DMN" }
+					-- if secondKey is "-DMW" then the base dungeon key is "DMW"
+					if secondKey:sub(1, 1) == "-" then secondKey = secondKey:sub(2) end
+					if dungeons[secondKey] == true then
+						messageHasSecondaryTags = true
+						break;
+					end
+				end
+				-- if no secondary keys were found active, then force include all non-negative secondary key categories
+				-- eg for DEADMINES, it would only include "DM"
+				if not messageHasSecondaryTags then
+					for _, secondKey in ipairs(secondaryKeys) do
+						if secondKey:sub(1, 1) ~= "-" then dungeons[secondKey] = true end
+					end
+				end
+			end
+		end
+		-- if no dungeon categories were found in message, add the misc category.
+		if next(dungeons) == nil then dungeons["MISC"] = true end
+	end
+
+	-- remove all primary category keys who have secondary keys
+	-- eg: this removes "DM2" and "SM2"
+	for dungeonKey, _ in pairs(GBB.dungeonSecondTags) do
+		if dungeons[dungeonKey] == true then dungeons[dungeonKey] = nil end
+	end
+
+	if GBB.DB.CombineSubDungeons then
+		for parentKey, secondaryKeys in pairs(GBB.dungeonSecondTags) do
+			-- ignore DEADMINES it doesnt actually have sub dungeons
+			if parentKey ~= "DEADMINES" then
+				for _, altKey in pairs(secondaryKeys) do
+					if dungeons[altKey] then
+						dungeons[parentKey] = true
+						dungeons[altKey] = nil
+					end
+				end
+			end
+		end
+	end
+
+	-- isolate travel services without the "lfg" tags so they don't show up in dungeon categories
+	if GBB.DB.IsolateTravelServices
+		and hasSearchTag == false
+		and dungeons["TRAVEL"]
+	then
+		dungeons = { TRAVEL = true }
+	end
+
+	-- edge case: force include TRADE requests (ie "wts") as part of TAGSEARCH (ie "lfg")
+	if not hasBlacklistTag and not hasSearchTag and dungeons["TRADE"] then
+		hasSearchTag = true
+	end
+
+	return dungeons, hasSearchTag, hasBlacklistTag, hasHeroicTag, wordCount
+end
+
+local fullNameByGUID = {} ---@type table<string, string>
+
+--- Parse and incoming chat message, check if it can be categorized & update GBB.RequestList if so.
+---@param msg string chat message to parse
+---@param sender string message sender name
+---@param senderGUID string message sender guid
+---@param channel string message channel name
+local function parseMessageForRequestList(msg, sender, senderGUID, channel)
+	if GBB.Initalized==false or sender==nil or sender=="" or msg==nil or msg=="" or string.len(msg)<4 then
+		return
+	end
+
+	local appendTime = tonumber("0." .. math.random(100,999)) -- Append a random "millisecond" value.
+	local requestTime=tonumber(time() + appendTime)
+	local _, classFile, _, _, _, _, _ = GetPlayerInfoByGUID(senderGUID)
+
+	-- track server name by player guid (sometimes no server is seen on initial messages)
+	local name, server = strsplit("-", sender)
+	if server then fullNameByGUID[senderGUID] = sender end
+	if not GBB.DB.RemoveRealm then
+		sender = fullNameByGUID[senderGUID] or sender
+		-- "mail" shows all realms
+		-- "none" shows realm only when different realm
+		-- "guild" like "none", but doesnt show guild realms names.
+		name = Ambiguate(sender, "none")
+	end
+
+	if GBB.DB.RemoveRaidSymbols then msg = string.gsub(msg, "{.-}", "*")
+	else msg = string.gsub(msg, "{.-}", GBB.Tool.GetRaidIcon) end
+
+	local skipRequestListUpdate = false
+	-- iterate over all requests in the list and check if a request from the same sender exists
+	-- and append the message to the existing request if it exists
+	for _, req in pairs(GBB.RequestList) do
+		if type(req) == "table" and req.guid == senderGUID and req.last+GBB.COMBINEMSGTIMER>=requestTime then
+			-- if the last request seen was for `TRADE`, then skip updating the request list
+			if req.dungeon=="TRADE" then
+				skipRequestListUpdate=true
+				if msg ~= req.message then req.message = req.message.."|n"..msg end
+			elseif req.dungeon ~= "DEBUG" and req.dungeon ~= "BAD" then
+				if msg ~= req.message then msg = req.message.."|n"..msg end
+				break;
+			end
+		end
+	end
+	if skipRequestListUpdate==true then return end
+
+	-- hasSearchTag: true if the message contains a TAGSEARCH or TRADE tag/keyword
+	local dungeonMap, hasSearchTag, shouldBlacklist, isHeroic = getRequestMessageCategories(msg, name)
+	if type(dungeonMap) ~= "table" then return end
+
+	-- includes all requests from LFG channel (as long as there are no blacklist tags)
+	if GBB.DB.UseAllInLFG and shouldBlacklist == false and hasSearchTag == false
+	and string.lower(GBB.L["lfg_channel"]) == string.lower(channel)
+	then
+		-- add it to the misc category if no other dungeons/categories are found for message
+		if next(dungeonMap) == nil then dungeonMap["MISC"] = true end
+		hasSearchTag=true
+	end
+
+	-- if the message is still not good or should be blacklisted, clear the dungeonMap
+	if hasSearchTag == false or shouldBlacklist == true then dungeonMap = {} end
+
+	local validCategories = {}
+	for categoryKey, shouldUse in pairs(dungeonMap) do
+		if shouldUse == true then table.insert(validCategories, categoryKey) end
+	end
+	if #validCategories == 0 then
+		if GBB.DB.OnDebug then
+			local index = #GBB.RequestList + 1
+			GBB.RequestList[index] = {}
+			GBB.RequestList[index].name = name
+			GBB.RequestList[index].guid = senderGUID
+			GBB.RequestList[index].class = classFile
+			GBB.RequestList[index].start = requestTime
+			if shouldBlacklist then
+				GBB.RequestList[index].dungeon = "BAD"
+			else
+				GBB.RequestList[index].dungeon = "DEBUG"
+			end
+			GBB.RequestList[index].message = msg
+			GBB.RequestList[index].IsHeroic = isHeroic
+			GBB.RequestList[index].last = requestTime
+		end
+		return;
+	end
+
+	local isFriend = C_FriendList.IsFriend(senderGUID)
+	local isGuildMember = IsInGuild() and IsGuildMember(senderGUID)
+	local isPastPlayer = GBB.GroupTrans[name] ~= nil
+	local notifyCategories = {}
+	for _, categoryKey in ipairs(validCategories) do
+		-- look for a pre-existing request (if the incoming request is not a trade request)
+		local existingRequestIndex
+		if categoryKey ~= "TRADE" then
+			for requestIdx, req in pairs(GBB.RequestList) do
+				if type(req) == "table" and req.guid == senderGUID and req.dungeon == categoryKey then
+					existingRequestIndex = requestIdx
+					break;
+				end
+			end
+		end
+		local isRaid = GBB.RaidList[categoryKey] ~= nil
+		-- if no pre-existing request was found, create a new one
+		---@class ChatRequestData
+		local requestData = existingRequestIndex and GBB.RequestList[existingRequestIndex] or {}
+		if not existingRequestIndex then
+			GBB.RequestList[#GBB.RequestList + 1] = requestData
+			requestData.guid = senderGUID
+			requestData.class = classFile
+			requestData.start = requestTime
+			requestData.dungeon = categoryKey
+			-- only append non-new trade/misc categories to the notification text
+			if GBB.FilterDungeon(categoryKey, isHeroic, isRaid)
+			and categoryKey ~= "TRADE" and categoryKey ~= "MISC" and GBB.FoldedDungeons[categoryKey] ~= true
+			then
+				table.insert(notifyCategories, GBB.dungeonNames[categoryKey])
+			end
+		end
+		requestData.name = name -- update name incase realm found
+		requestData.IsGuildMember = isGuildMember
+		requestData.IsFriend = isFriend
+		requestData.IsPastPlayer = isPastPlayer
+		requestData.message = msg
+		requestData.IsHeroic = isHeroic
+		requestData.IsRaid = isRaid
+		requestData.last = requestTime
+	end
+
+	if #notifyCategories > 0 and GBB.AllowInInstance() then
+		if GBB.DB.NotifyChat then
+			local relationIcon = (
+				(isFriend
+					and string.format(GBB.TxtEscapePicture, GBB.FriendIcon)
+					or "")
+				..(isGuildMember
+					and string.format(GBB.TxtEscapePicture, GBB.GuildIcon)
+					or "")
+				..(isPastPlayer
+					and string.format(GBB.TxtEscapePicture, GBB.PastPlayerIcon)
+					or "")
+			);
+			local playerLink = "|Hplayer:"..name.."|h[|c"..GBB.Tool.ClassColor[classFile].colorStr..name.."|r]|h"
+
+			if GBB.DB.OneLineNotification then -- short text notification
+				DEFAULT_CHAT_FRAME:AddMessage(
+					("%s%s%s: %s"):format(GBB.MSGPREFIX, playerLink, relationIcon, msg),
+					GBB.DB.NotifyColor.r, GBB.DB.NotifyColor.g, GBB.DB.NotifyColor.b
+				)
+			else -- full text notification
+				local categories = notifyCategories[2] and table.concat(notifyCategories, ", ") or notifyCategories[1]
+				DEFAULT_CHAT_FRAME:AddMessage(
+					GBB.MSGPREFIX..string.format(GBB.L["msgNewRequest"], playerLink..relationIcon, categories),
+					GBB.DB.NotifyColor.r, GBB.DB.NotifyColor.g, GBB.DB.NotifyColor.b, 0.8
+				)
+				DEFAULT_CHAT_FRAME:AddMessage(("%s: %s"):format(playerLink..relationIcon, msg),
+					GBB.DB.NotifyColor.r, GBB.DB.NotifyColor.g, GBB.DB.NotifyColor.b
+				)
+			end
+		end
+		if GBB.DB.NotifySound then
+			PlaySound(GBB.NotifySound, GBB.DB.NotifySoundChannel)
+		end
+	end
+
+	-- clear any existing sender requests that were not generated from the request message
+	for requestIdx, req in pairs(GBB.RequestList) do
+		if type(req) == "table" then
+			if req.guid == senderGUID and req.last ~= requestTime then
+				GBB.RequestList[requestIdx] = nil
+				ChatRequests.clearOnNextUpdate = true
+			end
+		end
+	end
 end
 --------------------------------------------------------------------------------
 -- Header Frame
@@ -188,13 +573,13 @@ local unfoldAllHeaders = function()
 	for k, v in pairs(GBB.FoldedDungeons) do
 		GBB.FoldedDungeons[k] = false
 	end
-	GBB.UpdateList()
+	ChatRequests.UpdateRequestList()
 end
 local foldAllHeaders = function()
 	for k, v in pairs(GBB.FoldedDungeons) do
 		GBB.FoldedDungeons[k] = true
 	end
-	GBB.UpdateList()
+	ChatRequests.UpdateRequestList()
 end
 function HeaderFrameMixin:OnMouseDown(button)
 	if not self.categoryKey then return end
@@ -208,7 +593,7 @@ function HeaderFrameMixin:OnMouseDown(button)
 	-- Left-Click
 	elseif button=="LeftButton" then
 		GBB.FoldedDungeons[self.categoryKey] = not GBB.FoldedDungeons[self.categoryKey]
-		GBB.UpdateList()
+		ChatRequests.UpdateRequestList()
 	-- Any other mouse click
 	else
 		GBB.CreateSharedBoardContextMenu(self, self.categoryKey)
@@ -242,7 +627,7 @@ end
 --------------------------------------------------------------------------------
 
 ---@class RequestListEntryFrame: Frame
----@field requestData table? GBB.RequestList data object, expected for `UpdateTextLayout`
+---@field requestData ChatRequestData? GBB.RequestList data object, expected for `UpdateTextLayout`
 local EntryFrameMixin = {}
 function EntryFrameMixin:OnLoad()
 	self.Name = self:CreateFontString(nil, "ARTWORK", "GameFontNormalLeft")
@@ -267,7 +652,8 @@ function EntryFrameMixin:OnLoad()
 	GBB.Tool.EnableHyperlink(self)
 end
 
----@param entry RequestListEntryFrame
+---@param entry RequestListEntryFrame]
+---@param request ChatRequestData
 local fillEntryChildRegions = function(entry, request)
 	local formattedName = request.name
 	local playerLevel = GBB.RealLevel[request.name]
@@ -548,86 +934,74 @@ local function CreateNoFiltersMessage()
 	entry:Show()
 end
 --------------------------------------------------------------------------------
+-- Public API
+--------------------------------------------------------------------------------
 
----@param leaderName string
----@param dungeonKey string
----@param isHeroic boolean?
-function GBB.SendJoinRequestMessage(leaderName, dungeonKey, isHeroic)
-	if not GBB.DB.EnableJoinRequestMessage then return end
-	local dungeon = GBB.dungeonNames[dungeonKey] or dungeonKey
-	local msg = GBB.DB.JoinRequestMessage
-	local replacements = {
-		-- note: the '%' in '%key' needs to be lua escaped with another '%' for the `gsub` function.
-		-- (they DO NOT need to be escaped in the actual `JoinRequestMessage`strings tho).
-		["%%level"] = UnitLevel("player"),
-		["%%class"] = UnitClass("player"),
-		["%%role"] = GBB.DB.InviteRole or "DPS",
-		["%%dungeon"] = isHeroic and ("%s %s"):format(GBB.L["heroicAbr"], dungeon) or dungeon,
-	}
-	for key, value in pairs(replacements) do
-		msg = msg:gsub(key, value)
-	end
-	SendChatMessage(msg, "WHISPER", nil, leaderName)
-end
-
-
-function GBB.Clear()
-	if GBB.ClearNeeded or GBB.ClearTimer<time() then
-		local newRequest={}
-		GBB.ClearTimer=GBB.MAXTIME
-
-		for i,req in pairs(GBB.RequestList) do
-			if type(req) == "table" then
-				if req.last + GBB.DB.TimeOut * 3 > time() then
-					if req.last < GBB.ClearTimer then
-						GBB.ClearTimer=req.last
-					end
-					newRequest[#newRequest+1]=req
-
-				end
-			end
-		end
-		GBB.RequestList=newRequest
-		GBB.ClearTimer=GBB.ClearTimer+GBB.DB.TimeOut * 3
-		GBB.ClearNeeded=false
-	end
-end
-
---- Used alongside the `GroupBulletinBoardFrameResultsFilter` editbox to filter requests by their message content.
---- An empty editbox assumes no filter is set and all requests should be shown.
----@param message string
----@return boolean
-local function doesRequestMatchResultsFilter(message)
-	assert(
-		GroupBulletinBoardFrameResultsFilter and GroupBulletinBoardFrameResultsFilter.GetFilters, 
-		"`GroupBulletinBoardFrameResultsFilter` frame should be defined and initialized with a call to `GBB.Init` before calling `doesRequestMatchResultsFilter`."
-	)
-
-	local filters = GroupBulletinBoardFrameResultsFilter:GetFilters()
-	for _, filter in ipairs(filters) do
-		if not string.find(message:lower(), filter:lower(), nil, true) then
-			return false
+--- initialize the chat request list module. ran on addon load.
+function ChatRequests:Load()
+	GBB.RequestList = {}
+	-- set up chat event handlers for parsing messages for the request list
+	local onChatEvent = function(msg,name,_,_,_,_,_,channelID,channel,_,_,guid)
+		if not GBB.Initalized then return end
+		if GBB.DBChar and GBB.DBChar.channel and GBB.DBChar.channel[channelID] then
+			parseMessageForRequestList(msg,name,guid,channel)
 		end
 	end
-	return true
+	local onGuildChatEvent = function(...)
+		local args = { ... }
+		args[8] = 20; args[9] = GBB.L.GuildChannel;
+		onChatEvent(unpack(args))
+	end
+	GBB.Tool.RegisterEvent("CHAT_MSG_CHANNEL", onChatEvent)
+	GBB.Tool.RegisterEvent("CHAT_MSG_GUILD", onGuildChatEvent)
+	GBB.Tool.RegisterEvent("CHAT_MSG_OFFICER", onGuildChatEvent)
+
+	-- Timer-Stuff
+	self.clearOnNextUpdate = true -- clear out expired requests from the request list on next UpdateRequestList call
+	self.nextClearTime = math.huge -- next _scheduled_ time to clear out expired requests from the request list
 end
 
 --- generates items for display in the scroll list.
-function GBB.UpdateList()
-	GBB.Clear()
+---@param clearNeeded boolean? if true, clear out expired requests from the request list
+function ChatRequests.UpdateRequestList(clearNeeded)
+	-- Filter out stale/expired requests from the request list
+	local currentTime = time()
+	if (clearNeeded or ChatRequests.clearOnNextUpdate)
+	or (ChatRequests.nextClearTime < currentTime)
+	then
+		local validRequests = {}
+		-- allow triple the time before requests are removed from the underlying data completely
+		local maxRequestAge = GBB.DB.TimeOut * 3
+		ChatRequests.nextClearTime = math.huge
+		for _, req in pairs(GBB.RequestList) do
+			if type(req) == "table" then
+				local isExpired = currentTime > req.last + maxRequestAge
+				if not isExpired then
+					-- schedule next clear based on the oldest valid request
+					if req.last < ChatRequests.nextClearTime then ChatRequests.nextClearTime = req.last end
+					validRequests[#validRequests + 1] = req
+				end
+			end
+		end
+		GBB.RequestList = validRequests
+		ChatRequests.nextClearTime = ChatRequests.nextClearTime + maxRequestAge
+		ChatRequests.clearOnNextUpdate = false
+	end
+
 	if not GroupBulletinBoardFrame:IsVisible() then return end
 
+	-- sort requests
 	if GBB.DB.OrderNewTop then
 		if GBB.DB.ShowTotalTime then
-			table.sort(GBB.RequestList, requestSort_TOP_TOTAL)
+			table.sort(GBB.RequestList, SortRequests_NewestByTotalTime)
 		else
-			table.sort(GBB.RequestList, requestSort_TOP_nTOTAL)
+			table.sort(GBB.RequestList, SortRequests_NewestByLastUpdate)
 		end
 	else
 		if GBB.DB.ShowTotalTime then
-			table.sort(GBB.RequestList, requestSort_nTOP_TOTAL)
+			table.sort(GBB.RequestList, SortRequests_OldestByTotalTime)
 		else
-			table.sort(GBB.RequestList, requestSort_nTOP_nTOTAL)
+			table.sort(GBB.RequestList, SortRequests_OldestByLastUpdate)
 		end
 	end
 
@@ -638,9 +1012,11 @@ function GBB.UpdateList()
 	local itemSpacing = 6
 	local existingHeaders = {}
 
-	if GBB.DBChar.DontFilterOwn then
-		for i,req in pairs(GBB.RequestList) do
-			if type(req) == "table" and req.guid == UnitGUID("player") and req.last + GBB.DB.TimeOut*2 > time()then
+	if GBB.DBChar.DontFilterOwn then -- force include own requests
+		for _, req in pairs(GBB.RequestList) do
+			local timeOutMod = 2 -- allow double the time before own requests are considered expired
+			if type(req) == "table" and req.guid == UnitGUID("player") 
+				and currentTime <= req.last + (GBB.DB.TimeOut * timeOutMod) then
 				ownRequestDungeons[req.dungeon]=true
 			end
 		end
@@ -699,384 +1075,56 @@ function GBB.UpdateList()
 	GroupBulletinBoardFrameFooterContainer.StatusText:SetText(string.format(GBB.L["msgNbRequest"], count))
 end
 
-function GBB.GetDungeons(msg,name)
-	if msg==nil then return {} end
-	---Maps dungeonKey to boolean, `true` if the dungeon is asociated with message
-	---@type table<string, boolean?> 
-	local dungeons={}
-
-	local isBad=false
-	local isGood=false
-	local isHeroic=false
-
-	local runrequired=false
-	local hasrun=false
-	local runDungeon=""
-	local hasTag=false
-	local wordcount=0
-
-	if GBB.DB.TagsZhcn then
-		for key, v in pairs(GBB.tagList) do
-			if strfind(msg:lower(), key) then
-				if v==GBB.TAGSEARCH then
-					isGood=true
-				elseif v==GBB.TAGBAD then
-					break
-				elseif v~=nil then
-					dungeons[v]=true
-				end
-			end
-		end
-		for key, v in pairs(GBB.HeroicKeywords) do
-			if strfind(msg:lower(), key) then
-				isHeroic = true
-			end
-		end
-		wordcount = string.len(msg)
-	elseif GBB.DB.TagsZhtw then
-		for key, v in pairs(GBB.tagList) do
-			if strfind(msg:lower(), key) then
-				if v==GBB.TAGSEARCH then
-					isGood=true
-				elseif v==GBB.TAGBAD then
-					break
-				elseif v~=nil then
-					dungeons[v]=true
-				end
-			end
-		end
-		for key, v in pairs(GBB.HeroicKeywords) do
-			if strfind(msg:lower(), key) then
-				isHeroic = true
-			end
-		end
-		wordcount = string.len(msg)
+-- Update interactive state of all elements based on .isInteractive and .isMovable settings
+function ChatRequests.UpdateInteractiveState()
+    local isInteractive = GBB.DB.WindowSettings.isInteractive
+	local isMovable = GBB.DB.WindowSettings.isMovable
+	-- Register scroll parent for dragging when isInteractive and isMovable
+	if isInteractive and isMovable then
+		GroupBulletinBoardFrame_ScrollFrame:EnableMouse(true)
+		GroupBulletinBoardFrame_ScrollFrame:RegisterForDrag("LeftButton")
+		GroupBulletinBoardFrame_ScrollFrame:SetScript("OnDragStart", function() GroupBulletinBoardFrame:StartMoving() end)
+		GroupBulletinBoardFrame_ScrollFrame:SetScript("OnDragStop", function() GroupBulletinBoardFrame:StopMovingAndSaveAnchors() end)
 	else
-		local parts = GBB.GetMessageWordList(msg)
-		for _, word in pairs(parts) do
-			if word == "run" or word=="runs" then
-				hasrun=true
-			end
-
-			local x = GBB.tagList[word]
-
-			if GBB.HeroicKeywords[word] ~= nil then
-				isHeroic = true
-			end
-
-			if x==nil then
-				if GBB.tagList[word.."run"]~=nil then
-					runDungeon=GBB.tagList[word.."run"]
-					runrequired=true
-				end
-			elseif x==GBB.TAGBAD then
-				isBad=true
-				break
-			elseif x==GBB.TAGSEARCH then
-				hasTag=true
-				isGood=true
-			else
-				local skip = false
-				if dungeons.TRADE and x ~= "TRADE" then
-					-- if a trade keyword and dungeon keyword are both present
-					-- disambiguate between items and dungeons.
-
-					-- useful for dungeons with more general search patterns
-					-- like "Throne of Four Winds"
-
-					local itemPattern =  "|hitem.*|h%[.*"..word..".*%]"
-					if msg:lower():find(itemPattern) then
-						-- keyword was part of a linked item not a dungeon request
-						skip = true
-					end
-				end
-				dungeons[x]= not skip
-			end
-		end
-		wordcount = #(parts)
+		GroupBulletinBoardFrame_ScrollFrame:EnableMouse(false)
+		GroupBulletinBoardFrame_ScrollFrame:RegisterForDrag()
+		GroupBulletinBoardFrame_ScrollFrame:SetScript("OnDragStart", nil)
+		GroupBulletinBoardFrame_ScrollFrame:SetScript("OnDragStop", nil)
 	end
-
-	if runrequired and hasrun and runDungeon and isBad==false then
-		dungeons[runDungeon]=true
+    for header in headerFramePool:EnumerateActive() do
+		header:UpdateInteractiveState()
+    end
+    for entry in requestEntryFramePool:EnumerateActive() do
+		entry:UpdateInteractiveState()
 	end
-
-	local nameLevel= 0
-	if name~=nil then
-		if  GBB.RealLevel[name] then
-			nameLevel= GBB.RealLevel[name]
-		else
-			for dungeon,id in pairs(dungeons) do
-				if GBB.dungeonLevel[dungeon][1]>0 and nameLevel<GBB.dungeonLevel[dungeon][1] then
-
-					nameLevel=GBB.dungeonLevel[dungeon][1]
-				end
-			end
-		end
-	end
-
-	if dungeons["DEADMINES"] 
-		and not dungeons["DMW"] 
-		and not dungeons["DME"] 
-		and not dungeons["DMN"]
-		and name ~= nil 
-	then
-		if nameLevel>0 and nameLevel<40 then
-			dungeons["DM"]=true
-			dungeons["DM2"]=false
-		else
-			dungeons["DM"]=false
-			dungeons["DM2"]=true
-		end
-	end
-
-	if isBad then
-		--dungeons={}
-	elseif isGood then
-		for parentKey, secondKeys in pairs(GBB.dungeonSecondTags) do
-			local anySecondaryFound = false
-			if dungeons[parentKey] == true then
-				for _, altKey in ipairs(secondKeys) do
-					-- check if altKey is negative & get base dungeon key
-					if altKey:sub(1,1) == "-" then
-						altKey = altKey:sub(2) 
-					end
-
-					if dungeons[altKey] == true then
-						anySecondaryFound=true
-					end
-				end
-				if not anySecondaryFound then
-					for _, altKey in ipairs(secondKeys) do
-						if altKey:sub(1, 1) ~= "-" then
-							-- force enable all alt keys if none were found in message
-							dungeons[altKey]= true
-						end
-					end
-				end
-			end
-		end
-
-		if next(dungeons) == nil then
-			dungeons["MISC"]=true
-		end
-	elseif dungeons["TRADE"] then
-		isGood=true
-	end
-
-	-- remove all primary dungeon keys
-	for dungeonKey, _ in pairs(GBB.dungeonSecondTags) do
-		if dungeons[dungeonKey] == true then
-			-- this removes "DEADMINES" and keeps either DM or DM2
-			dungeons[dungeonKey] = nil
-		end
-	end
-
-	if GBB.DB.CombineSubDungeons then
-		for parentKey, secondaryKeys in pairs(GBB.dungeonSecondTags) do
-			-- ignore DEADMINES
-			-- its doesnt actually have sub dungeons
-			if parentKey ~= "DEADMINES" then
-				for _, altKey in pairs(secondaryKeys) do
-					if dungeons[altKey] then
-						dungeons[parentKey] = true
-						dungeons[altKey] = nil
-					end
-				end
-			end
-		end
-	end
-
-	-- isolate travel services so they don't show up in groups
-	if GBB.DB.IsolateTravelServices then
-		if dungeons["TRAVEL"] then
-			for ip,p in pairs(dungeons) do
-				if ip~="TRAVEL" and hasTag==false then
-					dungeons[ip]=false
-				end
-			end
-		end
-	end
-
-	return dungeons, isGood, isBad, wordcount, isHeroic
 end
 
-local fullNameByGUID = {} ---@type table<string, string> 
-function GBB.ParseMessage(msg,sender,guid,channel)
-	if GBB.Initalized==false or sender==nil or sender=="" or msg==nil or msg=="" or string.len(msg)<4 then
-		return
+GBB.ChatRequests = ChatRequests
+
+--- Sends a pre formatted join request message (`DB.JoinRequestMessage`) to a player.
+---@param leaderName string
+---@param dungeonKey string
+---@param isHeroic boolean?
+function GBB.SendJoinRequestMessage(leaderName, dungeonKey, isHeroic)
+	if not GBB.DB.EnableJoinRequestMessage then return end
+	local dungeon = GBB.dungeonNames[dungeonKey] or dungeonKey
+	local msg = GBB.DB.JoinRequestMessage
+	local replacements = {
+		-- note: the '%' in '%key' needs to be lua escaped with another '%' for the `gsub` function.
+		-- (they DO NOT need to be escaped in the actual `JoinRequestMessage`strings tho).
+		["%%level"] = UnitLevel("player"),
+		["%%class"] = UnitClass("player"),
+		["%%role"] = GBB.DB.InviteRole or "DPS",
+		["%%dungeon"] = isHeroic and ("%s %s"):format(GBB.L["heroicAbr"], dungeon) or dungeon,
+	}
+	for key, value in pairs(replacements) do
+		msg = msg:gsub(key, value)
 	end
-
-	local appendTime = tonumber("0." .. math.random(100,999)) -- Append a random "millisecond" value. 
-	local requestTime=tonumber(time() + appendTime)
-
-	local doUpdate=false
-
-	local locClass,engClass,locRace,engRace,Gender,gName,gRealm = GetPlayerInfoByGUID(guid)
-
-	-- track server name by player guid (sometimes no server is seen on initial messages)
-	local name, server = strsplit("-", sender)
-	if server then
-		fullNameByGUID[guid] = sender
-	end
-	if not GBB.DB.RemoveRealm then
-		sender = fullNameByGUID[guid] or sender
-		-- "mail" shows all realms
-		-- "none" shows realm only when different realm
-		-- "guild" like "none", but doesnt show guild realms names.
-		name = Ambiguate(sender, "none")
-	end
-
-	if GBB.DB.RemoveRaidSymbols then
-		msg=string.gsub(msg,"{.-}","*")
-	else
-		msg=string.gsub(msg,"{.-}",GBB.Tool.GetRaidIcon)
-	end
-
-	local updated=false
-	for ir,req in pairs(GBB.RequestList) do
-		if type(req) == "table" and req.guid == guid and req.last+GBB.COMBINEMSGTIMER>=requestTime then
-			if req.dungeon=="TRADE" then
-				updated=true
-				if msg~=req.message then
-					req.message=req.message .. "|n" .. msg
-				end
-			elseif req.dungeon~="DEBUG" and req.dungeon~="BAD" then
-				if msg~=req.message then
-					msg=req.message .. "|n" .. msg
-				end
-				break
-			end
-		end
-	end
-	if updated==true then
-		return
-	end
-	--flm RFD need healer and 3 dps
-	local dungeonList, isGood, isBad, wordcount, isHeroic = GBB.GetDungeons(msg,name)
-
-	if type(dungeonList) ~= "table" then return end
-
-	local dungeonTXT=""
-
-	if GBB.DB.UseAllInLFG and isBad==false and isGood==false and string.lower(GBB.L["lfg_channel"])==string.lower(channel) then
-		isGood=true
-		if next(dungeonList) == nil then
-			dungeonList["MISC"]=true
-		end
-	elseif isGood==false or isBad==true then
-		dungeonList={}
-	end
-
-	if wordcount>1 then
-		for dungeon,id in pairs(dungeonList) do
-			local index=0
-			if id== true and dungeon~=nil then
-
-				if dungeon~="TRADE" then
-					for ir,req in pairs(GBB.RequestList) do
-						if type(req) == "table" and req.guid == guid and req.dungeon == dungeon then
-							index=ir
-							break
-						end
-					end
-				end
-
-				local isRaid = GBB.RaidList[dungeon] ~= nil
-
-				if index==0 then
-					index=#GBB.RequestList +1
-					GBB.RequestList[index]={}
-					GBB.RequestList[index].guid=guid
-					GBB.RequestList[index].class=engClass
-					GBB.RequestList[index].start=requestTime
-					GBB.RequestList[index].dungeon=dungeon
-					GBB.RequestList[index].IsGuildMember=IsInGuild() and IsGuildMember(guid)
-					GBB.RequestList[index].IsFriend=C_FriendList.IsFriend(guid)
-					GBB.RequestList[index].IsPastPlayer=GBB.GroupTrans[name]~=nil
-
-					if GBB.FilterDungeon(dungeon, isHeroic, isRaid) and dungeon~="TRADE" and dungeon~="MISC" and GBB.FoldedDungeons[dungeon]~= true then
-						if dungeonTXT=="" then
-							dungeonTXT=GBB.dungeonNames[dungeon]
-						else
-							dungeonTXT=GBB.dungeonNames[dungeon]..", "..dungeonTXT
-						end
-					end
-				end
-
-				GBB.RequestList[index].name=name --update name incase realm found
-				GBB.RequestList[index].message=msg
-				GBB.RequestList[index].IsHeroic = isHeroic
-				GBB.RequestList[index].IsRaid = isRaid
-				GBB.RequestList[index].last=requestTime
-				doUpdate=true
-			end
-		end
-	end
-
-	if dungeonTXT~="" and GBB.AllowInInstance() then
-		if GBB.DB.NotifyChat then
-			local FriendIcon=(C_FriendList.IsFriend(guid) and string.format(GBB.TxtEscapePicture,GBB.FriendIcon) or "") ..
-						 ((IsInGuild() and IsGuildMember(guid)) and string.format(GBB.TxtEscapePicture,GBB.GuildIcon) or "") ..
-						 (GBB.GroupTrans[name]~=nil and string.format(GBB.TxtEscapePicture,GBB.PastPlayerIcon) or "" )
-			local linkname=	"|Hplayer:"..name.."|h[|c"..GBB.Tool.ClassColor[engClass].colorStr ..name.."|r]|h"
-			if GBB.DB.OneLineNotification then
-				DEFAULT_CHAT_FRAME:AddMessage(GBB.MSGPREFIX..linkname..FriendIcon..": "..msg,GBB.DB.NotifyColor.r,GBB.DB.NotifyColor.g,GBB.DB.NotifyColor.b)
-			else
-				DEFAULT_CHAT_FRAME:AddMessage(GBB.MSGPREFIX..string.format(GBB.L["msgNewRequest"],linkname..FriendIcon,dungeonTXT),GBB.DB.NotifyColor.r*.8,GBB.DB.NotifyColor.g*.8,GBB.DB.NotifyColor.b*.8)
-				DEFAULT_CHAT_FRAME:AddMessage(GBB.MSGPREFIX..msg,GBB.DB.NotifyColor.r,GBB.DB.NotifyColor.g,GBB.DB.NotifyColor.b)
-			end
-		end
-		if GBB.DB.NotifySound then
-			PlaySound(GBB.NotifySound, GBB.DB.NotifySoundChannel)
-		end
-	end
-
-
-	if doUpdate then
-		for i,req in pairs(GBB.RequestList) do
-			if type(req) == "table" then
-				if req.guid == guid and req.last ~= requestTime then
-					GBB.RequestList[i]=nil
-					GBB.ClearNeeded=true
-				end
-			end
-		end
-
-	elseif GBB.DB.OnDebug then
-
-		local index=#GBB.RequestList +1
-		GBB.RequestList[index]={}
-		GBB.RequestList[index].name=name
-		GBB.RequestList[index].guid=guid
-		GBB.RequestList[index].class=engClass
-		GBB.RequestList[index].start=requestTime
-		if isBad then
-			GBB.RequestList[index].dungeon="BAD"
-		else
-			GBB.RequestList[index].dungeon="DEBUG"
-		end
-
-		GBB.RequestList[index].message=msg
-		GBB.RequestList[index].IsHeroic = isHeroic
-		GBB.RequestList[index].last=requestTime
-	end
-
-end
-function GBB.UnfoldAllDungeon()
-	for k,v in pairs(GBB.FoldedDungeons) do
-		GBB.FoldedDungeons[k]=false
-	end
-	GBB.UpdateList()
-end
-function GBB.FoldAllDungeon()
-	for k,v in pairs(GBB.FoldedDungeons) do
-		GBB.FoldedDungeons[k]=true
-	end
-	GBB.UpdateList()
+	SendChatMessage(msg, "WHISPER", nil, leaderName)
 end
 
 ---@class SharedBoardContextMenuApiOverrides
-local apiOverridesEmpty = { -- table mostly here to give type hints,
+local ctxMenuEmptyOverrides = { -- table mostly here to give type hints,
 	fold = {}, ---@type { isSelected: (fun(key: string): boolean), setSelected: fun(key: string) }?
 	foldAll = {}, ---@type { onSelect: fun(key: string) }?
 	unfoldAll = {}, ---@type { onSelect: fun(key: string) }?
@@ -1088,8 +1136,8 @@ local apiOverridesEmpty = { -- table mostly here to give type hints,
 ---@param data string|{name: string, class: string}? either dungeonKey or request entry info table (name, class)
 ---@param apiOverrides? SharedBoardContextMenuApiOverrides # used to pass functions from LFGToolList.lua
 function GBB.CreateSharedBoardContextMenu(parent, data, apiOverrides)
-	if not apiOverrides then apiOverrides = apiOverridesEmpty;
-	else for k,v in pairs(apiOverridesEmpty) do apiOverrides[k] = apiOverrides[k] or v end end
+	if not apiOverrides then apiOverrides = ctxMenuEmptyOverrides;
+	else for k,v in pairs(ctxMenuEmptyOverrides) do apiOverrides[k] = apiOverrides[k] or v end end
 
 	local createThinDivider = function(rootDesc)
 		return rootDesc:CreateDivider():SetFinalInitializer(function(frame) frame:SetHeight(3) end)
@@ -1118,8 +1166,8 @@ function GBB.CreateSharedBoardContextMenu(parent, data, apiOverrides)
 				or function() return GBB.FoldedDungeons[data] end,
 				setSelected = apiOverrides.fold.setSelected
 				or function() GBB.FoldedDungeons[data] = (not GBB.FoldedDungeons[data]) end,
-				foldAll = apiOverrides.foldAll.onSelect or GBB.FoldAllDungeon,
-				unfoldAll = apiOverrides.unfoldAll.onSelect or GBB.UnfoldAllDungeon,
+				foldAll = apiOverrides.foldAll.onSelect or foldAllHeaders,
+				unfoldAll = apiOverrides.unfoldAll.onSelect or unfoldAllHeaders,
 			}
 			rootDesc:CreateCheckbox(GBB.L["BtnFold"], foldApi.isSelected, foldApi.setSelected, data)
 			local filterSetting = GBB.OptionsBuilder.GetSavedVarHandle(GBB.DBChar, "FilterDungeon"..data)
@@ -1135,28 +1183,4 @@ function GBB.CreateSharedBoardContextMenu(parent, data, apiOverrides)
 		rootDesc:CreateButton(CANCEL, nop)
 	end
 	MenuUtil.CreateContextMenu(parent, menuGenerator)
-end
-
--- Function to update interactive state of all clickable elements
-function GBB.UpdateRequestListInteractiveState()
-    local isInteractive = GBB.DB.WindowSettings.isInteractive
-	local isMovable = GBB.DB.WindowSettings.isMovable
-	-- Register scroll parent for dragging when isInteractive and isMovable
-	if isInteractive and isMovable then
-		GroupBulletinBoardFrame_ScrollFrame:EnableMouse(true)
-		GroupBulletinBoardFrame_ScrollFrame:RegisterForDrag("LeftButton")
-		GroupBulletinBoardFrame_ScrollFrame:SetScript("OnDragStart", function() GroupBulletinBoardFrame:StartMoving() end)
-		GroupBulletinBoardFrame_ScrollFrame:SetScript("OnDragStop", function() GroupBulletinBoardFrame:StopMovingAndSaveAnchors() end)
-	else
-		GroupBulletinBoardFrame_ScrollFrame:EnableMouse(false)
-		GroupBulletinBoardFrame_ScrollFrame:RegisterForDrag()
-		GroupBulletinBoardFrame_ScrollFrame:SetScript("OnDragStart", nil)
-		GroupBulletinBoardFrame_ScrollFrame:SetScript("OnDragStop", nil)
-	end
-    for header in headerFramePool:EnumerateActive() do
-		header:UpdateInteractiveState()
-    end
-    for entry in requestEntryFramePool:EnumerateActive() do
-		entry:UpdateInteractiveState()
-	end
 end
