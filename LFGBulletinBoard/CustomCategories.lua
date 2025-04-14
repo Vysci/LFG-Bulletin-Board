@@ -310,7 +310,7 @@ local removeFilterFromRequestList = function(key) ---@param key string
     end
     if anyRemoved then
         Addon.RequestList = requestList
-        Addon.UpdateList()
+        Addon.ChatRequests.UpdateRequestList()
     end
 end
 

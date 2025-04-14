@@ -1069,7 +1069,7 @@ local miscTags = {
 	  zhTW = nil,
 	  zhCN = nil,
 	},
-	MISC = { --[[Misc messages, no defined tags. see `GBB.GetDungeons`]]},
+	MISC = { --[[Misc messages, no defined tags. see getRequestDungeons in RequestList.lua]]},
 }
 
 --- Secondary Dungeon Tags: used for groupable categories such as Scarlet Monastery

@@ -661,7 +661,7 @@ local function InitializeEntryItem(entry, node)
 		entry.Name:SetJustifyV("TOP")
 		entry.Message:SetJustifyH("LEFT")
 		entry.Message:SetNonSpaceWrap(false)
-		if GBB.DontTrunicate then GBB.ClearNeeded=true end
+
 		-- add highlight hover tex. Draw on "HIGHTLIGHT" layer to use base xml highlighting script
 		local hoverTex = entry:CreateTexture(nil, "HIGHLIGHT")
 		-- padding used compensate text clipping out of its containing frame

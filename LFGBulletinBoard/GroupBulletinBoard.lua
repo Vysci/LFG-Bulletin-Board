@@ -24,10 +24,7 @@ local PartyChangeEvent={ "GROUP_JOINED", "GROUP_ROSTER_UPDATE", "RAID_ROSTER_UPD
 
 -------------------------------------------------------------------------------------
 
--- GBB.RequestForPopup
-
--- GBB.DataBrockerInitalized
-GBB.MSGPREFIX="LFG Bulletin Board: "
+GBB.MSGPREFIX="[LFG Bulletin Board]: "
 GBB.TAGBAD="---"
 GBB.TAGSEARCH="+++"
 
@@ -324,8 +321,7 @@ function GBB.ShowWindow()
 		GBB.UpdateGroupList()
     end
 	GroupBulletinBoardFrame:Show()
-	GBB.ClearNeeded=true	 
-	GBB.UpdateList()
+	GBB.ChatRequests.UpdateRequestList(true)
 	GBB.ResizeFrameList()
 end
 
@@ -802,16 +798,9 @@ function GBB.Init()
 
 	-- Load LFGList tool module
 	GBB.LfgTool:Load()
+	-- Load Chat Request List module
+	GBB.ChatRequests:Load()
 
-	-- Reset Request-List
-	GBB.RequestList={}
-
-	-- Timer-Stuff
-	GBB.MAXTIME=time() +60*60*24*365 --add a year!
-	
-	GBB.ClearNeeded=true
-	GBB.ClearTimer=GBB.MAXTIME	
-	
 	GBB.LFG_Timer=time()+GBB.LFG_UPDATETIME
 	GBB.LFG_Successfulljoined=false
 
@@ -966,7 +955,7 @@ function GBB.Init()
 	GroupBulletinBoardFrameResultsFilter:SetFontObject(GBB.DB.FontSize);
 	GroupBulletinBoardFrameResultsFilter:SetTextColor(1, 1, 1, 1);
 	GroupBulletinBoardFrameResultsFilter:HookScript("OnTextChanged", function(self) 
-		GBB.UpdateList()
+		GBB.ChatRequests.UpdateRequestList()
 		-- cache filters early
 		self.filterPatterns = { };
 		local filterText = self:GetText()
@@ -991,7 +980,7 @@ function GBB.Init()
 	GBB.Tool.EnableSize(GroupBulletinBoardFrame,8,nil,function()	
 		GBB.ResizeFrameList()
 		GBB.SaveAnchors()
-		GBB.UpdateList()
+		GBB.ChatRequests.UpdateRequestList()
 		GBB.LfgTool.OnFrameResized()
 		end
 	)
@@ -1013,7 +1002,7 @@ function GBB.Init()
         windowSettings.isMovable:AddUpdateHook(setBulletinBoardMovableState)
         setBulletinBoardMovableState(windowSettings.isMovable:GetValue())
         local setBulletinBoardInteractiveState = function(isInteractive)
-            GBB.UpdateRequestListInteractiveState()
+            GBB.ChatRequests.UpdateInteractiveState()
             GBB.LfgTool:UpdateInteractiveState()
             GroupBulletinBoardFrame:EnableMouse(isInteractive and windowSettings.isMovable:GetValue())
         end
@@ -1240,19 +1229,6 @@ local function Event_CHAT_MSG_SYSTEM(arg1)
 	end	
 end
 
-local function Event_CHAT_MSG_CHANNEL(msg,name,_3,_4,_5,_6,_7,channelID,channel,_10,_11,guid)
-	if not GBB.Initalized then return end
-	--print("channel:"..tostring(channelID))
-	if GBB.DBChar and GBB.DBChar.channel and GBB.DBChar.channel[channelID] then
-		GBB.ParseMessage(msg,name,guid,channel)
-	end
-end
-
-local function Event_GuildMessage(msg,name,_3,_4,_5,_6,_7,channelID,channel,_10,_11,guid)
-	Event_CHAT_MSG_CHANNEL(msg,name,_3,_4,_5,_6,_7,20,GBB.L.GuildChannel,_10,_11,guid)
-end
-
-
 local function Event_ADDON_LOADED(arg1)
 	if arg1 == TOCNAME then
 		GBB.Init()
@@ -1272,9 +1248,6 @@ end
 function GBB.OnLoad()	
 	GBB.Tool.RegisterEvent("ADDON_LOADED",Event_ADDON_LOADED)
 	GBB.Tool.RegisterEvent("CHAT_MSG_SYSTEM",Event_CHAT_MSG_SYSTEM)
-	GBB.Tool.RegisterEvent("CHAT_MSG_CHANNEL",Event_CHAT_MSG_CHANNEL)
-	GBB.Tool.RegisterEvent("CHAT_MSG_GUILD",Event_GuildMessage)
-	GBB.Tool.RegisterEvent("CHAT_MSG_OFFICER",Event_GuildMessage)
 	
 	for i,event in ipairs(PartyChangeEvent) do
 		GBB.Tool.RegisterEvent(event,GBB.UpdateGroupList)
@@ -1303,7 +1276,7 @@ function GBB.OnUpdate(elapsed)
 
 		if GBB.ElapsedSinceListUpdate > 1 then
 			if GBB.GetSelectedTab() == GBB.Enum.Tabs.ChatRequests then
-				GBB.UpdateList()
+				GBB.ChatRequests.UpdateRequestList()
 			end
 			GBB.ElapsedSinceListUpdate = 0;
 		else
