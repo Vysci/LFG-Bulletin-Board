@@ -118,25 +118,7 @@ local function doesRequestMatchResultsFilter(message)
 	return true
 end
 
--- eg: {["DMN" | "DMW" | "DME"] => "DM2"}
----@type { [string]: string|false }
-local subDungeonParentLookup do
-	local lookup = {}
-	-- setup known key mappings
-	for parentKey, secondaryKeys in pairs(GBB.dungeonSecondTags) do
-		if parentKey ~= "DEADMINES" then -- ignore DEADMINES it doesn't actually have sub dungeons
-			for _, secondaryKey in ipairs(secondaryKeys) do
-				lookup[secondaryKey] = parentKey
-			end
-		end
-	end
-	subDungeonParentLookup = setmetatable(lookup, {
-		-- set any unknown keys to false to reduce cache misses on repeated lookups
-		__index = function(self, key) rawset(self, key, false); return false end
-	})
-end
-
----Normalize and fuzzify a string based on common variations of dungeon/raid tags and punctuations.
+---Normalize and fuzzy a string based on common variations of dungeon/raid tags and punctuations.
 ---@type function
 local getFuzzyNormalizedWords do
 	-- normalizes uses of apostrophes/backticks, mostly useful for frFR.
@@ -212,13 +194,12 @@ local getFuzzyNormalizedWords do
 end
 --- Get the best dungeon/raid categories associated with a request message and player.
 ---@param msg string? The message to parse
----@param name string? Message author/sender name
----@return {[string]: boolean?} dungeons Categories associated with the message
----@return boolean? hasSearchTag Whether the message contains a TAGSEARCH or TRADE tag keyword
----@return boolean? hasBlacklistTag Whether the message contains a blacklisted aka TAGBAD keyword
+---@param sender string? Message author/sender name
+---@param fromLFGChannel boolean? true if the message is from server the LFG channel
+---@return {[string]: boolean?} categories Categories associated with the message
 ---@return boolean? hasHeroicTag Whether the message contains keywords for the Heroic tag
----@return integer? wordCount The number of words in the message
-local function getRequestMessageCategories(msg, name)
+---@return boolean? hasBlacklistTag Whether the message contains a blacklisted aka TAGBAD keyword
+local function getRequestMessageCategories(msg, sender, fromLFGChannel)
 	if msg==nil then return {} end
 	---Maps a [tagKey] => boolean. `true` if the dungeon/category is associated with message
 	local dungeons = {} ---@type table<string, boolean?>
@@ -226,7 +207,6 @@ local function getRequestMessageCategories(msg, name)
 	local hasHeroicTag = false
 	local hasRunTag = false
 	local hasSearchTag = false
-	local wordCount = 0
 	local runDungeonKey = nil
 
 	if GBB.DB.TagsZhcn then
@@ -246,7 +226,6 @@ local function getRequestMessageCategories(msg, name)
 				hasHeroicTag = true
 			end
 		end
-		wordCount = string.len(msg)
 	elseif GBB.DB.TagsZhtw then
 		for key, v in pairs(GBB.tagList) do
 			if strfind(msg:lower(), key) then
@@ -264,7 +243,6 @@ local function getRequestMessageCategories(msg, name)
 				hasHeroicTag = true
 			end
 		end
-		wordCount = string.len(msg)
 	else
 		local wordList = getFuzzyNormalizedWords(msg)
 		for _, word in ipairs(wordList) do
@@ -294,7 +272,6 @@ local function getRequestMessageCategories(msg, name)
 				dungeons[categoryTagKey] = not skip
 			end
 		end
-		wordCount = #(wordList)
 	end
 
 	if hasRunTag and runDungeonKey and hasBlacklistTag == false then
@@ -302,9 +279,9 @@ local function getRequestMessageCategories(msg, name)
 	end
 
 	local authorPlayerLevel = 0
-	if name ~= nil then
-		if GBB.RealLevel[name] then
-			authorPlayerLevel = GBB.RealLevel[name]
+	if sender ~= nil then
+		if GBB.RealLevel[sender] then
+			authorPlayerLevel = GBB.RealLevel[sender]
 		else
 			for categoryKey, _ in pairs(dungeons) do
 				if GBB.dungeonLevel[categoryKey][1] > 0 and authorPlayerLevel < GBB.dungeonLevel[categoryKey][1] then
@@ -330,69 +307,74 @@ local function getRequestMessageCategories(msg, name)
 		end
 	end
 
-	-- fix dungeons for messages with categories that have secondary keys
-	if not hasBlacklistTag and hasSearchTag then
-		for parentKey, secondaryKeys in pairs(GBB.dungeonSecondTags) do
-			local messageHasSecondaryTags = false
-			if dungeons[parentKey] == true then
-				-- check if any secondary categories are present in the message
-				for _, secondKey in ipairs(secondaryKeys) do
-					-- check if secondary key is negative & get base key from it
-					-- eg ["DEADMINES"] = { "DM", "-DMW", "-DME", "-DMN" }
-					-- if secondKey is "-DMW" then the base dungeon key is "DMW"
-					if secondKey:sub(1, 1) == "-" then secondKey = secondKey:sub(2) end
-					if dungeons[secondKey] == true then
-						messageHasSecondaryTags = true
-						break;
-					end
-				end
-				-- if no secondary keys were found active, then force include all non-negative secondary key categories
-				-- eg for DEADMINES, it would only include "DM"
-				if not messageHasSecondaryTags then
+	local isValidRequest do
+		-- anything with TAGSEARCH is always valid
+		if hasSearchTag then isValidRequest = true end
+		-- otherwise, anything with TRADE is always valid
+		if dungeons.TRADE then isValidRequest = true end
+		-- when UseAllInLFG option set, anything from LFG channel is always valid
+		if GBB.DB.UseAllInLFG and fromLFGChannel then isValidRequest = true end
+	end
+
+	local validCategories = {}
+	if isValidRequest and not hasBlacklistTag then
+		-- check for the case of isolating travel services without the "lfg" tags
+		if GBB.DB.IsolateTravelServices and dungeons.TRAVEL and not hasSearchTag then
+			dungeons = { TRAVEL = true }
+		else
+			-- otherwise fix dungeons for messages with categories that have secondary keys
+			for parentKey, secondaryKeys in pairs(GBB.dungeonSecondTags) do
+				local messageHasSecondaryTags = false
+				if dungeons[parentKey] == true then
+					-- check if any secondary categories are present in the message
 					for _, secondKey in ipairs(secondaryKeys) do
-						if secondKey:sub(1, 1) ~= "-" then dungeons[secondKey] = true end
+						-- check if secondary key is negative & get base key from it
+						-- eg ["DEADMINES"] = { "DM", "-DMW", "-DME", "-DMN" }
+						-- if secondKey is "-DMW" then the base dungeon key is "DMW"
+						if secondKey:sub(1, 1) == "-" then secondKey = secondKey:sub(2) end
+						if dungeons[secondKey] == true then
+							messageHasSecondaryTags = true
+							break;
+						end
+					end
+					-- if no secondary keys were found active, then force include all non-negative secondary key categories
+					-- eg for DEADMINES, it would only include "DM"
+					if not messageHasSecondaryTags then
+						for _, secondKey in ipairs(secondaryKeys) do
+							if secondKey:sub(1, 1) ~= "-" then dungeons[secondKey] = true end
+						end
 					end
 				end
 			end
-		end
-		-- if no dungeon categories were found in message, add the misc category.
-		if next(dungeons) == nil then dungeons["MISC"] = true end
-	end
-
-	-- remove all primary category keys who have secondary keys
-	-- eg: this removes "DM2" and "SM2"
-	for dungeonKey, _ in pairs(GBB.dungeonSecondTags) do
-		if dungeons[dungeonKey] == true then dungeons[dungeonKey] = nil end
-	end
-
-	if GBB.DB.CombineSubDungeons then
-		for parentKey, secondaryKeys in pairs(GBB.dungeonSecondTags) do
-			-- ignore DEADMINES it doesnt actually have sub dungeons
-			if parentKey ~= "DEADMINES" then
-				for _, altKey in pairs(secondaryKeys) do
-					if dungeons[altKey] then
-						dungeons[parentKey] = true
-						dungeons[altKey] = nil
+			if not GBB.DB.CombineSubDungeons then -- default behavior
+				-- remove all parent categories who have secondary keys
+				-- eg: this removes "DM2" and "SM2" "DEADMINES"
+				for dungeonKey, _ in pairs(GBB.dungeonSecondTags) do
+					if dungeons[dungeonKey] == true then dungeons[dungeonKey] = nil end
+				end
+			else -- otherwise, all secondary keys and include their parent keys
+				for parentKey, secondaryKeys in pairs(GBB.dungeonSecondTags) do
+					-- ignore DEADMINES it doesnt actually have sub dungeons
+					if parentKey ~= "DEADMINES" then
+						for _, altKey in pairs(secondaryKeys) do
+							if dungeons[altKey] then
+								dungeons[parentKey] = true
+								dungeons[altKey] = nil
+							end
+						end
 					end
 				end
 			end
+			-- if no dungeon categories were found in message, add the misc category.
+			if next(dungeons) == nil then dungeons["MISC"] = true end
+		end
+		-- build the list of valid categories
+		for categoryKey, include in pairs(dungeons) do
+			if include == true then table.insert(validCategories, categoryKey) end
 		end
 	end
 
-	-- isolate travel services without the "lfg" tags so they don't show up in dungeon categories
-	if GBB.DB.IsolateTravelServices
-		and hasSearchTag == false
-		and dungeons["TRAVEL"]
-	then
-		dungeons = { TRAVEL = true }
-	end
-
-	-- edge case: force include TRADE requests (ie "wts") as part of TAGSEARCH (ie "lfg")
-	if not hasBlacklistTag and not hasSearchTag and dungeons["TRADE"] then
-		hasSearchTag = true
-	end
-
-	return dungeons, hasSearchTag, hasBlacklistTag, hasHeroicTag, wordCount
+	return validCategories, hasHeroicTag, hasBlacklistTag
 end
 
 local fullNameByGUID = {} ---@type table<string, string>
@@ -442,27 +424,10 @@ local function parseMessageForRequestList(msg, sender, senderGUID, channel)
 	end
 	if skipRequestListUpdate==true then return end
 
-	-- hasSearchTag: true if the message contains a TAGSEARCH or TRADE tag/keyword
-	local dungeonMap, hasSearchTag, shouldBlacklist, isHeroic = getRequestMessageCategories(msg, name)
-	if type(dungeonMap) ~= "table" then return end
+	local isLFGChannel = string.lower(GBB.L["lfg_channel"]) == string.lower(channel)
+	local validCategories, isHeroic, isBlacklisted = getRequestMessageCategories(msg, name, isLFGChannel)
 
-	-- includes all requests from LFG channel (as long as there are no blacklist tags)
-	if GBB.DB.UseAllInLFG and shouldBlacklist == false and hasSearchTag == false
-	and string.lower(GBB.L["lfg_channel"]) == string.lower(channel)
-	then
-		-- add it to the misc category if no other dungeons/categories are found for message
-		if next(dungeonMap) == nil then dungeonMap["MISC"] = true end
-		hasSearchTag=true
-	end
-
-	-- if the message is still not good or should be blacklisted, clear the dungeonMap
-	if hasSearchTag == false or shouldBlacklist == true then dungeonMap = {} end
-
-	local validCategories = {}
-	for categoryKey, shouldUse in pairs(dungeonMap) do
-		if shouldUse == true then table.insert(validCategories, categoryKey) end
-	end
-	if #validCategories == 0 then
+	if #validCategories == 0 then -- add to debug list and exit early if no valid categories
 		if GBB.DB.OnDebug then
 			local index = #GBB.RequestList + 1
 			GBB.RequestList[index] = {}
@@ -470,11 +435,7 @@ local function parseMessageForRequestList(msg, sender, senderGUID, channel)
 			GBB.RequestList[index].guid = senderGUID
 			GBB.RequestList[index].class = classFile
 			GBB.RequestList[index].start = requestTime
-			if shouldBlacklist then
-				GBB.RequestList[index].dungeon = "BAD"
-			else
-				GBB.RequestList[index].dungeon = "DEBUG"
-			end
+			GBB.RequestList[index].dungeon = isBlacklisted and "BAD" or "DEBUG"
 			GBB.RequestList[index].message = msg
 			GBB.RequestList[index].IsHeroic = isHeroic
 			GBB.RequestList[index].last = requestTime
