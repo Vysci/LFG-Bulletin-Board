@@ -912,7 +912,7 @@ function GBB.Init()
 		tinsert(UISpecialFrames, GroupBulletinBoardFrame:GetName()) --enable ESC-Key to close
 	end
 	
-	GBB.Tool.EnableSize(GroupBulletinBoardFrame,8,nil,function()	
+	local setBorderResizingEnabled = GBB.Tool.EnableSize(GroupBulletinBoardFrame,8,nil,function()
 		GBB.ResizeFrameList()
 		GBB.SaveAnchors()
 		GBB.ChatRequests.UpdateRequestList()
@@ -934,15 +934,22 @@ function GBB.Init()
 			--- `1` if the board is fully opaque; `0` if the board is fully transparent; default=`1`
 			opacity = OptionsUtil.GetSavedVarHandle(GBB.DB.WindowSettings, "opacity", 1),
         }
-        windowSettings.isMovable:AddUpdateHook(setBulletinBoardMovableState)
-        setBulletinBoardMovableState(windowSettings.isMovable:GetValue())
-        local setBulletinBoardInteractiveState = function(isInteractive)
+		-- Handle updates to isMovable
+		local setMovableStates = function(isMovable)
+			setBulletinBoardMovableState(isMovable)
+			setBorderResizingEnabled(isMovable)
+		end
+        windowSettings.isMovable:AddUpdateHook(setMovableStates)
+        setMovableStates(windowSettings.isMovable:GetValue())
+		-- Handle updates to isInteractive
+        local setInteractiveStates = function(isInteractive)
             GBB.ChatRequests.UpdateInteractiveState()
             GBB.LfgTool:UpdateInteractiveState()
             GroupBulletinBoardFrame:EnableMouse(isInteractive and windowSettings.isMovable:GetValue())
         end
-        windowSettings.isInteractive:AddUpdateHook(setBulletinBoardInteractiveState)
-        setBulletinBoardInteractiveState(windowSettings.isInteractive:GetValue())
+        windowSettings.isInteractive:AddUpdateHook(setInteractiveStates)
+        setInteractiveStates(windowSettings.isInteractive:GetValue())
+		-- Handle updates to opacity
 		local setBulletinBoardOpacity = function(opacity)
 			GroupBulletinBoardFrame:SetAlpha(opacity)
 		end

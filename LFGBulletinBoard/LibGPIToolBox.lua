@@ -463,19 +463,26 @@ function Tool.EnableSize(frame,border,OnStart,OnStop)
 	
 	frame:EnableMouse(true)
 	frame:SetResizable(true)	
-	
-	-- path= "Interface\\AddOns\\".. TOCNAME .. "\\Resize\\"
-	
-	CreateSizeBorder(frame,"BOTTOM","BOTTOMLEFT", border, border, "BOTTOMRIGHT", -border, 0,"Interface\\CURSOR\\UI-Cursor-SizeLeft",45,OnStart,OnStop)
-	CreateSizeBorder(frame,"TOP","TOPLEFT", border, 0, "TOPRIGHT", -border, -border,"Interface\\CURSOR\\UI-Cursor-SizeLeft",45,OnStart,OnStop)
-	CreateSizeBorder(frame,"LEFT","TOPLEFT", 0,-border, "BOTTOMLEFT", border, border,"Interface\\CURSOR\\UI-Cursor-SizeRight",45,OnStart,OnStop)
-	CreateSizeBorder(frame,"RIGHT","TOPRIGHT",-border,-border, "BOTTOMRIGHT", 0, border,"Interface\\CURSOR\\UI-Cursor-SizeRight",45,OnStart,OnStop)
-	
-	CreateSizeBorder(frame,"TOPLEFT","TOPLEFT", 0,0, "TOPLEFT", border, -border,"Interface\\CURSOR\\UI-Cursor-SizeRight",0,OnStart,OnStop)
-	CreateSizeBorder(frame,"BOTTOMLEFT","BOTTOMLEFT", 0,0, "BOTTOMLEFT", border, border, "Interface\\CURSOR\\UI-Cursor-SizeLeft",0,OnStart,OnStop)
-	CreateSizeBorder(frame,"TOPRIGHT","TOPRIGHT", 0,0, "TOPRIGHT", -border, -border, "Interface\\CURSOR\\UI-Cursor-SizeLeft",0,OnStart,OnStop)
-	CreateSizeBorder(frame,"BOTTOMRIGHT","BOTTOMRIGHT", 0,0, "BOTTOMRIGHT", -border, border, "Interface\\CURSOR\\UI-Cursor-SizeRight",0,OnStart,OnStop)
-	
+
+	local borders = {
+		CreateSizeBorder(frame,"BOTTOM","BOTTOMLEFT", border, border, "BOTTOMRIGHT", -border, 0,"Interface\\CURSOR\\UI-Cursor-SizeLeft",45,OnStart,OnStop),
+		CreateSizeBorder(frame,"TOP","TOPLEFT", border, 0, "TOPRIGHT", -border, -border,"Interface\\CURSOR\\UI-Cursor-SizeLeft",45,OnStart,OnStop),
+		CreateSizeBorder(frame,"LEFT","TOPLEFT", 0,-border, "BOTTOMLEFT", border, border,"Interface\\CURSOR\\UI-Cursor-SizeRight",45,OnStart,OnStop),
+		CreateSizeBorder(frame,"RIGHT","TOPRIGHT",-border,-border, "BOTTOMRIGHT", 0, border,"Interface\\CURSOR\\UI-Cursor-SizeRight",45,OnStart,OnStop),
+		CreateSizeBorder(frame,"TOPLEFT","TOPLEFT", 0,0, "TOPLEFT", border, -border,"Interface\\CURSOR\\UI-Cursor-SizeRight",0,OnStart,OnStop),
+		CreateSizeBorder(frame,"BOTTOMLEFT","BOTTOMLEFT", 0,0, "BOTTOMLEFT", border, border, "Interface\\CURSOR\\UI-Cursor-SizeLeft",0,OnStart,OnStop),
+		CreateSizeBorder(frame,"TOPRIGHT","TOPRIGHT", 0,0, "TOPRIGHT", -border, -border, "Interface\\CURSOR\\UI-Cursor-SizeLeft",0,OnStart,OnStop),
+		CreateSizeBorder(frame,"BOTTOMRIGHT","BOTTOMRIGHT", 0,0, "BOTTOMRIGHT", -border, border, "Interface\\CURSOR\\UI-Cursor-SizeRight",0,OnStart,OnStop),
+	}
+	local setResizingEnabled = function(enabled)
+		for _, border in ipairs(borders) do
+			border:SetScript("OnEnter", enabled and SizingEnter or nil)
+			border:SetScript("OnLeave", enabled and SizingLeave or nil)
+			border:SetScript("OnMouseDown", enabled and SizingStart or nil)
+			border:SetScript("OnMouseUp", enabled and SizingStop or nil)
+		end
+	end
+	return setResizingEnabled
 end
 
 --------------------------------------------------------------------------------
