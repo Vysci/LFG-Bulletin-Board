@@ -36,6 +36,7 @@ local isSoD = isClassicEra and C_Seasons.GetActiveSeason() == Enum.SeasonID.Seas
 ---@field sortIdx number # ties broken by key alphabetically. preset value is relatively arbitrary.
 ---@field isHidden boolean? # `true` if the filter should be hidden from UI. (used instead of deletion for saved presets)
 ---@field isDisabled boolean # `true` if the preset should be completely disabled for the current client (used by presets only)
+---@field includeItemLinks boolean? # `true` if the filter should parse item links for keys words
 
 ---@type {[string]: CustomFilter}
 local presets = {
@@ -460,6 +461,29 @@ local createMoveFilterButton = function(parent, direction)
     button:SetHighlightTexture([[Interface\Buttons\UI-Common-MouseHilight]], "ADD");
     return button;
 end
+local createSettingsDropdownButton = function(parent)
+    local buttonName = "$parentSettingsDropdownButton"
+    local button = CreateFrame("DropdownButton", buttonName, parent);
+    button.menuMixin = MenuStyle2Mixin
+    Mixin(button, ButtonStateBehaviorMixin)
+    button:SetSize(15, 15);
+    button:SetScript("OnMouseDown", button.OnMouseDown)
+    button:SetScript("OnMouseUp", button.OnMouseUp)
+    button:SetScript("OnEnable", button.OnEnable)
+    button:SetScript("OnDisable", button.OnDisable)
+    button.icon = button:CreateTexture("$parentIcon", "OVERLAY")
+    button.icon:SetAtlas("OptionsIcon-Brown")
+    button.icon:SetAllPoints()
+    button:SetDisplacedRegions(1, -1, button.icon)
+    button:SetupMenu(function(_, rootDescription)
+        local categoryData = GroupBulletinBoardDB.CustomFilters[button.filterKey]
+        if not categoryData then return end
+        local isSelected = function() return not categoryData.includeItemLinks end
+        local setSelected = function() categoryData.includeItemLinks = isSelected() end
+        rootDescription:CreateCheckbox(Addon.L.IGNORE_ITEM_LINKS, isSelected, setSelected)
+    end)
+    return button;
+end
 local displayLocales = {"enUS", "deDE", "ruRU", "frFR", "zhTW", "zhCN", "esES", "ptBR"}
 local isLocaleUserEnabled = function(locale)
     assert(GroupBulletinBoardDB, "GroupBulletinBoardDB not yet loaded. Call this function after initialization.", locale)
@@ -509,6 +533,9 @@ local FilterSettingsPool = {
             parent:HookScript("OnShow", function()
                 Addon.UpdateAdditionalFiltersPanel(parent)
             end)
+            ---@type DropdownButton|{icon: Texture, filterKey: string}
+            options.settingsDropdown = createSettingsDropdownButton(options)
+            options.settingsDropdown:SetPoint("LEFT", options.header, "RIGHT", 4, 1)
             self.entries[key] = options
         end
         return self:InitFilterOptions(self.entries[key])
@@ -568,6 +595,8 @@ local FilterSettingsPool = {
        
         options.header:SetText(dbEntry.name)
         options.header:SetTextColor(hColor:GetRGBA())
+        options.settingsDropdown:SetShown(filterEnabled)
+        options.settingsDropdown.filterKey = dbEntry.key
         options.rename:SetScript("OnClick", function()
             StaticPopup_Show("GBB_RENAME_CATEGORY", nil, nil, {
                 settings = self,

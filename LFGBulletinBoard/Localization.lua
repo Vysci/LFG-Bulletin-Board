@@ -97,6 +97,16 @@ local localizedAddonDisplayStrings = {
 		zhCN = "删除请求",
 		zhTW = "刪除要求",
 	},
+	IGNORE_ITEM_LINKS = {
+		enUS = "Ignore Item Links",
+		deDE = "Gegenstandslinks ignorieren",
+		esMX = "Ignorar enlaces de objetos",
+		frFR = "Ignorer les liens d’objets",
+		ptBR = "Ignorar links de itens",
+		ruRU = "Игнорировать ссылки на предметы",
+		zhCN = "忽略物品链接",
+		zhTW = "忽略物品連結",
+	},
 	JOIN_REQUEST_HEADER = {
         enUS = "Alt+Click to Request to Join Group",
         deDE = "Alt+Klick, um Beitritt zur Gruppe anzufragen",
