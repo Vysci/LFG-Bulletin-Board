@@ -263,11 +263,17 @@ local function getRequestMessageCategories(msg, sender, fromLFGChannel)
 				hasSearchTag = true
 			else
 				local skip = false
-				if dungeons.TRADE and categoryTagKey ~= "TRADE" then
-					-- if a trade keyword and dungeon keyword are both present, disambiguate between items and dungeons.
-					-- useful for dungeons with more general search patterns like "Throne of Four Winds"
-					local itemPattern =  "|hitem.*|h%[.*"..word..".*%]"
-					if msg:lower():find(itemPattern) then skip = true end
+				if dungeons.TRADE and categoryTagKey ~= "TRADE"
+				then
+					local customCategory = GBB.DB.CustomFilters[categoryTagKey] ---@type CustomFilter?
+					-- only check custom categories if they are set to NOT includes item links
+					-- all other categories are still checked for item links
+					if not customCategory or not customCategory.includeItemLinks then
+						-- if a trade keyword and dungeon keyword are both present, disambiguate between items and dungeons.
+						-- useful for dungeons with more general search patterns like "Throne of Four Winds"
+						local itemPattern =  "|hitem.*|h%[.*"..word..".*%]"
+						if msg:lower():find(itemPattern) then skip = true end
+					end
 				end
 				dungeons[categoryTagKey] = not skip
 			end
