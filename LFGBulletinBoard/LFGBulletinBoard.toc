@@ -17,6 +17,7 @@ Localization.lua
 dungeons/api.lua
 dungeons/classic.lua
 dungeons/cata.lua
+dungeons/mists.lua
 CustomCategories.lua
 Tags.lua
 Dungeons.lua
