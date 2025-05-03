@@ -3,9 +3,6 @@ local TOCNAME,
 	GBB = ...;
 
 GroupBulletinBoard_Addon=GBB
-
-GBB.Version=GetAddOnMetadata(TOCNAME, "Version") 
-GBB.Title=GetAddOnMetadata(TOCNAME, "Title") 
 GBB.Icon= "Interface\\Icons\\spell_holy_prayerofshadowprotection"
 --"Interface\\FriendsFrame\\Battlenet-Portrait"
 GBB.MiniIcon= "Interface\\Icons\\spell_holy_prayerofshadowprotection"
@@ -586,7 +583,7 @@ local function getMinimapMenuDescriptionGenerator(showMinimapOptions)
 		rootDesc:CreateDivider():SetFinalInitializer(function(frame) frame:SetHeight(4) end)
 	end
 	return function(_, rootDesc) ---@param rootDesc RootMenuDescriptionProxy
-		rootDesc:CreateTitle(GBB.Title)
+		rootDesc:CreateTitle(GBB.Metadata.Title)
 		rootDesc:CreateButton(SETTINGS, OptionsUtil.OpenCategoryPanel, 1) -- open main settings
 		do -- Notification Settings
 			local subDesc = rootDesc:CreateButton(COMMUNITIES_NOTIFICATION_SETTINGS, nop)
@@ -741,7 +738,7 @@ function GBB.Init()
 
     local HeaderContainer = GroupBulletinBoardFrameHeaderContainer
     do -- setup the header "Title"/"Close"/ "Settings" buttons
-        HeaderContainer.Title:SetText(string.format(GBB.TxtEscapePicture,GBB.MiniIcon).." ".. GBB.Title)
+        HeaderContainer.Title:SetText(string.format(GBB.TxtEscapePicture,GBB.MiniIcon).." ".. GBB.Metadata.Title)
         HeaderContainer.CloseButton:SetScript("OnClick", GBB.HideWindow)
 		Mixin(HeaderContainer.SettingsButton, SettingsButtonMixin)
 		SettingsButtonMixin.OnLoad(HeaderContainer.SettingsButton)
@@ -880,7 +877,7 @@ function GBB.Init()
 				GBB.CreateMinimapContextMenu(self.button, true)
 			end
 		end,
-		GBB.Title
+		GBB.Metadata.Title
 	)
 
 	---@type EditBox # making this local isnt required, just here for the luals linter
@@ -1080,7 +1077,7 @@ function GBB.Init()
 	local Enum = GBB.Enum; Enum.Tabs = TabEnum
 
 	GameTooltip:HookScript("OnTooltipSetUnit", hooked_createTooltip)
-	print("|cFFFF1C1C Loaded: "..GetAddOnMetadata(TOCNAME, "Title") .." ".. GetAddOnMetadata(TOCNAME, "Version") .." by "..GetAddOnMetadata(TOCNAME, "Author"))
+	print(("|cFFFF1C1C Loaded: %s %s by %s"):format(GBB.Metadata.Title, GBB.Metadata.Version, GBB.Metadata.Author))
 end
 
 

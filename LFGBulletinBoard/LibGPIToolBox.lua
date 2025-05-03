@@ -4,6 +4,13 @@ local TOCNAME,
 
 local MAX_PLAYER_LEVEL = GetMaxPlayerLevel()
 
+Addon.Metadata = {
+	Title = C_AddOns.GetAddOnMetadata(TOCNAME, "Title"),
+	Version = C_AddOns.GetAddOnMetadata(TOCNAME, "Version"),
+	Author = C_AddOns.GetAddOnMetadata(TOCNAME, "Author"),
+	Notes = C_AddOns.GetAddOnMetadata(TOCNAME, "Notes"),
+}
+
 ---@class ToolBox
 local Tool = {}
 Addon.Tool = Tool
@@ -748,7 +755,7 @@ function Tool.AddDataBrocker(icon,onClick,onTooltipShow,text)
 				OnClick = onClick,
 				OnTooltipShow = onTooltipShow,
 				tocname = TOCNAME,
-				label = text or GetAddOnMetadata(TOCNAME, "Title"),
+				label = text or Addon.Metadata.Title,
 			})
 		end
 	end	
@@ -812,8 +819,8 @@ end
 local function mySlashs(msg)
 	if msg=="help" then
 		local colCmd="|cFFFF9C00"
-		print("|cFFFF1C1C"..GetAddOnMetadata(TOCNAME, "Title") .." ".. GetAddOnMetadata(TOCNAME, "Version") .." by "..GetAddOnMetadata(TOCNAME, "Author"))
-		print(GetAddOnMetadata(TOCNAME, "Notes"))		
+		print(("|cFFFF1C1C %s %s by %s"):format(Addon.Metadata.Title, Addon.Metadata.Version, Addon.Metadata.Author))
+		print(Addon.Metadata.Notes)
 		if type(slashCmd)=="table" then
 			print("SlashCommand:",colCmd,slashUnpack(slashCmd,"|r, "..colCmd),"|r")
 		end

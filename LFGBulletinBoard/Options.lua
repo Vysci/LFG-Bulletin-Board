@@ -98,8 +98,8 @@ local function fixSecondaryTagFilters()
 end
 
 local function ResetFilters()
-	if GBB.ShouldReset and (not GBB.DBChar["ResetVersion"] or GBB.DBChar["ResetVersion"] ~= GBB.Version) then
-		GBB.DBChar["ResetVersion"] = GBB.Version
+	if GBB.ShouldReset and (not GBB.DBChar["ResetVersion"] or GBB.DBChar["ResetVersion"] ~= GBB.Metadata.Version) then
+		GBB.DBChar["ResetVersion"] = GBB.Metadata.Version
 		for k, _ in pairs(GBB.dungeonSort) do
 			if GBB.DBChar["FilterDungeon"..k] ~= nil then
 				GBB.DBChar["FilterDungeon"..k] = nil
@@ -303,8 +303,8 @@ function GBB.OptionsInit ()
 	----------------------------------------------------------
 	-- Main/General settings panel
 	----------------------------------------------------------
-	GBB.OptionsBuilder.AddNewCategoryPanel(GBB.Title,false,true)
-	--GBB.OptionsBuilder.AddVersion('|cff00c0ff' .. GBB.Version .. '|r')
+	GBB.OptionsBuilder.AddNewCategoryPanel(GBB.Metadata.Title,false,true)
+	--GBB.OptionsBuilder.AddVersion('|cff00c0ff' .. GBB.Metadata.Version .. '|r')
 	GBB.OptionsBuilder.AddHeaderToCurrentPanel(GBB.L["HeaderSettings"])
 	GBB.OptionsBuilder.Indent(10)
 	GBB.OptionsBuilder.AddCheckBoxToCurrentPanel(GBB.DB.MinimapButton,"visible",true,GBB.L["Cboxshowminimapbutton"])
@@ -614,14 +614,11 @@ function GBB.OptionsInit ()
 	-- About panel
 	----------------------------------------------------------
 	GBB.OptionsBuilder.AddNewCategoryPanel(GBB.L["PanelAbout"])
-	local addonMetadata = function(field) -- move from deprecated `GetAddOnMetadata`
-		return C_AddOns.GetAddOnMetadata(TOCNAME, field)
-	end
 	GBB.OptionsBuilder.AddHeaderToCurrentPanel(WrapTextInColorCode(('%s %s by %s'), 'FFFF1C1C')
-		:format(addonMetadata("Title"), addonMetadata("Version"), addonMetadata("Author"))
+		:format(GBB.Metadata.Title, GBB.Metadata.Version, GBB.Metadata.Author)
 	);
 	GBB.OptionsBuilder.Indent(10)
-	GBB.OptionsBuilder.AddTextToCurrentPanel(addonMetadata("Notes"))		
+	GBB.OptionsBuilder.AddTextToCurrentPanel(GBB.Metadata.Notes)
 	GBB.OptionsBuilder.Indent(-10)
 	
 	GBB.OptionsBuilder.AddHeaderToCurrentPanel(GBB.L["HeaderInfo"])
