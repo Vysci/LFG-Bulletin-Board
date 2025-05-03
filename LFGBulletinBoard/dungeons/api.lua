@@ -133,39 +133,48 @@ local activityIDToKey = {}
 local numDungeons = 0
 local queuedForCache = {}
 
-local queueActivityInfo =function (activityIDs, tagKey, overrides)
-    assert(next(activityIDs) and tagKey, "Invalid arguments to cacheActivityInfo: ", activityIDs, tagKey)
-    queuedForCache[tagKey] = queuedForCache[tagKey] or {}
-    queuedForCache[tagKey].activityIDs = activityIDs
-    if overrides then
-        if not queuedForCache[tagKey].overrides then
-            queuedForCache[tagKey].overrides = overrides
-        else
-            for key, value in pairs(overrides) do
-                queuedForCache[tagKey].overrides[key] = value
-            end
-        end
-    end
+--- By design queued activityID's for a key are replaced on repeat calls.
+--- This allows overridding any stale/changed activityIDs from expansion to expansion.
+---@param activityKey string also called the `dungeonKey`. String identifier for the dungeon.
+---@param activityIDs number[] List of activityIDs to use for ripping client information about this dungeon.
+local queueActivityForInfo =function (activityKey, activityIDs)
+    assert(next(activityIDs) and activityKey, "Invalid arguments to cacheActivityInfo: ", activityIDs, activityKey)
+    queuedForCache[activityKey] = queuedForCache[activityKey] or {}
+    queuedForCache[activityKey].activityIDs = activityIDs
 end
+--- Can be called multiple times per dungeonKey. Repeat call to replace any previous existing override kvs.
+---@param activityKey string
+---@param overrides DungeonInfo|table Partial DungeonInfo to override.
+local queueActivityInfoOverride = function(activityKey, overrides)
+	assert(queuedForCache[activityKey], "No queued activityIDs for tagKey. Queue activity with queueActivityInfo first. ", activityKey)
+	if not queuedForCache[activityKey].overrides then
+		queuedForCache[activityKey].overrides = overrides
+	else
+		for key, value in pairs(overrides) do
+			queuedForCache[activityKey].overrides[key] = value
+		end
+	end
+end
+--- Gets the `DungeonInfo` for all queued activities, applies any overrides, and verifies all the required addon data is present.
 ---@param activityID number ActivityID (or non colliding spoofed ID)
----@param tagKey string
-local function cacheActivityInfo(activityID, tagKey, overrides)
-    local info = { tagKey = tagKey }
+---@param activityKey string
+local function parseAndCacheActivityInfo(activityID, activityKey, overrides)
+    local info;
     local activityInfo = C_LFGList.GetActivityInfoTable(activityID)
     if activityInfo then -- spoofed entries will be nil
         local additionalInfo = activityGroupExpansion[activityInfo.groupFinderActivityGroupID]
         local typeID = activityCategoryDungeonType[activityInfo.categoryID]
         assert(typeID == additionalInfo.typeID, "Debug Check failed. Mismatch TypeID needs to be handled for activity", activityID, typeID, additionalInfo.typeID)
-        local minLevel, maxLevel = getBestActivityLevelRange(tagKey, activityInfo)
-        info = {
+        local minLevel, maxLevel = getBestActivityLevelRange(activityKey, activityInfo)
+        info = { ---@type DungeonInfo
             name = getBestActivityName(activityInfo, typeID, additionalInfo.expansionID),
             minLevel = minLevel,
             maxLevel = maxLevel,
             expansionID = additionalInfo.expansionID,
             typeID = typeID,
-            tagKey = tagKey,
+            tagKey = activityKey,
         }
-    end
+    else info = { tagKey = activityKey } end
     if overrides then
         for key, value in pairs(overrides) do
             info[key] = value
@@ -180,17 +189,18 @@ local function cacheActivityInfo(activityID, tagKey, overrides)
     assert(info.typeID, "Failed to get typeID for activityID: " .. activityID, activityInfo)
 
     uniqueIdInfoCache[activityID] = info
-    infoByTagKey[tagKey] = info
+    infoByTagKey[activityKey] = info
     numDungeons = numDungeons + 1
 end
 addon.Dungeons = {
-    queueActivityInfo = queueActivityInfo,
+    queueActivityForInfo = queueActivityForInfo,
+	queueActivityInfoOverride = queueActivityInfoOverride,
     infoByTagKey = infoByTagKey,
     numDungeons = numDungeons,
     activityGroupExpansion = activityGroupExpansion,
     activityCategoryDungeonType = activityCategoryDungeonType,
-    -- Hack, defer the querying of data until all the valid expansion data files have settled
-    -- this ensure they've gotten the chance to override any changed activityIDs
+    -- NOTE: Defer the querying of data until all the files in `/dungeons/` have been loaded
+	-- and any overriding `queueActivityForInfo`/`queueActivityInfoOverride` calls have been made.
     ProcessActivityInfo = function()
         for tagKey, queued in pairs(queuedForCache) do
             assert(type(queued.activityIDs) == "table", "Invalid queued activityIDs for tagKey: " .. tagKey, queued.activityIDs)
@@ -198,7 +208,7 @@ addon.Dungeons = {
                 if not activityIDToKey[activityID] then
                     activityIDToKey[activityID] = tagKey
                 end
-                cacheActivityInfo(activityID, tagKey, queued.overrides)
+                parseAndCacheActivityInfo(activityID, tagKey, queued.overrides)
             end
         end
     end

@@ -434,7 +434,7 @@ local spoofBattleground = function(name, minLevel, maxLevel, typeID, expansionID
 		minLevel = minLevel or cataMaxLevel,
 		maxLevel = maxLevel or cataMaxLevel,
 		typeID = typeID or DungeonType.Battleground,
-		expansionID = expansionID or Expansions.Cataclysm,
+		expansionID = expansionID or Expansions.Current,
 	}
 end
 
@@ -539,7 +539,6 @@ local hardcodedDungeonLevels = {
 	SMG = { minLevel = 26, maxLevel = 36 },
 	ZG = { minLevel = 85, maxLevel = 85 },
 	BOT = { minLevel = 70, maxLevel = 75 },
-	NULL = { minLevel = 85, maxLevel = 85 },
 	DMN = { minLevel = 42, maxLevel = 52 },
 	SOTA = { minLevel = 65, maxLevel = 85 },
 	HOR = { minLevel = 80, maxLevel = 80 },
@@ -567,7 +566,7 @@ local infoOverrides = {
 	TP = spoofBattleground(GetRealZoneText(726)),
 	BFG = spoofBattleground(GetRealZoneText(761)),
 	ARENA = { name = C_LFGList.GetActivityGroupInfo(299) }, -- localized "Arenas" string
-	RBG = { typeID = DungeonType.Battleground }, -- GetLFGDungeonInfo considers it a raid for some reason.
+	RBG = { typeID = DungeonType.Battleground, expansionID = Expansions.Current }, -- GetLFGDungeonInfo considers it a raid for some reason.
 	-- DM and SFK only "Heroic" @ max level
 	DM = isCataLevel and {
 		name = DUNGEON_NAME_WITH_DIFFICULTY:format(DUNGEON_FLOOR_THEDEADMINES1, DUNGEON_DIFFICULTY2),
@@ -597,34 +596,37 @@ end
         local dungeonInfo = {GetLFGDungeonInfo(dungeonID)}
         local name, typeID, minLevel, maxLevel = dungeonInfo[1], dungeonInfo[2], dungeonInfo[4], dungeonInfo[5];
         local expansionID, isHoliday = dungeonInfo[9], dungeonInfo[15];
-		local tagKey = dungeonIDToKey[dungeonID]
-		assert(tagKey, "No tagKey found for dungeonID: " .. tostring(dungeonID))
+		local dungeonKey = dungeonIDToKey[dungeonID]
+		assert(dungeonKey, "No tagKey found for dungeonID: " .. tostring(dungeonID))
         local cached = {
             name = name,
             minLevel = minLevel,
             maxLevel = maxLevel,
             typeID = typeID,
-            tagKey = tagKey,
+            tagKey = dungeonKey,
 			isHoliday = isHoliday,
             expansionID = expansionID,
         }
-		local overrides = infoOverrides[tagKey]
+		local overrides = infoOverrides[dungeonKey]
 		if overrides then
 			for key, value in pairs(overrides) do
 				cached[key] = value
 			end
 		end
-		addon.Dungeons.queueActivityInfo({dungeonID}, tagKey, cached)
+		addon.Dungeons.queueActivityForInfo(dungeonKey, {dungeonID})
+		addon.Dungeons.queueActivityInfoOverride(dungeonKey, cached)
     end
     for _, dungeonID in pairs(LFGDungeonIDs) do
             cacheLFGDungeonInfo(dungeonID)
     end
     for activityKey, activityIDs in pairs(ActivityIDs) do
-		if type(activityIDs) ~= "table" then
-			activityIDs = { activityIDs } -- ensure activityID is a table
-        end
-		addon.Dungeons.queueActivityInfo(activityIDs, activityKey, infoOverrides[activityKey])
+		-- ensure activityID is a table
+		if type(activityIDs) ~= "table" then activityIDs = { activityIDs } end
+		addon.Dungeons.queueActivityForInfo(activityKey, activityIDs)
     end
 	for activityKey, activityID in pairs(SpoofedActivityIDs) do
-		addon.Dungeons.queueActivityInfo({activityID}, activityKey, infoOverrides[activityKey])
+		addon.Dungeons.queueActivityForInfo(activityKey, {activityID})
+	end
+	for key, info in pairs(infoOverrides) do
+		addon.Dungeons.queueActivityInfoOverride(key, info)
 	end
