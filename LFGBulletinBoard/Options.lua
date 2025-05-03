@@ -12,6 +12,7 @@ local EXPANSION_FILTER_NAME = {
 	[GBB.Enum.Expansions.BurningCrusade] = SUBTITLE_FORMAT:format(FILTERS, EXPANSION_NAME1),
 	[GBB.Enum.Expansions.Wrath] = SUBTITLE_FORMAT:format(FILTERS, EXPANSION_NAME2),
 	[GBB.Enum.Expansions.Cataclysm] = SUBTITLE_FORMAT:format(FILTERS, EXPANSION_NAME3),
+	[GBB.Enum.Expansions.Mists] = SUBTITLE_FORMAT:format(FILTERS, EXPANSION_NAME4),
 }
 
 ---@type {[number]: CheckButton[]} # Used by GetNumActiveFilters
@@ -498,17 +499,15 @@ function GBB.OptionsInit ()
 	----------------------------------------------------------
 	-- Expansion specific filters
 	----------------------------------------------------------
-	if not isClassicEra then 
-		--- Cata Filters
-		GenerateExpansionPanel(GBB.Enum.Expansions.Cataclysm)
-		--- Wrath Filters
-		GenerateExpansionPanel(GBB.Enum.Expansions.Wrath)
-		--- TBC Filters
-		GenerateExpansionPanel(GBB.Enum.Expansions.BurningCrusade)
+	local clientExpansionID = GBB.GetExpansionEnumForProjectID(WOW_PROJECT_ID);
+	local expansionsEnumLookup = tInvert(GBB.Enum.Expansions)
+	-- generate panels from current client expansion down to classic era.
+	for expansionID = clientExpansionID, 0, -1 do
+		local expansion = expansionsEnumLookup[expansionID]
+		if expansion then
+			GenerateExpansionPanel(GBB.Enum.Expansions[expansion])
+		end
 	end
-	-- Vanilla Filters
-	GenerateExpansionPanel(GBB.Enum.Expansions.Classic)
-		
 	----------------------------------------------------------
 	-- Custom Filters/Categories
 	----------------------------------------------------------
