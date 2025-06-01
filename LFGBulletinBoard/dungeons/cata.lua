@@ -2,7 +2,7 @@
 local tocName, 
     ---@class Addon_DungeonData : Addon_LibGPIOptions
     addon = ...;
-if WOW_PROJECT_ID ~= WOW_PROJECT_CATACLYSM_CLASSIC then return end
+if WOW_PROJECT_ID < WOW_PROJECT_CATACLYSM_CLASSIC then return end
 assert(GetLFGDungeonInfo, tocName .. " requires the API `GetLFGDungeonInfo` for parsing dungeon info")
 assert(GetRealZoneText, tocName .. " requires the API `GetRealZoneText` for parsing dungeon info")
 assert(C_LFGList.GetActivityInfoTable, tocName .. " requires the API `C_LFGList.GetActivityInfoTable` for parsing dungeon info")
@@ -10,46 +10,11 @@ assert(C_LFGList.GetActivityInfoTable, tocName .. " requires the API `C_LFGList.
 local debug = false
 local print = function(...) if debug then addon.print(...) end end
 
--- initialize here for now, this should be moved to a file thats always grunted to load first.
-addon.Enum = addon.Enum or {} 
-local Expansions = {
-	Classic = 0,
-	BurningCrusade = 1,
-	Wrath = 2,
-	Cataclysm = 3,
-}
-
-local DungeonType = {
-	Dungeon = 1,
-	Raid = 2,
-	Zone = 4,
-    -- Possible to use 5 for BG's but i want to preserve the ID just incase
-	Random = 6,
-	Battleground = 7
-	-- thinking of using 8 for "Rated" for rbgs and arenas to be sorted after normal bgs. 
-}
+local Expansions = addon.Enum.Expansions
+local DungeonType = addon.Enum.DungeonType
 
 local cataMaxLevel = GetMaxLevelForExpansionLevel(Expansions.Cataclysm)
 local isCataLevel = UnitLevel("player") >= (cataMaxLevel - 2) -- when to show Heroic DM & SFK as part of cata.
-
-local isHolidayActive = function(key)
-	local seasonal = {
-		["BREW"] = { start = "09/20", stop = "10/06"},
-		["HOLLOW"] = { start = "10/18", stop = "11/01"},
-		["LOVE"] = {start = "02/03", stop = "02/17"},
-		["SUMMER"] = {start = "06/21", stop = "07/05"},
-	}
-	if not seasonal[key] then return false end
-	local active = addon.Tool.InDateRange(seasonal[key].start, seasonal[key].stop)
-	
-	if not active -- hack: disable filtering for any inactive holiday dungeons
-	and GroupBulletinBoardDBChar -- should only modify after savedVars is loaded
-	and GroupBulletinBoardDBChar["FilterDungeon"..key]
-	then -- previously done in `FixFilters()`
-		GroupBulletinBoardDBChar["FilterDungeon"..key] = nil
-	end
-	return active
-end
 
 -- Use GetActivityInfoTable to get dungeon data based on db2 table
 -- https://wago.tools/db2/GroupFinderActivity?build=4.4.2.59185
@@ -113,7 +78,12 @@ local ActivityIDs = {
 	DME = 813, -- "Dire Maul East"
 	DMN = 815, -- "Dire Maul North"
 	DMW = 814, -- "Dire Maul West"
-	-- DS = 0000, -- "Dragon Soul"
+	DS = { -- "Dragon Soul"
+        1703, -- "Dragon Soul (10 Normal)"
+        1704, -- "Dragon Soul (10 Heroic)"
+        1705, -- "Dragon Soul (25 Heroic)"
+        1706, -- "Dragon Soul (25 Normal)"
+    },
 	DTK = { -- "Drak'Tharon Keep"
 		1070, -- "Drak'Tharon Keep (Normal)"
 		1129, -- "Drak'Tharon Keep (Heroic)"
@@ -428,22 +398,11 @@ local ActivityIDs = {
 	SUMMER = 1082, -- "The Frost Lord Ahune" (Midsummer)
 	HOLLOW = 1081, -- "The Headless Horseman" (Hallow's End)
 }
-local activityIDToKey = {}
-for key, activityID in pairs(ActivityIDs) do
-    if type(activityID) == "table" then
-        for _, id in ipairs(activityID) do
-            activityIDToKey[id] = key
-        end
-    else
-        activityIDToKey[activityID] = key
-    end
-end
 
 -- For entries with no ActivityID, we can also use GetLFGDungeonInfo api
 -- https://wago.tools/db2/LFGDungeons?build=4.4.2.59185
 local LFGDungeonIDs = {
 	RBG = 358, -- "10v10 Rated Battleground"
-	DS = 447, -- "Dragon Soul" (untill activiyID is known)
 }
 local dungeonIDToKey = {}
 for key, dungeonID in pairs(LFGDungeonIDs) do
@@ -464,9 +423,6 @@ local SpoofedActivityIDs = {
 	DM2 = 4004,   -- Base "Dire Maul"
 	SM2 = 4005,   -- Base "Scarlet Monastery"
 }
-for key, id in pairs(SpoofedActivityIDs) do
-	activityIDToKey[id] = key
-end
 
 ---@param name string
 ---@param minLevel? number
@@ -480,54 +436,6 @@ local spoofBattleground = function(name, minLevel, maxLevel, typeID, expansionID
 		typeID = typeID or DungeonType.Battleground,
 		expansionID = expansionID or Expansions.Cataclysm,
 	}
-end
-
--- C_LFGList.GetActivityInfoTable doesnt have expansionID so we need to set it based on activityGroupID
--- https://wago.tools/db2/GroupFinderActivityGrp?build=4.4.0.54525
-local groupIDAdditionalInfo = {
-	-- Classic Dungeons
-	[285] = { expansionID = Expansions.Classic, typeID = DungeonType.Dungeon },
-	-- Classic Raids
-	[290] = { expansionID = Expansions.Classic, typeID = DungeonType.Raid },
-	-- Burning Crusade Dungeons
-	[286] = { expansionID = Expansions.BurningCrusade, typeID = DungeonType.Dungeon },
-	-- Burning Crusade Raids
-	[291] = { expansionID = Expansions.BurningCrusade, typeID = DungeonType.Raid },
-	-- Lich King Dungeons
-	[287] = { expansionID = Expansions.Wrath, typeID = DungeonType.Dungeon },
-	-- Lich King Raids
-	[292] = { expansionID = Expansions.Wrath, typeID = DungeonType.Raid },
-	-- Cataclysm Raids
-	[364] = { expansionID = Expansions.Cataclysm, typeID = DungeonType.Raid },
-	-- Cataclysm Dungeons
-	[368] = { expansionID = Expansions.Cataclysm, typeID = DungeonType.Dungeon },
-	-- Holiday Dungeons (treat as latest xpac dungeon)
-	[294] = { expansionID = Expansions.Cataclysm, typeID = DungeonType.Dungeon },
-	-- Arena & Battlegrounds (map to latest expansion)
-	[299] = { expansionID = Expansions.Cataclysm, typeID = DungeonType.Battleground }
-}
-do -- link groupIDs to ones that share expansionID and typeID values
-	local groupIdMap = {
-		[288] = 286, -- Burning Crusade Heroic Dungeons
-		[289] = 287, -- Lich King Heroic Dungeons
-		[311] = 287, --- Titan Rune Alpha
-		[312] = 287, --- Titan Rune Beta
-		[314] = 287, --- Titan Rune Gamma
-		[293] = 292, -- Lich King Normal Raids (25)
-		[320] = 292, -- Lich King Heroic Raids (10)
-		[321] = 292, -- Lich King Heroic Raids (25)
-		[300] = 299, -- Battlegrounds
-		[301] = 299, -- World PvP Events
-		[365] = 364, -- Cataclysm Heroic Raids (10)
-		[366] = 364, -- Cataclysm Normal Raids (25)
-		[367] = 364, -- Cataclysm Heroic Raids (25)
-		[369] = 368, -- Cataclysm Heroic Dungeons
-		[376] = 368, -- Elemental Rune Inferno
-		[379] = 368, -- Elemental Rune Twilight
-	}
-	for link, source in pairs(groupIdMap) do
-		groupIDAdditionalInfo[link] = groupIDAdditionalInfo[source]
-	end
 end
 
 -- Because the GetActivityInfoTable API is returning `0` for min/max level we'll hardcode data here.
@@ -670,216 +578,53 @@ local infoOverrides = {
 		minLevel = cataMaxLevel, maxLevel = cataMaxLevel,
 	} or nil,
 	-- Consider Holiday dungeons as part of latest expansion (like bgs). Related issue: #253
-	BREW = { expansionID = Expansions.Cataclysm, isHoliday = true },
-	LOVE = { expansionID = Expansions.Cataclysm, isHoliday = true },
-	SUMMER = { expansionID = Expansions.Cataclysm, isHoliday = true },
-	HOLLOW = { expansionID = Expansions.Cataclysm, isHoliday = true },
+	BREW = { isHoliday = true },
+	LOVE = { isHoliday = true },
+	SUMMER = { isHoliday = true },
+	HOLLOW = { isHoliday = true },
 }
 
-local getBestActivityName = function(activityInfo, typeID, expansionID)
-	if typeID == DungeonType.Battleground -- battlegrounds and pre-Wotlk raids use fullname for tranlsations
-	or ((expansionID and expansionID < Expansions.Wrath) and typeID == DungeonType.Raid) then
-		return (activityInfo.fullName and activityInfo.fullName ~= "" and activityInfo.fullName)
-			or activityInfo.shortName
+for dungeonKey, levelRange in pairs(hardcodedDungeonLevels) do
+	local info = infoOverrides[dungeonKey] or {}
+	for key, level in pairs(levelRange) do
+		info[key] = level
 	end
-	return (activityInfo.shortName and activityInfo.shortName ~= "" and activityInfo.shortName)
-		or activityInfo.fullName
-end
-local getBestActivityLevelRange = function(tagKey, activityInfo)
-	local override = hardcodedDungeonLevels[tagKey]
-	local min = (override and override.minLevel) or activityInfo.minLevelSuggestion or activityInfo.minLevel
-	local max = (override and override.maxLevel) or activityInfo.maxLevelSuggestion or activityInfo.maxLevel
-	if min == 0 then min = max end
-	return min, Clamp(max, 0, cataMaxLevel)
+	infoOverrides[dungeonKey] = info
 end
 
----@type {[DungeonID]: DungeonInfo}
-local dungeonInfoCache = {}
-local infoByTagKey = {}
-local numDungeons = 0
-do
-    local function cacheActivityInfo(activityID)
-        local cached = {}
-        local activityInfo = C_LFGList.GetActivityInfoTable(activityID)
-		if activityInfo then -- spoofied entries will be nil
-			local tagKey = activityIDToKey[activityID]
-			local additionalInfo = groupIDAdditionalInfo[activityInfo.groupFinderActivityGroupID]
-			local minLevel, maxLevel = getBestActivityLevelRange(tagKey, activityInfo)
-			cached = {
-				name = getBestActivityName(activityInfo, additionalInfo.typeID, additionalInfo.expansionID),
-				minLevel = minLevel,
-				maxLevel = maxLevel,
-				expansionID = additionalInfo.expansionID,
-				typeID = additionalInfo.typeID,
-				tagKey = tagKey,
-			}
-		else cached.tagKey = activityIDToKey[activityID] end
-
-		local overrides = infoOverrides[cached.tagKey]
-		if overrides then
-			for key, value in pairs(overrides) do
-				cached[key] = value
-			end
-		end
-		-- this is is here verify no overlap in ID's between LFGDungeonIDs and ActivityIDs
-        assert(not dungeonInfoCache[activityID], "Duplicate ID found for activity ID: " .. activityID, "Use a different dungeonID for this dungeon or different activityID", activityInfo)
-
-		assert(cached.name and cached.name ~= "", "Failed to get name for activityID: " .. activityID, activityInfo)
-		assert(cached.minLevel and cached.maxLevel, "Failed to get level range for activityID: " .. activityID, activityInfo)
-		assert(cached.expansionID, "Failed to get expansionID for activityID: " .. activityID, activityInfo)
-		assert(cached.typeID, "Failed to get typeID for activityID: " .. activityID, activityInfo)
-
-        dungeonInfoCache[activityID] = cached
-		infoByTagKey[cached.tagKey] = cached
-        numDungeons = numDungeons + 1
-    end
     local function cacheLFGDungeonInfo(dungeonID)
-        local cached = {}
 		-- https://warcraft.wiki.gg/wiki/API_GetLFGDungeonInfo
         local dungeonInfo = {GetLFGDungeonInfo(dungeonID)}
-        local name, typeID, minLevel, maxLevel = 
-			dungeonInfo[1], dungeonInfo[2], dungeonInfo[4], dungeonInfo[5];
-        local expansionID, isHoliday = 
-			dungeonInfo[9], dungeonInfo[15];
-
-        cached = {
+        local name, typeID, minLevel, maxLevel = dungeonInfo[1], dungeonInfo[2], dungeonInfo[4], dungeonInfo[5];
+        local expansionID, isHoliday = dungeonInfo[9], dungeonInfo[15];
+		local tagKey = dungeonIDToKey[dungeonID]
+		assert(tagKey, "No tagKey found for dungeonID: " .. tostring(dungeonID))
+        local cached = {
             name = name,
             minLevel = minLevel,
             maxLevel = maxLevel,
             typeID = typeID,
-            tagKey = dungeonIDToKey[dungeonID],
+            tagKey = tagKey,
 			isHoliday = isHoliday,
             expansionID = expansionID,
         }
-		local overrides = infoOverrides[cached.tagKey]
+		local overrides = infoOverrides[tagKey]
 		if overrides then
 			for key, value in pairs(overrides) do
 				cached[key] = value
 			end
 		end
-		assert(not dungeonInfoCache[dungeonID], "Duplicate ID found for dungeon ID: " .. dungeonID, "Use a different dungeonID for this dungeon or different dungeonID", dungeonInfo)
-
-		assert(cached.name, "Failed to get name for dungeonID: " .. dungeonID, dungeonInfo)
-		assert(cached.minLevel and cached.maxLevel, "Failed to get level range for dungeonID: " .. dungeonID, dungeonInfo)
-		assert(cached.expansionID, "Failed to get expansionID for dungeonID: " .. dungeonID, dungeonInfo)
-		assert(cached.typeID, "Failed to get typeID for dungeonID: " .. dungeonID, dungeonInfo)
-
-        dungeonInfoCache[dungeonID] = cached
-        infoByTagKey[cached.tagKey] = cached
-		numDungeons = numDungeons + 1
-        -- print(_ .. ": Skipping dunegeon " .. info.name .. " dungeonID: " .. dungeonID .. " typeID: " .. info.typeID)
+		addon.Dungeons.queueActivityInfo({dungeonID}, tagKey, cached)
     end
-    for dungeonKey in pairs(LFGDungeonIDs) do
-        local dungeonID = LFGDungeonIDs[dungeonKey]
-        if type(dungeonID) == "table" then
-            for _, id in ipairs(dungeonID) do
-                cacheLFGDungeonInfo(id)
-            end
-        else
+    for _, dungeonID in pairs(LFGDungeonIDs) do
             cacheLFGDungeonInfo(dungeonID)
+    end
+    for activityKey, activityIDs in pairs(ActivityIDs) do
+		if type(activityIDs) ~= "table" then
+			activityIDs = { activityIDs } -- ensure activityID is a table
         end
+		addon.Dungeons.queueActivityInfo(activityIDs, activityKey, infoOverrides[activityKey])
     end
-    for activityKey in pairs(ActivityIDs) do
-        local activityID = ActivityIDs[activityKey]
-        if type(activityID) == "table" then
-            for _, id in ipairs(activityID) do
-                cacheActivityInfo(id)
-            end
-        else
-            cacheActivityInfo(activityID)
-        end
-    end
-	for activityKey in pairs (SpoofedActivityIDs) do
-		cacheActivityInfo(SpoofedActivityIDs[activityKey])
+	for activityKey, activityID in pairs(SpoofedActivityIDs) do
+		addon.Dungeons.queueActivityInfo({activityID}, activityKey, infoOverrides[activityKey])
 	end
-end
-
----@param dungeonKey string
----@return (DungeonInfo|table<DungeonID, DungeonInfo>)? 
-function addon.GetDungeonInfo(dungeonKey, useRef)
-    if dungeonKey then
-        local info = infoByTagKey[dungeonKey]
-        if info then
-            return useRef and info or CopyTable(info)
-        end
-    end
-end
-
---Optionally filter by expansionID and/or typeID
----@param expansionID ExpansionID?
----@param typeID DungeonTypeID|DungeonTypeID[]?
----@return string[]
-function addon.GetSortedDungeonKeys(expansionID, typeID)
-	local keys = {}
-	for tagKey, info in pairs(infoByTagKey) do
-		if (not expansionID or info.expansionID == expansionID) 
-		and (not typeID 
-			or (type(typeID) == "number" and info.typeID == typeID)
-			or (type(typeID) == "table" and tContains(typeID, info.typeID)))
-		and (not info.isHoliday or isHolidayActive(tagKey))
-		-- not actually dungeons
-		and (tagKey ~= "DM2" and tagKey ~= "SM2" and tagKey ~= "NULL")
-		then
-			tinsert(keys, tagKey)
-		end
-	end
-	local isRated = { -- move this to a trait on the info table
-		RBG = true,
-		ARENA = true
-	}
-	table.sort(keys, function(keyA, keyB)
-		local infoA = infoByTagKey[keyA];
-        local infoB = infoByTagKey[keyB];
-        if infoA.typeID == infoB.typeID then
-            if infoA.minLevel == infoB.minLevel then
-                if infoA.maxLevel == infoB.maxLevel then
-					-- Edge case: Sort RBGS and ARENAS *after* normal bgs.
-					if not isRated[keyA] and isRated[keyB] then
-						return true
-					elseif isRated[keyA] and not isRated[keyB] then
-						return false
-					end
-
-                    if infoA.name == infoB.name then
-                        return keyA < keyB
-                    else return infoA.name < infoB.name end
-                else return infoA.maxLevel < infoB.maxLevel end
-            else return infoA.minLevel < infoB.minLevel end
-        else return infoA.typeID < infoB.typeID end
-	end)
-	return keys
-end
-
----Optionally filter by expansionID and/or typeID
----@param expansionID ExpansionID?
----@param typeID DungeonTypeID?
-function addon.GetDungeonLevelRanges(expansionID, typeID)
-	local ranges = {}
-	for tagKey, info in pairs(infoByTagKey) do
-		if (not expansionID or info.expansionID == expansionID) 
-		and (not typeID or info.typeID == typeID) 
-		-- ignore NULL entries. But they really should be rectified at somepoint
-		and tagKey ~= "NULL"
-		then
-			ranges[tagKey] = {info.minLevel, info.maxLevel}
-		end
-	end
-	return ranges
-end
-
----@param opts {activityID: number}
-function addon.GetDungeonKeyByID(opts)
-    local key = activityIDToKey[opts.activityID]
-    if key ~= nil then return key end;
-    -- if no key, fallback to a name match
-    local activityInfo = C_LFGList.GetActivityInfoTable(opts.activityID)
-    if not activityInfo then return end
-	local auxInfo = groupIDAdditionalInfo[activityInfo.groupFinderActivityGroupID] or {}
-	local name = getBestActivityName(activityInfo, auxInfo.typeID, auxInfo.expansionID)
-    for key, cacheInfo in pairs(infoByTagKey) do
-        if cacheInfo.name == name then return key; end
-    end
-end
-addon.cataRawDungeonInfo = dungeonInfoCache
-addon.Enum.Expansions = Expansions
-addon.Enum.DungeonType = DungeonType

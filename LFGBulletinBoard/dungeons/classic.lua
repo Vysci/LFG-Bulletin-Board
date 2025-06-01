@@ -19,26 +19,8 @@ if WOW_PROJECT_ID ~= WOW_PROJECT_CLASSIC then return end
 -- Required APIs.
 assert(C_LFGList.GetActivityInfoTable, tocName .. " requires the API `C_LFGList.GetActivityInfoTable` for parsing dungeon info")
 
--- initialize here for now, this should be moved to a file thats always guarantied to load first.
----@class AddonEnum
-addon.Enum = {}
-
----@enum DungeonTypeID # note that the actual value of the enum maybe be different depending on the client version.
-local DungeonType = {
-    Dungeon = 1,
-    Raid = 2,
-    None = 4,
-    Battleground = 5, -- in classic, 5 is used for BGs
-    WorldBoss = 6,
-}
-
----@enum ExpansionID
-local Expansions = {
-	Classic = 0,
-	BurningCrusade = 1,
-	Wrath = 2,
-	Cataclysm = 3,
-}
+local DungeonType = addon.Enum.DungeonType
+local Expansions = addon.Enum.Expansions
 
 local isSoD = C_Seasons and (C_Seasons.GetActiveSeason() == Enum.SeasonID.SeasonOfDiscovery)
 
@@ -259,5 +241,3 @@ function addon.GetDungeonKeyByID(opts)
     end
 end
 addon.rawClassicDungeonInfo = infoByTagKey
-addon.Enum.DungeonType = DungeonType
-addon.Enum.Expansions = Expansions
