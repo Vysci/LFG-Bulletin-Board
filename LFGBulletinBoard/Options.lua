@@ -4,14 +4,7 @@ local TOCNAME,
 local ChannelIDs
 local isClassicEra = WOW_PROJECT_ID == WOW_PROJECT_CLASSIC
 local isCataclysm = WOW_PROJECT_ID == WOW_PROJECT_CATACLYSM_CLASSIC
-local PROJECT_EXPANSION_ID = {
-	[WOW_PROJECT_CLASSIC] = GBB.Enum.Expansions.Classic,
-	[WOW_PROJECT_BURNING_CRUSADE_CLASSIC] = GBB.Enum.Expansions.BurningCrusade,
-	[WOW_PROJECT_WRATH_CLASSIC] = GBB.Enum.Expansions.Wrath,
-	-- note: global not defined in classic era client
-	[WOW_PROJECT_CATACLYSM_CLASSIC or 0] = GBB.Enum.Expansions.Cataclysm,
-}
-local EXPANSION_PROJECT_ID = tInvert(PROJECT_EXPANSION_ID)
+
 ---hack to remove "World of Warcraft: " from classic on esES/esMX clients
 local EXPANSION_NAME0 = EXPANSION_NAME0:gsub("World of Warcraft: ", "")
 local EXPANSION_FILTER_NAME = {
@@ -136,7 +129,7 @@ end
 ---@param expansionID ExpansionID
 local function GenerateExpansionPanel(expansionID)
 	GBB.OptionsBuilder.AddNewCategoryPanel(EXPANSION_FILTER_NAME[expansionID], false, true)
-	local isCurrentXpac = expansionID == PROJECT_EXPANSION_ID[WOW_PROJECT_ID];
+	local isCurrentXpac = expansionID == GBB.GetExpansionEnumForProjectID(WOW_PROJECT_ID);
 	local filters = {} ---@type CheckButton[]
 	filtersByExpansionID[expansionID] = filters
 	local dungeons = GBB.GetSortedDungeonKeys(
