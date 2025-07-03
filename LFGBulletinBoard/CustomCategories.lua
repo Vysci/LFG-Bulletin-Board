@@ -24,7 +24,9 @@ local CHARACTER_SPECIFIC_SYMBOL = "\42" -- "*"
 
 local isClassicEra = WOW_PROJECT_ID == WOW_PROJECT_CLASSIC
 local isCataclysm = WOW_PROJECT_ID == WOW_PROJECT_CATACLYSM_CLASSIC
+local isMists = WOW_PROJECT_ID == WOW_PROJECT_MISTS_CLASSIC
 local isSoD = isClassicEra and C_Seasons.GetActiveSeason() == Enum.SeasonID.SeasonOfDiscovery
+local ExpansionEnum  = (Addon.Enum --[[@as AddonEnum]]).Expansions
 
 ---@alias Locale "enUS"|"enGB"|"deDE"|"ruRU"|"frFR"|"zhTW"|"zhCN"|"ptBR"|"esES"|"koKR"
 
@@ -40,10 +42,10 @@ local isSoD = isClassicEra and C_Seasons.GetActiveSeason() == Enum.SeasonID.Seas
 
 ---@type {[string]: CustomFilter}
 local presets = {
-    RDF = { -- Random Dungeon Finder
+    RDF = { -- Random Dungeon Finder (Wotlk+)
         name = LFG_TYPE_RANDOM_DUNGEON,
         tags = {
-            enUS = "rdf random dungeons spam heroics gamma gammas",
+            enUS = "rdf random dungeons spam heroics gamma gammas celestial",
             -- deDE = nil,
             -- ruRU = nil,
             -- frFR = nil,
@@ -54,8 +56,18 @@ local presets = {
         },
         key = "RDF",
         levels = CopyTable(HIDDEN_LEVEL_RANGE),
-        isDisabled = not isCataclysm,
+        isDisabled = ExpansionEnum.Current < ExpansionEnum.Wrath,
         sortIdx = 1,
+    },
+    CHALLENGE_MODES = { -- Mists Challenge Mode dungeons
+        name = CHALLENGE_MODE,
+        tags = {
+            enUS = "challenge cm",
+        },
+        key = "CHALLENGE_MODES",
+        levels = CopyTable(HIDDEN_LEVEL_RANGE),
+        isDisabled = ExpansionEnum.Current ~= ExpansionEnum.Mists,
+        sortIdx = 2,
     },
     BLOOD = { -- Bloodmoon Event (SoD)
         name = "Bloodmoon",
