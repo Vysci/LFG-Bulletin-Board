@@ -731,7 +731,7 @@ local FilterSettingsPool = {
         local createBtn = self.create 
             or CreateFrame("Button", "$parentCreateFilter", parent, "UIPanelButtonTemplate");
         ---@cast createBtn UIPanelButtonTemplate
-        createBtn:SetText(CREATE)
+        createBtn:SetText(CREATE or ADD)
         createBtn:FitToText()
         createBtn:SetScript("OnClick", function()
             StaticPopup_Show("GBB_CREATE_CATEGORY", nil, nil, {panel = parent})
