@@ -9,11 +9,6 @@ local isSoD = isClassicEra and C_Seasons.GetActiveSeason() == Enum.SeasonID.Seas
 local debug = false
 local print = function(...) if debug then print('['..TOCNAME.."] ",...) end end
 
--- todo: this is a hack to only use this system for Cata+ clients
-if WOW_PROJECT_ID >= WOW_PROJECT_CATACLYSM_CLASSIC then
-	GBB.Dungeons.ProcessActivityInfo()
-end
-
 function GBB.GetDungeonNames()
 	local miscCategoryLocalizations = {
 		-- note: enUS treated as a fallback when no locale specific key exists
