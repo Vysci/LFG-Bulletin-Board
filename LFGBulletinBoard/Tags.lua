@@ -1157,8 +1157,16 @@ GBB.heroicTagsLoc = langSplit(heroicTags)
 GBB.Misc = (function() local t = {}; for k, _ in pairs(miscTags) do table.insert(t,k); end return t; end)()
 
 GBB.dungeonTagsLoc = dungeonTagsLoc
+
+-- todo: this is a hack to only use this system for Cata+ clients
+if WOW_PROJECT_ID >= WOW_PROJECT_CATACLYSM_CLASSIC then
+	GBB.Dungeons.ProcessActivityInfo()
+end
+
 -- Remove any unused dungeon tags based on game version
 local clientDungeonKeys = GBB.GetSortedDungeonKeys() -- includes raids/bgs/dungeons for all valid expansions.
+assert(next(clientDungeonKeys), "No client dungeons found. Was `ProcessActivityInfo()` called?")
+
 clientDungeonKeys = (function() ---@type table<string, boolean> convert to map
 	local t = {}; for _, key in ipairs(clientDungeonKeys) do t[key] = true; end return t;
 end)()
