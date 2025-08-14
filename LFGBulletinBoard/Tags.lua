@@ -943,7 +943,7 @@ local dungeonTags = {
 
 	-- Mists of Pandaria specific dungeons/raids
 	MSV = { -- "Mogu'shan Vaults"
-		enGB = "msv vaults",
+		enGB = "mgsv msv vaults elegon",
     },
     NIUZAO_TEMPLE = { -- "Siege of Niuzao Temple"
 		enGB = "niu niuzao temple nt",
@@ -955,16 +955,16 @@ local dungeonTags = {
 		enGB = "scarlet halls sh",
     },
     TOT = { -- "Throne of Thunder"
-		enGB = "tot tot10 tot25",
+		enGB = "tot tot10 tot25 thunder",
     },
     MSP = { -- "Mogu'shan Palace"
-		enGB = "palace msp",
+		enGB = "mogu palace msp",
     },
     TOTJS = { -- "Temple of the Jade Serpent"
 		enGB = "jade serpent totjs",
     },
     SPM = { -- "Shado-Pan Monastery"
-		enGB = "monastery spm",
+		enGB = "shadopan monastery spm",
     },
     BREWERY = { -- "Stormstout Brewery"
 		enGB = "brewery stormstout sb brew",
