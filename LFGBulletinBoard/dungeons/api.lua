@@ -2,6 +2,8 @@ local tocName,
 ---@class Addon_DungeonData: Addon_Localization
 addon = ...;
 local isClassicEra = WOW_PROJECT_ID == WOW_PROJECT_CLASSIC
+
+---@enum ExpansionID
 local Expansion = {
 	Classic = 0,
 	BurningCrusade = 1,
@@ -26,13 +28,14 @@ local DungeonType = isClassicEra and {
     Raid = 2,
     None = 4,
     Battleground = 5, -- in classic, 5 is used for BGs
-    WorldBoss = 6,
+    WorldBoss = 6, -- spoofed
 } or {
 	Dungeon = 1,
 	Raid = 2,
 	Zone = 4,
-	Random = 6,
-	Battleground = 7
+	-- Random = 6, -- unused, kept for consistency with blizzard API, see comment above
+	Battleground = 7,
+	WorldBoss = 8, -- spoofed
 }
 ---@class AddonEnum
 addon.Enum = addon.Enum or {}

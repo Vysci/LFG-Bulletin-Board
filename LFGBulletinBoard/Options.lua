@@ -5,14 +5,16 @@ local ChannelIDs
 local isClassicEra = WOW_PROJECT_ID == WOW_PROJECT_CLASSIC
 local isCataclysm = WOW_PROJECT_ID == WOW_PROJECT_CATACLYSM_CLASSIC
 
+local Expansions = GBB.Enum.Expansions
+
 ---hack to remove "World of Warcraft: " from classic on esES/esMX clients
 local EXPANSION_NAME0 = EXPANSION_NAME0:gsub("World of Warcraft: ", "")
 local EXPANSION_FILTER_NAME = {
-	[GBB.Enum.Expansions.Classic] = SUBTITLE_FORMAT:format(FILTERS, EXPANSION_NAME0),
-	[GBB.Enum.Expansions.BurningCrusade] = SUBTITLE_FORMAT:format(FILTERS, EXPANSION_NAME1),
-	[GBB.Enum.Expansions.Wrath] = SUBTITLE_FORMAT:format(FILTERS, EXPANSION_NAME2),
-	[GBB.Enum.Expansions.Cataclysm] = SUBTITLE_FORMAT:format(FILTERS, EXPANSION_NAME3),
-	[GBB.Enum.Expansions.Mists] = SUBTITLE_FORMAT:format(FILTERS, EXPANSION_NAME4),
+	[Expansions.Classic] = SUBTITLE_FORMAT:format(FILTERS, EXPANSION_NAME0),
+	[Expansions.BurningCrusade] = SUBTITLE_FORMAT:format(FILTERS, EXPANSION_NAME1),
+	[Expansions.Wrath] = SUBTITLE_FORMAT:format(FILTERS, EXPANSION_NAME2),
+	[Expansions.Cataclysm] = SUBTITLE_FORMAT:format(FILTERS, EXPANSION_NAME3),
+	[Expansions.Mists] = SUBTITLE_FORMAT:format(FILTERS, EXPANSION_NAME4),
 }
 
 ---@type {[number]: CheckButton[]} # Used by GetNumActiveFilters
@@ -130,7 +132,7 @@ end
 ---@param expansionID ExpansionID
 local function GenerateExpansionPanel(expansionID)
 	GBB.OptionsBuilder.AddNewCategoryPanel(EXPANSION_FILTER_NAME[expansionID], false, true)
-	local isCurrentXpac = expansionID == GBB.GetExpansionEnumForProjectID(WOW_PROJECT_ID);
+	local isCurrentXpac = expansionID == Expansions.Current;
 	local filters = {} ---@type CheckButton[]
 	filtersByExpansionID[expansionID] = filters
 	local dungeons = GBB.GetSortedDungeonKeys(
@@ -163,7 +165,11 @@ local function GenerateExpansionPanel(expansionID)
 	for _, key in pairs(raids) do
 		tinsert(filters, CheckBoxFilter(key, enabled))
 	end
-	if isClassicEra then -- World Bosses
+
+	-- World Bosses
+	if expansionID == Expansions.Classic
+	or expansionID == Expansions.Mists
+	then
 		local bosses = GBB.GetSortedDungeonKeys(expansionID, GBB.Enum.DungeonType.WorldBoss)
 		if #bosses > 0 then
 			GBB.OptionsBuilder.Indent(-10)
@@ -499,14 +505,10 @@ function GBB.OptionsInit ()
 	----------------------------------------------------------
 	-- Expansion specific filters
 	----------------------------------------------------------
-	local clientExpansionID = GBB.GetExpansionEnumForProjectID(WOW_PROJECT_ID);
-	local expansionsEnumLookup = tInvert(GBB.Enum.Expansions)
 	-- generate panels from current client expansion down to classic era.
-	for expansionID = clientExpansionID, 0, -1 do
-		local expansion = expansionsEnumLookup[expansionID]
-		if expansion then
-			GenerateExpansionPanel(GBB.Enum.Expansions[expansion])
-		end
+	-- note: if both limits are 0, this lua loop should still run with `expansionID == 0`.
+	for expansionID = Expansions.Current, Expansions.Classic, -1 do
+		GenerateExpansionPanel(expansionID)
 	end
 	----------------------------------------------------------
 	-- Custom Filters/Categories

@@ -73,6 +73,14 @@ local preLocalizedFallbacks = {
 	-- Language checkboxes 
 	["CboxTagsPortuguese"] = LFG_LIST_LANGUAGE_PTBR,
 	["CboxTagsSpanish"] = LFG_LIST_LANGUAGE_ESES,
+	-- Mists of Pandaria world bosses
+	-- note: these globals only exist in mop classic client, but its the only place they should be used.
+	SHA_OF_ANGER = WORLD_BOSS_SHA_OF_ANGER or "Sha of Anger",
+	GALLEON = WORLD_BOSS_GALLEON or "Galleon",
+	NALAK = WORLD_BOSS_NALAK or "Nalak",
+	OONDASTA = WORLD_BOSS_OONDASTA or "Oondasta",
+	FOUR_CELESTIALS = WORLD_BOSS_FOUR_CELESTIALS or "The Four Celestials",
+	ORDOS = WORLD_BOSS_ORDOS or "Ordos",
 }
 
 -- localized strings keyed by string identifier key

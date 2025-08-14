@@ -75,7 +75,7 @@ local classicDungeonLevels = GBB.GetDungeonLevelRanges(GBB.Enum.Expansions.Class
 
 local mistsDungeonKeys = GBB.GetSortedDungeonKeys(
 	GBB.Enum.Expansions.Mists,
-	{ GBB.Enum.DungeonType.Dungeon, GBB.Enum.DungeonType.Raid }
+	{ GBB.Enum.DungeonType.Dungeon, GBB.Enum.DungeonType.Raid, GBB.Enum.DungeonType.WorldBoss }
 );
 local cataDungeonKeys = GBB.GetSortedDungeonKeys(
 	GBB.Enum.Expansions.Cataclysm,

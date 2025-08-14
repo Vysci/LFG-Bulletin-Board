@@ -976,6 +976,26 @@ local dungeonTags = {
 		enGB = "heart hof",
     },
 
+	-- Mists of Pandaria World Bosses
+	SHA_OF_ANGER = { -- Sha of Anger
+		enGB = "sha shanger",
+	},
+	GALLEON = { -- Galleon
+		enGB = "galleon gal",
+	},
+	NALAK = { -- Nalak
+		enGB = "nalak nal",
+	},
+	OONDASTA = { -- Oondasta
+		enGB = "oondasta ond oond",
+	},
+	ORDOS = { -- Ordos
+		enGB = "ordos ord",
+	},
+	-- FOUR_CELESTIALS = { -- Four Celestials (Unused)
+	-- 	enGB = "chiji xuen yulon niuzao celestials",
+	-- },
+
 	-- PvP
 	RBG = { -- 10v10 Rated Battleground
 		enGB = "rbgs rbg rated",

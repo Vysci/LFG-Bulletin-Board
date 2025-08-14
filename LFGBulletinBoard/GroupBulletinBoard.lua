@@ -531,7 +531,7 @@ function GBB.CreateTagList ()
 		-- insert a "custom" locale to `dungeonTagsLoc` for custom tags (before calling `setTagListByLocale`).
 		GBB.dungeonTagsLoc["custom"]={}
 		for _, key in ipairs(sortedDungeonKeys) do
-			GBB.dungeonTagsLoc['custom'][key] = GBB.Split(GBB.DB.Custom[key])
+			GBB.dungeonTagsLoc['custom'][key] = GBB.Split(GBB.DB.Custom[key] or "")
 		end
 		setTagListByLocale("custom")
 	end
