@@ -115,6 +115,16 @@ local localizedAddonDisplayStrings = {
 		zhCN = "忽略物品链接",
 		zhTW = "忽略物品連結",
 	},
+	ISOLATE_CATEGORY = {
+		enUS ="Isolate Requests",
+		deDE = "Anfragen isolieren",
+		esMX = "Aislar solicitudes",
+		frFR = "Isoler les demandes",
+		ptBR = "Isolar solicitações",
+		ruRU = "Изолировать запросы",
+		zhCN = "隔离请求",
+		zhTW = "隔離請求",
+	},
 	JOIN_REQUEST_HEADER = {
         enUS = "Alt+Click to Request to Join Group",
         deDE = "Alt+Klick, um Beitritt zur Gruppe anzufragen",

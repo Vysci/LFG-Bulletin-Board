@@ -39,6 +39,7 @@ local ExpansionEnum  = (Addon.Enum --[[@as AddonEnum]]).Expansions
 ---@field isHidden boolean? # `true` if the filter should be hidden from UI. (used instead of deletion for saved presets)
 ---@field isDisabled boolean # `true` if the preset should be completely disabled for the current client (used by presets only)
 ---@field includeItemLinks boolean? # `true` if the filter should parse item links for keys words
+---@field isolateCategory boolean? # `true` if the filter should be isolated from other categories in the bulletin board
 
 ---@type {[string]: CustomFilter}
 local presets = {
@@ -490,9 +491,14 @@ local createSettingsDropdownButton = function(parent)
     button:SetupMenu(function(_, rootDescription)
         local categoryData = GroupBulletinBoardDB.CustomFilters[button.filterKey]
         if not categoryData then return end
-        local isSelected = function() return not categoryData.includeItemLinks end
-        local setSelected = function() categoryData.includeItemLinks = isSelected() end
-        rootDescription:CreateCheckbox(Addon.L.IGNORE_ITEM_LINKS, isSelected, setSelected)
+        rootDescription:CreateCheckbox(Addon.L.IGNORE_ITEM_LINKS,
+            function() return not categoryData.includeItemLinks end, -- note; this option is inverted.
+            function() categoryData.includeItemLinks = not categoryData.includeItemLinks end
+        )
+        rootDescription:CreateCheckbox(Addon.L.ISOLATE_CATEGORY,
+            function() return categoryData.isolateCategory end,
+            function() categoryData.isolateCategory = not categoryData.isolateCategory end
+        )
     end)
     return button;
 end
