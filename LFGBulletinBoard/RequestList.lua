@@ -378,6 +378,15 @@ local function getRequestMessageCategories(msg, sender, fromLFGChannel)
 		for categoryKey, include in pairs(dungeons) do
 			if include == true then table.insert(validCategories, categoryKey) end
 		end
+		-- check for custom categories which are set to be isolated/exclusive
+		for _, key in ipairs(validCategories) do
+			local customCategory = GBB.DB.CustomFilters[key] ---@type CustomFilter
+			if customCategory and customCategory.isolateCategory then
+				-- if the custom category is isolated, remove all other categories
+				validCategories = { key }
+				break;
+			end
+		end
 	end
 
 	return validCategories, hasHeroicTag, hasBlacklistTag
