@@ -3,6 +3,11 @@ local _, addon = ...;
 local DungeonType = addon.Enum.DungeonType
 local Expansions = addon.Enum.Expansions
 
+-- hacky way to get the localization table. rework in the future
+-- side-effects:
+-- custom users set translatiosn in the `Localization` settings panel will not apply to strings used in this file.
+local L = addon.LocalizationInit()
+
 local ActivityIDs = {
     MSV = { -- "Mogu'shan Vaults"
         335, -- "Mogu'shan Vaults (10 Normal)"
@@ -77,10 +82,17 @@ local ActivityIDs = {
         1717, -- "Scholomance (Celestial)"
     },
 }
--- The latest bgs aren't in the ActivityID table, so we need to add/spoof them manually
 local SpoofedActivityIDs = {
+    -- The latest bgs aren't in the ActivityID table, so we need to add/spoof them manually
     SSM = 50001, -- Silvershard Mines
     KOTMOGU = 50002, -- Temple of Kotmogu
+    -- Same for the world bosses
+    SHA_OF_ANGER = 50003, -- Sha of Anger
+    GALLEON = 50004, -- Galleon
+    NALAK = 50005, -- Nalak
+    OONDASTA = 50006, -- Oondasta
+    ORDOS = 50007, -- Ordos
+    -- FOUR_CELESTIALS = 50008, -- Four Celestials
 }
 
 local mistsMaxLevel = GetMaxLevelForExpansionLevel(Expansions.Mists)
@@ -93,6 +105,16 @@ local spoofBattleground = function(name)
         -- consider bg's part of the current expansion
 		expansionID = Expansions.Current,
 	}
+end
+
+local spoofWorldBoss = function(name)
+    return {
+        name = name,
+        typeID = DungeonType.WorldBoss,
+        expansionID = Expansions.Mists,
+        minLevel = 0,
+        maxLevel = 100,
+    }
 end
 
 --- Any info that needs to be overridden/spoofed/adjusted for a specific instances should be done here.
@@ -111,6 +133,12 @@ local infoOverrides = {
     ARENA = {maxLevel = mistsMaxLevel, minLevel = mistsMaxLevel},
     SSM = spoofBattleground(GetRealZoneText(727)),
     KOTMOGU = spoofBattleground(GetRealZoneText(998)),
+    SHA_OF_ANGER = spoofWorldBoss(L.SHA_OF_ANGER),
+    GALLEON = spoofWorldBoss(L.GALLEON),
+    NALAK = spoofWorldBoss(L.NALAK),
+    OONDASTA = spoofWorldBoss(L.OONDASTA),
+    ORDOS = spoofWorldBoss(L.ORDOS),
+    -- FOUR_CELESTIALS = spoofWorldBoss(L.FOUR_CELESTIALS),
 }
 
 for activityKey, activityIDs in pairs(ActivityIDs) do
