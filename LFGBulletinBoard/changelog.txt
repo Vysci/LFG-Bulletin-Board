@@ -1,5 +1,13 @@
 Group Bulletin Board
 
+3.46:
+  - General:
+    - Custom filter categories (under 'Additional Filters' in settings) now have a new option, "Isolate Requests".
+      - When enabled, any matching bulletin board requests will only get categorized under that filter.
+  - Mists of Pandaria:
+    - Added dedicated filter categories for world bosses (excluding four celestials)
+    - Tweaks to default search patterns for various MoP dungeons
+
 3.45:
   - Added preliminary support for Mists of Pandaria classic
   - Locking the bulleting board window now prevents resizing.
