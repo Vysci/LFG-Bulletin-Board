@@ -1,7 +1,7 @@
-## Interface: 11507, 50500
+## Interface: 11507, 50501
 ## Title: LFG Bulletin Board
 ## Notes: Sort LFG/LFM Messages
-## Version: 3.45
+## Version: 3.46
 ## Author: Vyscî, Bigsxy
 ## DefaultState: enabled
 ## SavedVariables: GroupBulletinBoardDB
