@@ -167,6 +167,12 @@ do -- Setup category selection dropdown buttons
 		for i = 1, #lfgCategories do
 			local categoryID = lfgCategories[i]
 			local categoryName = C_LFGList.GetLfgCategoryInfo(categoryID).name
+			if categoryID == 122
+				and GBB.Enum.Expansions.Current == GBB.Enum.Expansions.Mists
+			then -- add (PvP) suffix for mists' pvp specific "Custom" category
+				categoryName = ("%s (%s)"):format(categoryName, PVP)
+
+			end
 			rootDescription:CreateRadio(categoryName, IsSelected, OnSelect, categoryID)
 		end
 	end
