@@ -1,5 +1,9 @@
 Group Bulletin Board
 
+3.47:
+  - Mists:
+    - Fix lua errors related to font templates, when opening the bulletin board
+
 3.46:
   - General:
     - Custom filter categories (under 'Additional Filters' in settings) now have a new option, "Isolate Requests".
