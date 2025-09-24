@@ -556,7 +556,8 @@ local HeaderFrameMixin = {}
 function HeaderFrameMixin:OnLoad()
 	self:SetPoint("RIGHT", GroupBulletinBoardFrame_ScrollChildFrame, "RIGHT")
 	self:SetHeight(20)
-	self.Name = self:CreateFontString(nil, "ARTWORK", "GameFontNormalLeft")
+	self.Name = self:CreateFontString(nil, "ARTWORK", "GameFontNormal")
+	self.Name:SetJustifyH("LEFT")
 	self.Name:SetAllPoints()
 	self.Name:SetJustifyV("MIDDLE")
 
@@ -680,9 +681,12 @@ end
 ---@field requestData ChatRequestData? GBB.RequestList data object, expected for `UpdateTextLayout`
 local EntryFrameMixin = {}
 function EntryFrameMixin:OnLoad()
-	self.Name = self:CreateFontString(nil, "ARTWORK", "GameFontNormalLeft")
-	self.Message = self:CreateFontString(nil, "ARTWORK", "GameFontNormalLeft")
-	self.Time = self:CreateFontString(nil, "ARTWORK", "GameFontNormalRight")
+	self.Name = self:CreateFontString(nil, "ARTWORK", "GameFontNormal")
+	self.Name:SetJustifyH("LEFT")
+	self.Message = self:CreateFontString(nil, "ARTWORK", "GameFontNormal")
+	self.Message:SetJustifyH("LEFT")
+	self.Time = self:CreateFontString(nil, "ARTWORK", "GameFontNormal")
+	self.Time:SetJustifyH("RIGHT")
 	self.Highlight = self:CreateTexture(nil, "HIGHLIGHT")
 
 	-- points not expected to change, see `layoutEntryChildRegions` func for rest.
