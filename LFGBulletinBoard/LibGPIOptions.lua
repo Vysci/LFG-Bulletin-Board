@@ -218,7 +218,7 @@ function Options.SetScale(x) Options.scale = x; end
 ---@param parent Frame
 ---@param name string
 local CreateScrollFrames = function(parent, name)
-	local scrollBox = CreateFrame("Frame", name, parent, "WowScrollBox") --[[@as WowScrollBox]]
+	local scrollBox = CreateFrame("Frame", name, parent, "WowScrollBox") --[[@as WowScrollBox|Frame]]
 	local scrollBar = CreateFrame("EventFrame", name.."ScrollBar", parent, "MinimalScrollBar")
 	local barPadding = 12
 	scrollBar:SetPoint("RIGHT", parent, "RIGHT", -barPadding, 0)
@@ -234,13 +234,14 @@ local CreateScrollFrames = function(parent, name)
 	scrollChild:SetHeight(100) -- initial arbitrary height
 	scrollChild.ScrollBox = scrollBox;
 	scrollChild.ScrollBar = scrollBar;
-	-- Updates the canvas's resizable height and the scroll parent to match.
-	scrollChild.UpdateScrollLayout = function()
-		scrollChild:Layout() -- ResizeLayoutFrame:Layout()
-		scrollBox:Update(true) -- WowScrollBox:Update()
+	-- Updates the canvas's resizable layout height, and then the scroll parent to match.
+	function scrollChild.UpdateScrollLayout()
+		scrollChild:Layout()
+		scrollBox:FullUpdate(true)
 	end
 	local scrollView = CreateScrollBoxLinearView();
 	scrollView:SetPadding(0, 25) -- pad bottom of view with 25px
+	scrollView:SetPanExtent(50) -- scroll step
 	ScrollUtil.InitScrollBoxWithScrollBar(scrollBox, scrollBar, scrollView);
 	ScrollUtil.AddManagedScrollBarVisibilityBehavior(scrollBox, scrollBar); -- adds autohide to scrollbar
 	return scrollBox, scrollChild
