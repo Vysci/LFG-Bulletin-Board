@@ -1,5 +1,9 @@
 Group Bulletin Board
 
+3.48:
+  - Era:
+   - Fix issue with addon options panel scrolling for patch 1.15.8
+
 3.47:
   - Mists:
     - Fix lua errors related to font templates, when opening the bulletin board
