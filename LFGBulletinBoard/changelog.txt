@@ -1,5 +1,9 @@
 Group Bulletin Board
 
+3.49:
+  - General:
+    - Fix issues in 1.15.8 and 5.5.2 encountered when interacting with popup dialogs created by the addon
+
 3.48:
   - Era:
    - Fix issue with addon options panel scrolling for patch 1.15.8

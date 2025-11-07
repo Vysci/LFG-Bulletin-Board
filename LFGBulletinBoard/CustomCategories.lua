@@ -354,33 +354,33 @@ StaticPopupDialogs["GBB_CREATE_CATEGORY"] = {
     text = ENTER_FILTER_NAME,
     button1 = CREATE,
     button2 = CANCEL,
-    OnButton1 = function(self, data)
+    OnButton1 = function(dialog, data)
         PlaySound(SOUNDKIT.IG_MAINMENU_OPTION_CHECKBOX_ON);
-		local name = strtrim(self.editBox:GetText());
+		local name = strtrim(dialog:GetEditBox():GetText());
 		AddNewFilterToStore(name);
         updateRelatedAddonData(nil, true) -- skips inserting tags (none yet)
         Addon.UpdateAdditionalFiltersPanel(data.panel)
     end,
-    EditBoxOnTextChanged = function(self)
-		if (strtrim(self:GetText()) == "" ) then
-			self:GetParent().button1:Disable();
+    EditBoxOnTextChanged = function(editBox)
+		if (strtrim(editBox:GetText()) == "" ) then
+			editBox:GetParent():GetButton1():Disable();
 		else
-			self:GetParent().button1:Enable();
+			editBox:GetParent():GetButton1():Enable();
 		end
 	end,
-    EditBoxOnEnterPressed = function(self)
-		local name = strtrim(self:GetText());
+    EditBoxOnEnterPressed = function(editBox)
+		local name = strtrim(editBox:GetText());
         if name == "" then return end
         PlaySound(SOUNDKIT.IG_MAINMENU_OPEN);
 		AddNewFilterToStore(name);
         updateRelatedAddonData(nil, true)
-        Addon.UpdateAdditionalFiltersPanel(self:GetParent().data.panel)
-		self:GetParent():Hide();
+        Addon.UpdateAdditionalFiltersPanel(editBox:GetParent().data.panel)
+		editBox:GetParent():Hide();
 	end,
-    OnShow = function(self)
-        self.button1:SetEnabled(false)
+    OnShow = function(dialog)
+        dialog:GetButton1():SetEnabled(false)
     end,
-    EditBoxOnEscapePressed = function(self) self:GetParent():Hide() end,
+    EditBoxOnEscapePressed = function(editBox) editBox:GetParent():Hide() end,
 	hideOnEscape = 1,
 	hasEditBox = 1,
 	maxLetters = 31
@@ -389,45 +389,45 @@ StaticPopupDialogs["GBB_RENAME_CATEGORY"] = {
     text = ENTER_FILTER_NAME,
     button1 = PET_RENAME,
     button2 = CANCEL,
-    OnButton1 = function(self, data)
+    OnButton1 = function(dialog, data)
         ---@cast data {settings: FilterSettingsPool, key: string, options: Frame}
         local entry = GroupBulletinBoardDB.CustomFilters[data.key]
 		if not entry then return end
-		local name = strtrim(self.editBox:GetText());
+		local name = strtrim(dialog:GetEditBox():GetText());
         if name == "" then return end
         entry.name = name
         data.settings:UpdateFilterState(data.options, entry)
         updateRelatedAddonData(nil, true) -- skips inserting tags (none changed)
     end,
-    EditBoxOnTextChanged = function(self)
-		if (strtrim(self:GetText()) == "" ) then
-			self:GetParent().button1:Disable();
+    EditBoxOnTextChanged = function(editBox)
+		if (strtrim(editBox:GetText()) == "" ) then
+			editBox:GetParent():GetButton1():Disable();
 		else
-			self:GetParent().button1:Enable();
+			editBox:GetParent():GetButton1():Enable();
 		end
 	end,
-    EditBoxOnEnterPressed = function(self)
-		local name = strtrim(self:GetText());
+    EditBoxOnEnterPressed = function(editBox)
+		local name = strtrim(editBox:GetText());
         if name == "" then return end
         ---@type {settings: FilterSettingsPool, key: string, options: Frame}
-        local data = self:GetParent().data
+        local data = editBox:GetParent().data
         local entry = GroupBulletinBoardDB.CustomFilters[data.key]
         if not entry then return end
         entry.name = name
         data.settings:UpdateFilterState(data.options, entry)
         updateRelatedAddonData(nil, true)
-        self:GetParent():Hide();
+        editBox:GetParent():Hide();
 	end,
-    OnShow = function(self)
-        self.button1:SetEnabled(false)
-        local preset = presets[self.data.key]
+    OnShow = function(dialog)
+        dialog:GetButton1():SetEnabled(false)
+        local preset = presets[dialog.data.key]
         if preset then
-            self.editBox:SetText(preset.name)
-            self.editBox:HighlightText()
-            self.editBox:SetCursorPosition(0)
+            dialog:GetEditBox():SetText(preset.name)
+            dialog:GetEditBox():HighlightText()
+            dialog:GetEditBox():SetCursorPosition(0)
         end
     end,
-    EditBoxOnEscapePressed = function(self) self:GetParent():Hide() end,
+    EditBoxOnEscapePressed = function(editBox) editBox:GetParent():Hide() end,
 	hideOnEscape = true,
 	hasEditBox = 1,
 	maxLetters = 31
