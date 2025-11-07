@@ -190,20 +190,20 @@ function GBB.InitGroupList()
 		countInvisibleLetters = true,
 		editBoxWidth = 350,
 		OnAccept = function(self)
-			EditEntry.Note=self.editBox:GetText()
+			EditEntry.Note=self:GetEditBox():GetText()
 			GBB.UpdateGroupList()
 		end,
 		OnShow = function(self)
-			self.editBox:SetText(EditEntry.Note or "");
-			self.editBox:SetFocus();
+			self:GetEditBox():SetText(EditEntry.Note or "");
+			self:GetEditBox():SetFocus();
 		end,
 		OnHide = function(self)
 			ChatEdit_FocusActiveWindow();
-			self.editBox:SetText("");			
+			self:GetEditBox():SetText("");			
 		end,
 		EditBoxOnEnterPressed = function(self)
 			local parent = self:GetParent();
-			EditEntry.Note=parent.editBox:GetText()
+			EditEntry.Note=parent:GetEditBox():GetText()
 			GBB.UpdateGroupList()
 			parent:Hide();
 		end,
