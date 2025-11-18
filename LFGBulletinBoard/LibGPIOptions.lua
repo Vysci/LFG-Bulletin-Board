@@ -617,25 +617,26 @@ function Options.AddTextToCurrentPanel(text,width,center)
 	textFrame:SetPoint("TOPLEFT",Options.NextRelativ,"BOTTOMLEFT", Options.NextRelativX, Options.NextRelativY-2)
 	textFrame:SetScale(Options.scale)
 
-	if width==nil or width==0 then 
-		textFrame:SetWidth(textFrame:GetStringWidth())
-	elseif width<0 then
-		if string.sub(Options.CurrentPanel:GetName(),  -11) == "ScrollChild" then
-			-- edge case for scrollable frames
-			textFrame:SetPoint("RIGHT",Options.CurrentPanel:GetParent():GetParent(),"RIGHT",width,0)
-		else
-			textFrame:SetPoint("RIGHT",width,0)
-		end
-		if not center then 
-			textFrame:SetJustifyH("LEFT")
-			textFrame:SetJustifyV("TOP")
+	-- if no width then; set to min(max string width, panel width minus padding)
+	-- if negative width then: set width as if no width but use given width as right offset
+	if not width or width <= 0 then
+		local parentFrame = string.sub(Options.CurrentPanel:GetName(), -11) == "ScrollChild"
+			and Options.CurrentPanel:GetParent():GetParent() -- edge case for scrollable frames
+			or Options.CurrentPanel
+		local textFrameWidth = math.min(
+			textFrame:GetStringWidth(),
+			SettingsPanel.Container.SettingsCanvas:GetWidth() - 20
+		)
+		textFrame:SetWidth(textFrameWidth)
+		if width and width < 0 then
+			textFrame:SetPoint("RIGHT", parentFrame, "RIGHT", width, 0)
 		end
 	else
 		textFrame:SetWidth(width)
-		if not center then 
-			textFrame:SetJustifyH("LEFT")
-			textFrame:SetJustifyV("TOP")
-		end
+	end
+	if not center then
+		textFrame:SetJustifyH("LEFT")
+		textFrame:SetJustifyV("TOP")
 	end
 	Options.NextRelativ=textFrame
 	Options.NextRelativX=0
