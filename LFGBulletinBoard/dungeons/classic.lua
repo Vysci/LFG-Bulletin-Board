@@ -1,26 +1,15 @@
 local tocName,
     ---@class Addon_DungeonData: Addon_Localization
     addon = ...;
+local Expansions = addon.Enum.Expansions
 
-if WOW_PROJECT_ID ~= WOW_PROJECT_CLASSIC then return end
----@alias DungeonID number
----@alias ActivityID number
-
----@class DungeonInfo
----@field name string # Game client localized name of the dungeon
----@field minLevel number
----@field maxLevel number
----@field typeID DungeonTypeID -- 1 = dungeon, 2 = raid, 5 = bg
----@field expansionID ExpansionID
----@field tagKey string # The key used to identify the dungeon in the addon
----@field size number? # The size of the dungeon, only used for raids and battlegrounds
----@field isHoliday boolean? # If the dungeon is a holiday event
+-- Only load this file in Classic Era and BC clients
+if Expansions.Current > Expansions.BurningCrusade then return end
 
 -- Required APIs.
 assert(C_LFGList.GetActivityInfoTable, tocName .. " requires the API `C_LFGList.GetActivityInfoTable` for parsing dungeon info")
 
 local DungeonType = addon.Enum.DungeonType
-local Expansions = addon.Enum.Expansions
 
 local isSoD = C_Seasons and (C_Seasons.GetActiveSeason() == Enum.SeasonID.SeasonOfDiscovery)
 
@@ -56,7 +45,10 @@ local LFGActivityIDs = {
     ["DME"] = 813,  -- Dire Maul - East
     ["DMW"] = 814,  -- Dire Maul - West
     ["DMN"] = 815,  -- Dire Maul - North
-    ["STR"] = 816,  -- Stratholme [816|1603]
+    ["STR"] = {
+        816,  -- Stratholme (Main Gate)
+        1603, -- Stratholme (Service Gate)
+    },
     ["SCH"] = 797,  -- Scholomance
     ["LBRS"] = 812,  -- Lower Blackrock Spire
     ["UBRS"] = 837,  -- Upper Blackrock Spire
@@ -65,8 +57,21 @@ local LFGActivityIDs = {
     ["BWL"] = 840,  -- Blackwing Lair
     ["NAXX"] = 841,  -- Naxxramas
     -- Battlegrounds
-    ["WSG"] = 924, -- Warsong Gulch [919-924]
-    ["AB"] = 930,  -- Arathi Basin [926-930]
+    ["WSG"] = { -- Warsong Gulch
+        919, -- "Warsong Gulch (10-19)"
+        920, -- "Warsong Gulch (20-29)"
+        921, -- "Warsong Gulch (30-39)"
+        922, -- "Warsong Gulch (40-49)"
+        923, -- "Warsong Gulch (50-59)"
+        924, -- "Warsong Gulch (60)"
+    },
+    ["AB"] = { -- Arathi Basin
+        926, -- "Arathi Basin (20-29)"
+        927, -- "Arathi Basin (30-39)"
+        928, -- "Arathi Basin (40-49)"
+        929, -- "Arathi Basin (50-59)"
+        930, -- "Arathi Basin (60)"
+    },
     ["AV"] = 932,  -- Alterac Valley
     -- SoD/Classic augmented
     ["BFD"] = not isSoD and 801 or 1604,  -- Blackfathom Deeps
@@ -85,159 +90,39 @@ local LFGActivityIDs = {
     ["KARA"] = isSoD and 1693 or nil, -- Karazhan Crypts
     ["ENCLAVE"] = isSoD and 1710 or nil -- Scarlet Enclave
 }
---see https://wago.tools/db2/GroupFinderCategory?build=1.15.2.54332
-local activityCategoryTypeID  = {
-    [2] = DungeonType.Dungeon ,
-    [114] = DungeonType.Raid,
-    [118] = DungeonType.Battleground,
-}
-local idToDungeonKey = tInvert(LFGActivityIDs)
 
 --- Any info that needs to be overridden/spoofed for a specific instances should be done here.
 local infoOverrides = {
-    CRY = isSoD and { name = L.THUNDERAAN, typeID = DungeonType.WorldBoss },
-    AZGS = { name = L.AZUREGOS, typeID = DungeonType.WorldBoss },
-    KAZK = { name = L.LORD_KAZZAK, typeID = DungeonType.WorldBoss },
-    NMG = isSoD and { typeID = DungeonType.WorldBoss },
+    CRY = isSoD and { name = L.THUNDERAAN, typeID = DungeonType.WorldBoss } or nil,
+    AZGS = isSoD and { name = L.AZUREGOS, typeID = DungeonType.WorldBoss } or nil,
+    KAZK = isSoD and { name = L.LORD_KAZZAK, typeID = DungeonType.WorldBoss } or nil,
+    NMG = isSoD and { typeID = DungeonType.WorldBoss } or nil,
     -- Strat is split into "Main"/"Service" Gates between 2 IDs. We use just the plain zone name.
     STR = { name = GetRealZoneText(329) },
     -- GetActivityInfoTable has unique entries for each BG level bracket. We however use a single entry.
-    WSG = { minLevel = 10, maxLevel = 60 },
-    AB = { minLevel = 20, maxLevel = 60 },
+    WSG = { minLevel = 10, maxLevel = 60, expansionID = Expansions.Classic },
+    AB = { minLevel = 20, maxLevel = 60, expansionID = Expansions.Classic },
     -- Note: Following entries for are completely spoofed. hardcoded info here.
     SM2 = {
         name = GetRealZoneText(189),
         minLevel = 30, -- SMG min
         maxLevel = 46, -- SMC max
-        typeID = DungeonType.Dungeon
+        typeID = DungeonType.Dungeon,
+        expansionID = Expansions.Classic,
     },
     DM2 = {
         name = GetRealZoneText(429),
         minLevel = 54, -- DME min
         maxLevel = 60, -- DMN max
-        typeID = DungeonType.Dungeon
+        typeID = DungeonType.Dungeon,
+        expansionID = Expansions.Classic,
     },
 }
 
----@type {[DungeonID]: DungeonInfo}
-local dungeonInfoCache = {}
----@type {[string]: DungeonInfo}
-local infoByTagKey = {}
-local numDungeons = 0
--- begin querying game client for localized dungeon info
-local function cacheActivityInfo(key, activityID)
-    local cached = {}
-    local activityInfo = C_LFGList.GetActivityInfoTable(activityID) or {categoryID = 0}
-    cached = {
-        name = activityInfo.shortName or activityInfo.fullName,
-        minLevel = activityInfo.minLevelSuggestion or activityInfo.minLevel,
-        maxLevel = activityInfo.maxLevelSuggestion or activityInfo.maxLevel,
-        typeID = activityCategoryTypeID[activityInfo.categoryID],
-        tagKey = key,
-        expansionID = Expansions.Classic,
-    }
-
-    local overrides = infoOverrides[key]
-    if overrides then
-        for k, v in pairs(overrides) do
-            cached[k] = v
-        end
-    end
-    -- Required fields. If asserts failing, please add any missing data to `infoOverrides`.
-    assert(cached.name, "Missing name for activityID: " .. activityID)
-    assert(cached.typeID, "Missing typeID for activityID: " .. activityID)
-    assert(cached.minLevel and cached.maxLevel, "Missing level range for activityID: " .. activityID)
-
-    dungeonInfoCache[activityID] = cached
-    infoByTagKey[cached.tagKey] = cached
-    numDungeons = numDungeons + 1
+for key, activityIDs in pairs(LFGActivityIDs) do
+   if type(activityIDs) ~= "table" then activityIDs = { activityIDs } end
+   addon.Dungeons.queueActivityForInfo(key, activityIDs)
 end
-for key, activityID in pairs(LFGActivityIDs) do
-    cacheActivityInfo(key, activityID)
+for key, activityInfo in pairs(infoOverrides) do
+    addon.Dungeons.queueActivityInfoOverride(key, activityInfo)
 end
-
----Returns info table for the specified dungeon key or `nil` if it doesn't exist.
----@param dungeonKey string
----@return (DungeonInfo|table<DungeonID, DungeonInfo>)?
-function addon.GetDungeonInfo(dungeonKey, useRef)
-    if dungeonKey then
-        local info = infoByTagKey[dungeonKey]
-        if info then
-            return useRef and info or CopyTable(info)
-        end
-    end
-end
-
----Optionally filter by expansionID and/or typeID
----Sorted by min level, ties broken on min max level, then by dungeonID
--- note: the new dungeons are sorted slightly differently,
--- plan is to add  a custom sort index that users can-
--- change in the config so that dungeons sorted to their preference.
----@param expansionID ExpansionID?
----@param typeID DungeonTypeID|DungeonTypeID[]?
-function addon.GetSortedDungeonKeys(expansionID, typeID)
-	local keys = {}
-	for dungeonID, info in pairs(dungeonInfoCache) do
-        local tagKey = idToDungeonKey[dungeonID]
-		if (not expansionID or info.expansionID == expansionID)
-		and (not typeID -- only include set typeIDs
-			or (type(typeID) == "number" and info.typeID == typeID)
-			or (type(typeID) == "table" and tContains(typeID, info.typeID)))
-        and (tagKey ~= "DM2" and tagKey ~= "SM2") -- not actually dungeons
-		then
-			tinsert(keys, tagKey)
-		end
-	end
-	table.sort(keys, function(keyA, keyB)
-		local infoA = infoByTagKey[keyA];
-        local infoB = infoByTagKey[keyB];
-        if infoA.typeID == infoB.typeID then
-            if infoA.minLevel == infoB.minLevel then
-                if infoA.maxLevel == infoB.maxLevel then
-                    if infoA.name == infoB.name then
-                        return keyA < keyB
-                    else return infoA.name < infoB.name end
-                else return infoA.maxLevel < infoB.maxLevel end
-            else return infoA.minLevel < infoB.minLevel end
-        else return infoA.typeID < infoB.typeID end
-	end)
-	return keys
-end
-
-local cachedLevelRanges
-function addon.GetDungeonLevelRanges()
-    if cachedLevelRanges then return cachedLevelRanges end
-    cachedLevelRanges = {}
-    for key, info in pairs(infoByTagKey) do
-        cachedLevelRanges[key] = {info.minLevel, info.maxLevel}
-    end
-    return cachedLevelRanges
-end
-
-local activityRemap = {
-    [919] = 924, -- WSG 10 - 19
-    [920] = 924, -- 20 - 29
-    [921] = 924, -- 30 - 39
-    [922] = 924, -- 40 - 49
-    [923] = 924, -- 50 - 59
-    [926] = 930, -- AB 20 - 29
-    [927] = 930, -- 30 - 39
-    [928] = 930, -- 40 - 49
-    [929] = 930, -- 50 - 59
-    [1603] = 816, -- Link STR live to STR undead (see infoOverrides table)
-}
----@param opts {activityID: number}
-function addon.GetDungeonKeyByID(opts)
-    local activityId = activityRemap[opts.activityID] or opts.activityID
-    local key = idToDungeonKey[activityId]
-    if key ~= nil then return key end;
-    -- if no key, fallback to a name match
-    local info = C_LFGList.GetActivityInfoTable(activityId)
-    if not info then return end
-    for key, v in pairs(infoByTagKey) do
-        if v.name == info.shortName or v.name == info.fullName then
-            return key
-        end
-    end
-end
-addon.rawClassicDungeonInfo = infoByTagKey
