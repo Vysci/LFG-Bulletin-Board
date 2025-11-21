@@ -1178,10 +1178,8 @@ GBB.Misc = (function() local t = {}; for k, _ in pairs(miscTags) do table.insert
 
 GBB.dungeonTagsLoc = dungeonTagsLoc
 
--- todo: this is a hack to only use this system for Cata+ clients
-if WOW_PROJECT_ID >= WOW_PROJECT_CATACLYSM_CLASSIC then
-	GBB.Dungeons.ProcessActivityInfo()
-end
+-- todo: move this call to somewhere more logical. Forgetting to call this could be a footgun.
+GBB.Dungeons.ProcessActivityInfo()
 
 -- Remove any unused dungeon tags based on game version
 local clientDungeonKeys = GBB.GetSortedDungeonKeys() -- includes raids/bgs/dungeons for all valid expansions.

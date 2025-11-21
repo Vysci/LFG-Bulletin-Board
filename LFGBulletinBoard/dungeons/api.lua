@@ -3,6 +3,7 @@ local tocName,
 addon = ...;
 local isClassicEra = WOW_PROJECT_ID == WOW_PROJECT_CLASSIC
 
+---todo: move this enum to a constants.lua or something that loads first.
 ---@enum ExpansionID
 local Expansion = {
 	Classic = 0,
@@ -23,10 +24,11 @@ Expansion.Current = ExpansionByProjectID[WOW_PROJECT_ID]
 
 -- These enums are somewhat inline with the TypeID column of https://wago.tools/db2/LFGDungeons
 -- todo: unify at some point. This was more important when i was using GetLFGDungeonInfo API.
+---@enum DungeonTypeID
 local DungeonType = isClassicEra and {
 	Dungeon = 1,
     Raid = 2,
-    None = 4,
+    Zone = 4,
     Battleground = 5, -- in classic, 5 is used for BGs
     WorldBoss = 6, -- spoofed
 } or {
@@ -46,18 +48,26 @@ function addon.GetExpansionEnumForProjectID(projectID)
 	return ExpansionByProjectID[projectID]
 end
 
--- NOTE: For now only use the following API's to generate the cata/mists dungeon info
--- For classic it can remain self contained in the `classic.lua` file until tbc refactoring
-if WOW_PROJECT_ID < WOW_PROJECT_CATACLYSM_CLASSIC then return end
+local activityCategoryDungeonType =
+	--see https://wago.tools/db2/GroupFinderCategory?build=2.5.5.64508
+	Expansion.Current <= Expansion.BurningCrusade and {
+		[2] = DungeonType.Dungeon,
+		[114] = DungeonType.Raid,
+		[117] = DungeonType.Dungeon,
+		[118] = DungeonType.Battleground,
+	}
+	--see https://wago.tools/db2/GroupFinderCategory?build=5.5.1.63364
+	or Expansion.Current >= Expansion.Cataclysm and {
+		[2] = DungeonType.Dungeon,
+		[114] = DungeonType.Raid,
+		[118] = DungeonType.Battleground,
+		[125] = DungeonType.Battleground,
+		[126] = DungeonType.Battleground,
+	}
 
---see https://wago.tools/db2/GroupFinderCategory?build=5.5.1.63364
-local activityCategoryDungeonType  = {
-    [2] = DungeonType.Dungeon ,
-    [114] = DungeonType.Raid,
-    [118] = DungeonType.Battleground,
-    [125] = DungeonType.Battleground,
-    [126] = DungeonType.Battleground,
-}
+assert(activityCategoryDungeonType, "[[Runtime check failed]]: activityCategoryDungeonType missing entries for current expansion client", {
+	expansionID = Expansion.Current,
+})
 
 --todo: can remove typeID from this table and rely solely on activityCategoryDungeonType
 local activityGroupExpansion = {
@@ -132,6 +142,20 @@ local getBestActivityName = function(activityInfo, typeID, expansionID)
 	return (activityInfo.shortName and activityInfo.shortName ~= "" and activityInfo.shortName)
     or activityInfo.fullName
 end
+
+---@alias DungeonID number
+---@alias ActivityID number
+
+---@class DungeonInfo
+---@field name string # Game client localized name of the dungeon
+---@field minLevel number
+---@field maxLevel number
+---@field typeID DungeonTypeID -- 1 = dungeon, 2 = raid, 5 = bg
+---@field expansionID ExpansionID
+---@field tagKey string # The key used to identify the dungeon in the addon
+---@field size number? # The size of the dungeon, only used for raids and battlegrounds
+---@field isHoliday boolean? # If the dungeon is a holiday event
+
 local uniqueIdInfoCache = {}
 --- note: multiple activityID's can map to the same dungeon/tag key.
 --- This table only tracks the state for the last ID passed to `cacheActivityInfo`
@@ -153,7 +177,7 @@ end
 ---@param activityKey string
 ---@param overrides DungeonInfo|table Partial DungeonInfo to override.
 local queueActivityInfoOverride = function(activityKey, overrides)
-	assert(queuedForCache[activityKey], "No queued activityIDs for tagKey. Queue activity with queueActivityInfo first. ", activityKey)
+	assert(queuedForCache[activityKey], ("[[queueActivityInfoOverride Error]]: No queued activityID(s) for tagKey `%s`"):format(activityKey), activityKey)
 	if not queuedForCache[activityKey].overrides then
 		queuedForCache[activityKey].overrides = overrides
 	else
@@ -327,6 +351,9 @@ function addon.GetDungeonKeyByID(opts)
 	local auxInfo = activityGroupExpansion[activityInfo.groupFinderActivityGroupID] or {}
 	local name = getBestActivityName(activityInfo, auxInfo.typeID, auxInfo.expansionID)
     for key, cacheInfo in pairs(infoByTagKey) do
-        if cacheInfo.name == name then return key; end
+        if cacheInfo.name == name then
+			activityIDToKey[opts.activityID] = key
+			return key;
+		end
     end
 end

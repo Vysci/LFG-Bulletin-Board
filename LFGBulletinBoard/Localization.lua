@@ -2,8 +2,6 @@ local TOCNAME,
 	---@class Addon_Localization
 	GBB=...;
 
-local isClassicEra = WOW_PROJECT_ID == WOW_PROJECT_CLASSIC
-
 ---Supports utf8 strings for non-english clients
 local initialChar = function(str)
 	---@cast str string
@@ -25,7 +23,15 @@ local preLocalizedFallbacks = {
 	["lfg_channel"]= (function()
 		-- related issues: #207
 		-- client specific Id's here: https://wago.tools/db2/ChatChannels?build=4.4.0.54986
-		local lfgChannelID = isClassicEra and 24 or 26
+		local db2TableIds = {
+			[WOW_PROJECT_CLASSIC] = 24,
+			[WOW_PROJECT_BURNING_CRUSADE_CLASSIC] = 24,
+			[WOW_PROJECT_WRATH_CLASSIC] = 28,
+			[WOW_PROJECT_CATACLYSM_CLASSIC] = 28,
+			[WOW_PROJECT_MISTS_CLASSIC] = 28,
+		}
+		local lfgChannelID = db2TableIds[WOW_PROJECT_ID]
+		assert(lfgChannelID ~= nil, "[Addon Check Failed]: No LFG Chat Channel ID found for this game client")
 		local localizedName = C_ChatInfo.GetChannelShortcutForChannelID(lfgChannelID)
 		return localizedName
 	end)(),
