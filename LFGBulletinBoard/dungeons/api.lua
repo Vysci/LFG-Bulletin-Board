@@ -1,7 +1,6 @@
 local tocName,
 ---@class Addon_DungeonData: Addon_Localization
 addon = ...;
-local isClassicEra = WOW_PROJECT_ID == WOW_PROJECT_CLASSIC
 
 ---todo: move this enum to a constants.lua or something that loads first.
 ---@enum ExpansionID
@@ -25,7 +24,7 @@ Expansion.Current = ExpansionByProjectID[WOW_PROJECT_ID]
 -- These enums are somewhat inline with the TypeID column of https://wago.tools/db2/LFGDungeons
 -- todo: unify at some point. This was more important when i was using GetLFGDungeonInfo API.
 ---@enum DungeonTypeID
-local DungeonType = isClassicEra and {
+local DungeonType = Expansion.Current <= Expansion.BurningCrusade and {
 	Dungeon = 1,
     Raid = 2,
     Zone = 4,
@@ -98,7 +97,8 @@ local activityGroupExpansion = {
 }
 do -- link groupIDs to ones that share expansion and dungeon types
 	local groupIdMap = {
-		[288] = 286, -- Burning Crusade Heroic Dungeons
+		[288] = 286, -- Burning Crusade Heroic Dungeons (3.4.1 onwards)
+		[380] = 286, -- Burning Crusade Heroic Dungeons (2.5.5)
 		[289] = 287, -- Lich King Heroic Dungeons
 		[311] = 287, -- Titan Rune Alpha
 		[312] = 287, -- Titan Rune Beta
@@ -164,13 +164,20 @@ local activityIDToKey = {}
 local numDungeons = 0
 local queuedForCache = {}
 
---- By design queued activityID's for a key are replaced on repeat calls.
---- This allows overridding any stale/changed activityIDs from expansion to expansion.
+--- Note: By default activityID's for a key are overwritten on repeat calls.
+--- This allows overridding any stale/changed activityIDs from expansion to expansion. Use `appendIDsOnCollision` to append instead.
 ---@param activityKey string also called the `dungeonKey`. String identifier for the dungeon.
 ---@param activityIDs number[] List of activityIDs to use for ripping client information about this dungeon.
-local queueActivityForInfo =function (activityKey, activityIDs)
+---@param options {appendIDsOnCollision: boolean?}|nil
+local queueActivityForInfo =function (activityKey, activityIDs, options)
     assert(next(activityIDs) and activityKey, "Invalid arguments to cacheActivityInfo: ", activityIDs, activityKey)
     queuedForCache[activityKey] = queuedForCache[activityKey] or {}
+	if options and options.appendIDsOnCollision and queuedForCache[activityKey].activityIDs then
+		for _, activityID in ipairs(activityIDs) do
+			tinsert(queuedForCache[activityKey].activityIDs, activityID)
+		end
+		return;
+	end
     queuedForCache[activityKey].activityIDs = activityIDs
 end
 --- Can be called multiple times per dungeonKey. Repeat call to replace any previous existing override kvs.

@@ -2,9 +2,8 @@ local TOCNAME,
 	---@class Addon_Dungeons : Addon_Tags, Addon_DungeonData
 	GBB = ...;
 
-local isClassicEra = WOW_PROJECT_ID == WOW_PROJECT_CLASSIC
-local isCata = WOW_PROJECT_ID == WOW_PROJECT_CATACLYSM_CLASSIC
-local isSoD = isClassicEra and C_Seasons.GetActiveSeason() == Enum.SeasonID.SeasonOfDiscovery
+local Expansion = GBB.Enum.Expansions
+local isClassicEra = Expansion.Current == Expansion.Classic
 
 local debug = false
 local print = function(...) if debug then print('['..TOCNAME.."] ",...) end end
@@ -215,14 +214,10 @@ function GBB.GetDungeonSort(additonalCategories)
 	return dungeonSort
 end
 
-if isClassicEra then
-	GBB.dungeonLevel = mergeTables(classicDungeonLevels, miscCatergoriesLevels)
-else
-	GBB.dungeonLevel = mergeTables(
-		GBB.GetDungeonLevelRanges(), -- all dungeon types, all expansions
-		miscCatergoriesLevels
-	)
-end
+GBB.dungeonLevel = mergeTables(
+	-- all dungeon types, all available expansions for client
+	GBB.GetDungeonLevelRanges(), miscCatergoriesLevels
+)
 
 -- needed because Option.lua hardcodes a checkbox for "DEADMINES"
 GBB.dungeonLevel["DEADMINES"] = GBB.dungeonLevel["DM"]
