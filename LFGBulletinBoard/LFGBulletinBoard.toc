@@ -1,4 +1,4 @@
-## Interface: 11508, 50502
+## Interface: 11508, 20505, 50502
 ## Title: LFG Bulletin Board
 ## Notes: Sort LFG/LFM Messages
 ## Version: 3.49
@@ -16,6 +16,7 @@ Chat.lua
 Localization.lua
 dungeons/api.lua
 dungeons/classic.lua
+dungeons/tbc.lua
 dungeons/cata.lua
 dungeons/mists.lua
 CustomCategories.lua
