@@ -114,6 +114,13 @@ local infoOverrides = {
     ARENA = { name = C_LFGList.GetActivityGroupInfo(299)}
 }
 
+--hack: hardcode expansionID for tbc ptr.
+-- required because GroupFinderActivityGrp uses a shared entry for classic+tbc dungeons/raids
+for key, _ in pairs(LFGActivityIDs) do
+    infoOverrides[key] = infoOverrides[key] or {}
+    infoOverrides[key].expansionID = Expansion.BurningCrusade
+end
+
 for key, activityIDs in pairs(LFGActivityIDs) do
    if type(activityIDs) ~= "table" then activityIDs = { activityIDs } end
    addon.Dungeons.queueActivityForInfo(key, activityIDs, {
