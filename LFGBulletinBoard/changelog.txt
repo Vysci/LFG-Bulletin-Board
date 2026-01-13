@@ -1,5 +1,8 @@
 Group Bulletin Board
 
+3.50:
+ - Add Burning Crusade patch 2.5.5 support
+
 3.49:
   - General:
     - Fix issues in 1.15.8 and 5.5.2 encountered when interacting with popup dialogs created by the addon
