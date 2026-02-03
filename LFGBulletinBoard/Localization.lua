@@ -23,16 +23,16 @@ local preLocalizedFallbacks = {
 	["lfg_channel"]= (function()
 		-- related issues: #207
 		-- client specific Id's here: https://wago.tools/db2/ChatChannels?build=4.4.0.54986
-		local db2TableIds = {
+		local db2TableIds = { --todo: use GBB.Enum.Expansion instead of this table
 			[WOW_PROJECT_CLASSIC] = 24,
 			[WOW_PROJECT_BURNING_CRUSADE_CLASSIC] = 24,
-			[WOW_PROJECT_WRATH_CLASSIC] = 28,
-			[WOW_PROJECT_CATACLYSM_CLASSIC] = 28,
-			[WOW_PROJECT_MISTS_CLASSIC] = 28,
+			[WOW_PROJECT_WRATH_CLASSIC] = 26,
+			[WOW_PROJECT_CATACLYSM_CLASSIC] = 26,
+			[WOW_PROJECT_MISTS_CLASSIC] = 26,
 		}
-		local lfgChannelID = db2TableIds[WOW_PROJECT_ID]
-		assert(lfgChannelID ~= nil, "[Addon Check Failed]: No LFG Chat Channel ID found for this game client")
+		local lfgChannelID = db2TableIds[WOW_PROJECT_ID] or 26 -- default to post wotlk ID
 		local localizedName = C_ChatInfo.GetChannelShortcutForChannelID(lfgChannelID)
+		assert(localizedName ~= nil, "[Addon Check Failed]: Could not get localized LFG Chat Channel name from game client")
 		return localizedName
 	end)(),
 	-- default global string includes an unwanted colon at the end

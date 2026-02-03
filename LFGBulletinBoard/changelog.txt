@@ -1,5 +1,9 @@
 Group Bulletin Board
 
+3.51:
+  Mists:
+   - Minor development fix for error introduced in 3.50
+
 3.50:
  - Add Burning Crusade patch 2.5.5 support
 
