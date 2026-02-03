@@ -2,12 +2,7 @@
 local TOCNAME,
 ---@class Addon_LFGTool: Addon_GroupBulletinBoard, Addon_RequestList
 GBB=...
-
-local MAXGROUP=500
-local lastUpdateTime = time()
-local requestNil={dungeon="NIL",start=0,last=0,name=""}
-local isCata = WOW_PROJECT_ID == WOW_PROJECT_CATACLYSM_CLASSIC
-local isClassicEra = WOW_PROJECT_ID == WOW_PROJECT_CLASSIC
+local Expansion = GBB.Enum.Expansions
 local CUSTOM_ACTIVITY_PREFIX = "ACTIVITY_" -- prefix for unrecognized activity headers
 local ROLE_ATLASES = { -- for using with Textures
 	-- see Interface\AddOns\Blizzard_GroupFinder_VanillaStyle\Blizzard_LFGVanilla_Browse.lua
@@ -194,6 +189,7 @@ local onSearchStart = function(categoryID)
 	LFGTool.RefreshSpinner:Show()
 	LFGTool.CategoryButton.Dropdown:Disable()
 end
+local lastUpdateTime = time()
 local onSearchComplete = function()
 	LFGTool.searching = false
     LFGTool.RefreshButton:Enable()
@@ -781,7 +777,7 @@ local function InitializeEntryItem(entry, node)
 			end
 
 			local typePrefix = ""
-			if not isClassicEra then -- "heroic" is not a concept in classic era/sod
+			if not Expansion.Current == Expansion.Classic then -- "heroic" is not a concept in classic era/sod
 				if request.isHeroic == true then
 					local colorHex = GBB.Tool.RGBPercToHex(GBB.DB.HeroicDungeonColor.r,GBB.DB.HeroicDungeonColor.g,GBB.DB.HeroicDungeonColor.b)
 					-- note colorHex here has no alpha channels
@@ -1106,8 +1102,8 @@ function LFGTool:UpdateRequestList()
 			local isSelf = leaderInfo.name == UnitNameUnmodified("player")
             local listingTimestamp = time() - searchResultData.age
             local message = ""
-			-- only cata has lfg listing titles in the `name` field
-			if isCata and searchResultData.name and string.len(searchResultData.name) > 2 then
+			-- cata+ clients have lfg listing titles in the `name` field instead of `comment`
+			if Expansion.Current >= Expansion.Cataclysm and searchResultData.name and string.len(searchResultData.name) > 2 then
 				message = searchResultData.name;
 			end
             if searchResultData.comment ~= nil and string.len(searchResultData.comment) > 2 then
@@ -1224,8 +1220,8 @@ function LFGTool:Load()
 	end
 end
 function GBB.UpdateLfgTool()
-	-- named differently on cata/era
-	local LFGBrowseFrame = isCata and _G.LFGListFrame.SearchPanel or _G.LFGBrowseFrame
+	-- Frame named differently on cata+ clients
+	local LFGBrowseFrame = Expansion.Current >= Expansion.Cataclysm and _G.LFGListFrame.SearchPanel or _G.LFGBrowseFrame
 	if LFGBrowseFrame and LFGBrowseFrame.searching then return end
 	LFGTool:UpdateBoardListings()
 end

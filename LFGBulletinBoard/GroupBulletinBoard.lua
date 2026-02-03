@@ -962,30 +962,16 @@ function GBB.Init()
 	
 	GBB.InitGroupList()
 
-	local TabEnum; ---@type {ChatRequests: number?, RecentPlayers: number?, LFGTool: number?}
-	if isClassicEra then -- setup tabs
-		local serverType = C_Seasons.GetActiveSeason()
-		-- Note: tool currently only active in anniversary/fresh servers and SoD
-		local useToolRequestTab = (serverType == Enum.SeasonID.SeasonOfDiscovery)
-			or (serverType == Enum.SeasonID.Fresh)
-			or (serverType == Enum.SeasonID.FreshHardcore);
-
-		TabEnum = {
-			-- Normal requests tab
-			ChatRequests = GBB.Tool.AddTab(GroupBulletinBoardFrame, GBB.L.TabRequest, GroupBulletinBoardFrame_ScrollFrame),
-			-- LFG Tool requests
-			LFGTool = useToolRequestTab and GBB.Tool.AddTab(GroupBulletinBoardFrame, GBB.L.TabLfg, GBB.LfgTool.ScrollContainer) or nil,
-			-- Past group members tab. (Inactive and broken)
-			-- RecentPlayers = GBB.Tool.AddTab(GroupBulletinBoardFrame, GBB.L.TabGroup, GroupBulletinBoardFrame_GroupFrame);
-		}
-	else
-		-- cata client for Hide all tabs except requests for the time being
-		TabEnum = {
-			ChatRequests = GBB.Tool.AddTab(GroupBulletinBoardFrame, GBB.L.TabRequest, GroupBulletinBoardFrame_ScrollFrame);
-			LFGTool = GBB.Tool.AddTab(GroupBulletinBoardFrame, GBB.L.TabLfg, GBB.LfgTool.ScrollContainer);
-			-- RecentPlayers = GBB.Tool.AddTab(GroupBulletinBoardFrame, GBB.L.TabGroup, GroupBulletinBoardFrame_GroupFrame);
-		}
-	end
+	-- setup tabs
+	---@type {ChatRequests: 1, RecentPlayers: 2, LFGTool: 3?}
+	local TabEnum = {
+		-- Normal requests tab
+		ChatRequests = GBB.Tool.AddTab(GroupBulletinBoardFrame, GBB.L.TabRequest, GroupBulletinBoardFrame_ScrollFrame),
+		-- LFG Tool requests
+		LFGTool = GBB.Tool.AddTab(GroupBulletinBoardFrame, GBB.L.TabLfg, GBB.LfgTool.ScrollContainer),
+		-- Past group members tab. (Inactive and broken)
+		-- RecentPlayers = GBB.Tool.AddTab(GroupBulletinBoardFrame, GBB.L.TabGroup, GroupBulletinBoardFrame_GroupFrame);
+	}
 	GBB.Tool.SelectTab(GroupBulletinBoardFrame, TabEnum.ChatRequests) -- default to requests tab
 
 	if TabEnum.LFGTool then
