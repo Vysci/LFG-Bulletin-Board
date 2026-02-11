@@ -1,6 +1,8 @@
 Group Bulletin Board
 
 3.51:
+  Era:
+   - Enable support for browsing blizzard Group Finder tool requests on all era servers
   Mists:
    - Minor development fix for error introduced in 3.50
 
