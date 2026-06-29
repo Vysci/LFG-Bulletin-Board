@@ -93,6 +93,7 @@ local SpoofedActivityIDs = {
     OONDASTA = 50006, -- Oondasta
     ORDOS = 50007, -- Ordos
     -- FOUR_CELESTIALS = 50008, -- Four Celestials
+		SOO = 50009, -- Siege of Orgrimmar (has no ActivityGroupFinder entry as of 5.5.4.68317)
 }
 
 local mistsMaxLevel = GetMaxLevelForExpansionLevel(Expansions.Mists)
@@ -139,6 +140,13 @@ local infoOverrides = {
     OONDASTA = spoofWorldBoss(L.OONDASTA),
     ORDOS = spoofWorldBoss(L.ORDOS),
     -- FOUR_CELESTIALS = spoofWorldBoss(L.FOUR_CELESTIALS),
+		SOO = {
+			name = GetRealZoneText(1136),
+			minLevel= mistsMaxLevel,
+			maxLevel = mistsMaxLevel,
+			typeID = DungeonType.Raid,
+			expansionID = Expansions.Mists
+		}
 }
 
 for activityKey, activityIDs in pairs(ActivityIDs) do
