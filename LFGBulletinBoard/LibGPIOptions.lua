@@ -19,25 +19,6 @@ local print = function(...)
 	end
 end
 
-local categoriesByName = { } ---@type table<string, table>
-local addToBlizzardSettings = function(frame) -- alternative to the deprecated `InterfaceOptions_AddCategory`
-	-- Frames are required to have OnCommit, OnDefault, and OnRefresh functions even if their implementations are empty.
-	frame.OnCommit = Options.onCommit
-	frame.OnDefault = Options.onDefault
-	frame.OnRefresh = Options.onRefresh
-	if frame.parent then
-		local parent = Settings.GetCategory(frame.parent)
-		local subcategory = Settings.RegisterCanvasLayoutSubcategory(parent, frame, frame.name)
-		subcategory.ID = frame.name
-		Settings.RegisterAddOnCategory(subcategory)
-		categoriesByName[frame.name] = subcategory
-	else
-		local category = Settings.RegisterCanvasLayoutCategory(frame, frame.name)
-		category.ID = frame.name
-		Settings.RegisterAddOnCategory(category)
-		categoriesByName[frame.name] = category
-	end
-end
 
 ---@alias SavedVarHandle.updateHook fun(newValue: savedValue)
 ---@class SavedVarHandle
@@ -247,6 +228,22 @@ local CreateScrollFrames = function(parent, name)
 	return scrollBox, scrollChild
 end
 
+local addBlizzardSettingsCategory = function(frame, title, parentCategory)
+	-- Frames are required to have OnCommit, OnDefault, and OnRefresh functions even if their implementations are empty.
+	frame.OnCommit = Options.onCommit
+	frame.OnDefault = Options.onDefault
+	frame.OnRefresh = Options.onRefresh
+	if parentCategory then
+		local subcategory = Settings.RegisterCanvasLayoutSubcategory(parentCategory, frame, title)
+		Settings.RegisterAddOnCategory(subcategory)
+		return subcategory
+	else
+		local category = Settings.RegisterCanvasLayoutCategory(frame, title)
+		Settings.RegisterAddOnCategory(category)
+		return category
+	end
+end
+
 ---Creates a new settings category and returns its display frame.
 ---@param title string
 ---@param noHeader boolean?
@@ -258,13 +255,17 @@ function Options.AddNewCategoryPanel(title, noHeader, scrollable)
 	---@class SettingsCategoryPanel: Frame
 	local panelFrame = CreateFrame("Frame", frameName, UIParent)
 
-	Options.CategoryPanels[categoryIdx] = panelFrame
-	Options.CurrentPanel = panelFrame
-	panelFrame.name = title
 	if categoryIdx > 1 then
-		panelFrame.parent = Options.CategoryPanels[1].name
+		local parentCategory = Options.CategoryPanels[1].blizzardCategory
+		assert(parentCategory, "Failed to find parent category for settings categoryIdx="..categoryIdx)
+		panelFrame.blizzardCategory = addBlizzardSettingsCategory(panelFrame, title, parentCategory)
+	else
+		panelFrame.blizzardCategory = addBlizzardSettingsCategory(panelFrame, title)
 	end
-	addToBlizzardSettings(panelFrame)
+
+	Options.CurrentPanel = panelFrame
+	Options.CategoryPanels[categoryIdx] = panelFrame
+
 	if scrollable then
 		local scrollFrame, scrollChild = CreateScrollFrames(Options.CurrentPanel, frameName)
 		panelFrame:HookScript("OnShow", scrollChild.UpdateScrollLayout)
@@ -768,6 +769,8 @@ end
 
 ---@param panelID number? defaults to panel `1` (main addon's panel)
 function Options.OpenCategoryPanel(panelID)
-	Settings.OpenToCategory(Options.CategoryPanels[panelID or 1].name)
+	local category = Options.CategoryPanels[panelID or 1].blizzardCategory
+	assert(category, "OpenCategoryPanel: category not found for panelID/categoryIdx="..(panelID or 1))
+	Settings.OpenToCategory(category:GetID())
 end
 

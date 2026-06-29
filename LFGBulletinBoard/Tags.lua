@@ -944,38 +944,40 @@ local dungeonTags = {
 	-- Mists of Pandaria specific dungeons/raids
 	MSV = { -- "Mogu'shan Vaults"
 		enGB = "mgsv msv vaults elegon",
-    },
-    NIUZAO_TEMPLE = { -- "Siege of Niuzao Temple"
+	},
+	NIUZAO_TEMPLE = {   -- "Siege of Niuzao Temple"
 		enGB = "niu niuzao temple nt",
-    },
-    SETTING_SUN = { -- "Gate of the Setting Sun"
+	},
+	SETTING_SUN = {   -- "Gate of the Setting Sun"
 		enGB = "goss gate",
-    },
+	},
 	SCARLET_HALLS = { -- "Scarlet Halls"
 		enGB = "scarlet halls sh",
-    },
-    TOT = { -- "Throne of Thunder"
+	},
+	TOT = {   -- "Throne of Thunder"
 		enGB = "tot tot10 tot25 thunder",
-    },
-    MSP = { -- "Mogu'shan Palace"
+	},
+	MSP = {   -- "Mogu'shan Palace"
 		enGB = "mogu palace msp",
-    },
-    TOTJS = { -- "Temple of the Jade Serpent"
+	},
+	TOTJS = {   -- "Temple of the Jade Serpent"
 		enGB = "jade serpent totjs",
-    },
-    SPM = { -- "Shado-Pan Monastery"
+	},
+	SPM = {   -- "Shado-Pan Monastery"
 		enGB = "shadopan monastery spm",
-    },
-    BREWERY = { -- "Stormstout Brewery"
+	},
+	BREWERY = {   -- "Stormstout Brewery"
 		enGB = "brewery stormstout sb brew",
-    },
-    TERRACE = { -- "Terrace of Endless Spring"
+	},
+	TERRACE = {   -- "Terrace of Endless Spring"
 		enGB = "terrace tes toes",
-    },
-    HEART_OF_FEAR = { -- "Heart of Fear"
+	},
+	HEART_OF_FEAR = {   -- "Heart of Fear"
 		enGB = "heart hof",
-    },
-
+	},
+	SOO = {   -- "Siege of Orgrimmar"
+		enGB = "soo garrosh",
+	},
 	-- Mists of Pandaria World Bosses
 	SHA_OF_ANGER = { -- Sha of Anger
 		enGB = "sha shanger",

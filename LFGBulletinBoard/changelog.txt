@@ -3,7 +3,10 @@ Group Bulletin Board
 3.51:
   Era:
    - Enable support for browsing blizzard Group Finder tool requests on all era servers
+	TBC:
+	 - Fix Lua errors when opening addon settings (seen in 2.5.6)
   Mists:
+	 - Fix Lua errors when opening addon settings.
    - Minor development fix for error introduced in 3.50
 
 3.50:
