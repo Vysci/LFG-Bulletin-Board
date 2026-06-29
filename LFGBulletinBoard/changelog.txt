@@ -4,8 +4,9 @@ Group Bulletin Board
   Era:
    - Enable support for browsing blizzard Group Finder tool requests on all era servers
 	TBC:
-	 - Fix Lua errors when opening addon settings (seen in 2.5.6)
+	 - Fix Lua errors when opening addon settings (introduced in 2.5.6)
   Mists:
+	 - add Siege of Orgrimmar to filters
 	 - Fix Lua errors when opening addon settings.
    - Minor development fix for error introduced in 3.50
 
