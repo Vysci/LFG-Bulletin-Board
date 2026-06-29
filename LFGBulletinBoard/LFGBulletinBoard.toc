@@ -1,4 +1,4 @@
-## Interface: 11508, 20505, 50503
+## Interface: 11508, 20506, 50504
 ## Title: LFG Bulletin Board
 ## Notes: Sort LFG/LFM Messages
 ## Version: 3.51
