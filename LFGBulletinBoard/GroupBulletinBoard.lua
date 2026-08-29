@@ -38,6 +38,7 @@ GBB.MAXCOMPACTWIDTH=350
 GBB.ShouldReset = false
 
 local isClassicEra = WOW_PROJECT_ID == WOW_PROJECT_CLASSIC
+local maxPlayerLevel = GetMaxPlayerLevel()
 local OptionsUtil = GBB.OptionsBuilder
 -- Tools
 -------------------------------------------------------------------------------------
@@ -102,7 +103,7 @@ function GBB.FilterDungeon(dungeon, isHeroic, isRaid)
 	if isRaid == nil then isRaid = false end
 
 	-- If the user is within the level range, or if they're max level and it's heroic.
-	local inLevelRange = (not isHeroic and GBB.dungeonLevel[dungeon][1] <= GBB.UserLevel and GBB.UserLevel <= GBB.dungeonLevel[dungeon][2]) or (isHeroic and GBB.UserLevel == 80)
+	local inLevelRange = (not isHeroic and GBB.dungeonLevel[dungeon][1] <= GBB.UserLevel and GBB.UserLevel <= GBB.dungeonLevel[dungeon][2]) or (isHeroic and GBB.UserLevel == maxPlayerLevel)
 
 	-- return `false` if not checked in preferences
 	if not GBB.DBChar["FilterDungeon"..dungeon] then return false end;
